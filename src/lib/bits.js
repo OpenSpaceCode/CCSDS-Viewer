@@ -38,26 +38,33 @@ function crc16(b, from, count) {
   return crc;
 }
 
-// Collects a decoder's result. bitField/octField append to `fields` in wire order.
+// Collects a decoder's result. bitField/octField/fecfField append to `fields` in wire order.
 function decodeHelpers(b) {
   const fields = [], checks = [];
-  return {
-    fields, checks,
-    check: (level, msg, ref) => checks.push({ level, msg, ref }),
-    bitField: (fid, n, abbr, off, bits, meaning) => {
-      const v = readBits(b, off, bits);
-      fields.push({ fid, n, abbr, off, bits, value: String(v), raw: binStr(b, off, bits), meaning: meaning(v) });
-      return v;
-    },
-    // Octet-aligned field of `want` octets at `from`, clipped to what was received.
-    // opts: extra (received but not part of the PDU), proto (protocol whose diagram the field's page belongs to).
-    octField: (fid, n, abbr, from, want, meaning, opts) => {
-      const have = Math.max(0, Math.min(want, b.length - from));
-      fields.push({ fid, n, abbr, off: from * 8, bits: have * 8, octets: true, ...opts,
-        value: have ? oct(have) : 'MISSING',
-        raw: have ? hexStr(b, from, have, 12) : '—',
-        meaning: have < want ? 'Truncated — ' + have + ' of ' + oct(want) + ' received. ' + meaning : meaning });
-      return have;
-    }
+  const check = (level, msg, ref) => checks.push({ level, msg, ref });
+  const bitField = (fid, n, abbr, off, bits, meaning) => {
+    const v = readBits(b, off, bits);
+    fields.push({ fid, n, abbr, off, bits, value: String(v), raw: binStr(b, off, bits), meaning: meaning(v) });
+    return v;
   };
+  // Octet-aligned field of `want` octets at `from`, clipped to what was received.
+  // opts: extra (received but not part of the PDU), proto (protocol whose diagram the field's page belongs to).
+  const octField = (fid, n, abbr, from, want, meaning, opts) => {
+    const have = Math.max(0, Math.min(want, b.length - from));
+    fields.push({ fid, n, abbr, off: from * 8, bits: have * 8, octets: true, ...opts,
+      value: have ? oct(have) : 'MISSING',
+      raw: have ? hexStr(b, from, have, 12) : '—',
+      meaning: have < want ? 'Truncated — ' + have + ' of ' + oct(want) + ' received. ' + meaning : meaning });
+    return have;
+  };
+  // Frame Error Control Field at `pos`, covering everything before it. Not checked if it was not fully received.
+  const fecfField = (fid, pos, ref) => {
+    const complete = b.length >= pos + 2;
+    const got = complete ? (b[pos] << 8) | b[pos + 1] : 0, crc = complete ? crc16(b, 0, pos) : 0;
+    const hex = (v) => '0x' + v.toString(16).toUpperCase().padStart(4, '0');
+    octField(fid, 'Frame Error Control Field', 'FECF', pos, 2, !complete ? 'CRC not checked' : got === crc ? 'CRC correct' : 'CRC mismatch — computed ' + hex(crc));
+    if (complete && got === crc) check('ok', 'Frame Error Control Field is correct: CRC = ' + hex(crc) + '.', ref);
+    else if (complete) check('err', 'Frame Error Control Field mismatch: received ' + hex(got) + ', computed ' + hex(crc) + '. The frame is corrupted, or this channel has no FECF — if so, set it to Absent.', ref);
+  };
+  return { fields, checks, check, bitField, octField, fecfField };
 }

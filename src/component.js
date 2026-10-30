@@ -99,7 +99,7 @@ class Component extends DCLogic {
   DECODE_SPECS = {
     spp: SPP_DECODE,
     tm: TM_DECODE,
-    tc: { tab: 'TC SDLP', soon: true },
+    tc: TC_DECODE,
     sdls: { tab: 'SDLS', soon: true }
   };
 

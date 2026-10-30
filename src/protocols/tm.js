@@ -276,7 +276,7 @@ function oidMismatch(b, from, count) {
 }
 
 function decodeTm(b, set) {
-  const { fields, checks, check, bitField, octField } = decodeHelpers(b);
+  const { fields, checks, check, bitField, octField, fecfField } = decodeHelpers(b);
   const FHP_NONE = 0x7FF, FHP_OID = 0x7FE;
 
   if (b.length < 6) {
@@ -370,14 +370,7 @@ function decodeTm(b, set) {
       octField('ocf', 'Operational Control Field', 'OCF', pos, 4, type < 0 ? 'Report type unknown' : type < 2 ? 'Type-1 Report — CLCW' : type === 2 ? 'Type-2 Report — project-specific' : 'Type-2 Report — SDLS Frame Security Report');
       pos += 4;
     }
-    if (set.fecf) {
-      const complete = b.length >= pos + 2;
-      const got = complete ? (b[pos] << 8) | b[pos + 1] : 0, crc = complete ? crc16(b, 0, pos) : 0;
-      const hex = (v) => '0x' + v.toString(16).toUpperCase().padStart(4, '0');
-      octField('fecf', 'Frame Error Control Field', 'FECF', pos, 2, !complete ? 'CRC not checked' : got === crc ? 'CRC correct' : 'CRC mismatch — computed ' + hex(crc));
-      if (complete && got === crc) check('ok', 'Frame Error Control Field is correct: CRC = ' + hex(crc) + '.', '§ 4.1.6.3');
-      else if (complete) check('err', 'Frame Error Control Field mismatch: received ' + hex(got) + ', computed ' + hex(crc) + '. The frame is corrupted, or this channel has no FECF — if so, set it to Absent.', '§ 4.1.6.3');
-    }
+    if (set.fecf) fecfField('fecf', pos, '§ 4.1.6.3');
   }
   if (b.length > frameLen) octField(null, 'Octets after the frame', 'EXTRA', frameLen, b.length - frameLen, 'Not part of this frame', { extra: true });
 

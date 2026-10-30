@@ -1,5 +1,5 @@
 // TC Space Data Link Protocol — CCSDS 232.0-B-4.
-// Field reference pages, structure maps, breadcrumb names and the Frame Builder spec.
+// Field reference pages, structure maps, breadcrumb names, Frame Builder spec and Frame Decoder.
 
 const TC_FIELDS = {
   tcph: { n: 'Transfer Frame Primary Header', parent: 'tcframe', bits: 'BITS 0–39', len: '5 OCTETS', pres: 'MANDATORY', ref: '§ 4.1.2',
@@ -179,3 +179,114 @@ const TC_BUILD = { name: 'TC TRANSFER FRAME PRIMARY HEADER', tab: 'TC SDLP',
     { id: 'tcflen', n: 'Frame Length', bits: 10, def: 63, abbr: 'LEN' },
     { id: 'tcfsn', n: 'Frame Sequence Number', bits: 8, def: 7, abbr: 'FSN' } ],
   pay: { name: 'TRANSFER FRAME DATA FIELD', field: 'Data Field', abbr: 'DATA', note: 'Optional. The Data Field carries the payload — one or more Packets, a Segment or a VCA_SDU. Give its length in octets and its content as raw hex; leave the length at 0 to build the header only.' } };
+
+// Frame Decoder spec — see DECODE_SPECS in component.js for the decode() contract.
+const TC_DECODE = { name: 'TC TRANSFER FRAME', tab: 'TC SDLP',
+  note: 'CCSDS 232.0-B-4 § 4.1 — a TC Transfer Frame is a 5-octet Primary Header, a Data Field of up to 1019 octets and an optional 2-octet FECF. The Data Field holds a Frame Data Unit (Type-D, with an optional Segment Header) or Control Commands (Type-C). With SDLS (§ 6.3) a Security Header and optional Security Trailer surround the User Data of Type-D frames.',
+  setNote: 'The frame carries its own length, but it does not signal these; they are established by management (tables 5-1, 5-3, 6-2 and 6-3). Type-C frames never have a Segment Header or SDLS fields, so those settings apply to Type-D frames only.',
+  settings: [
+    { id: 'fecf', n: 'Presence of Frame Error Control', ref: 'TABLE 5-1', def: 1, opts: [{ v: 1, l: 'Present — last 2 octets are the FECF' }, { v: 0, l: 'Absent' }],
+      note: 'If present, the CRC is computed and compared with the received value.' },
+    { id: 'seg', n: 'Presence of Segment Header', ref: 'TABLE 5-3', def: 1, opts: [{ v: 1, l: 'Present — Sequence Flags and MAP ID' }, { v: 0, l: 'Absent' }],
+      note: 'Per Virtual Channel. Required with more than one MAP, or for service data units too large for one frame.' },
+    { id: 'maxLen', n: 'Maximum Transfer Frame Length', ref: 'TABLE 5-1', unit: 'octets', def: 1024, min: 5, max: 1024,
+      note: 'Largest frame the mission allows. The Standard’s limit is 1024.' },
+    { id: 'secHdr', n: 'Security Header length', ref: 'TABLES 6-2, 6-3', unit: 'octets', def: 0, min: 0, max: 64,
+      note: 'Per Virtual Channel or MAP. 0 = SDLS not in use.' },
+    { id: 'secTrl', n: 'Security Trailer length', ref: 'TABLES 6-2, 6-3', unit: 'octets', def: 0, min: 0, max: 64,
+      note: 'Per Virtual Channel or MAP. 0 = no Security Trailer.' } ],
+  examples: [
+    { l: 'Type-BD · Segment', hex: '20 2A 04 13 00 C5 11 A2 C0 2A 00 05 A1 B2 C3 D4 E5 F6 87 4D' },
+    { l: 'Type-AD · first portion', hex: '00 2A 08 0B 07 43 DE AD BE EF 0F 04' },
+    { l: 'Type-BC · Unlock', hex: '30 2A 04 07 00 00 20 E7' },
+    { l: 'Type-BC · Set V(R)', hex: '30 2A 04 09 00 82 00 2A 94 95' },
+    { l: 'Fill Data', hex: '20 2A 04 13 00 C5 11 A2 C0 2A 00 05 A1 B2 C3 D4 E5 F6 87 4D 55 55 55' },
+    { l: 'Truncated', hex: '20 2A 04 13 00 C5 11 A2 C0 2A 00 05 A1 B2 C3' },
+    { l: 'Bad FECF', hex: '20 2A 04 13 00 C5 11 A2 C4 2A 00 05 A1 B2 C3 D4 E5 F6 87 4D' } ],
+  decode: decodeTc };
+
+function decodeTc(b, set) {
+  const { fields, checks, check, bitField, octField, fecfField } = decodeHelpers(b);
+  const FILL = 0x55, FILL_MAX = 6;   // § 4.4.9.2.6
+
+  if (b.length < 5) {
+    if (b.length) check('err', 'The Transfer Frame Primary Header is 5 octets — only ' + oct(b.length) + ' received, so nothing can be decoded.', '§ 4.1.2.1');
+    return { fields, checks };
+  }
+
+  const bypass = readBits(b, 2, 1), control = readBits(b, 3, 1);
+  const frameType = bypass ? (control ? 'Type-BC' : 'Type-BD') : (control ? 'Reserved combination' : 'Type-AD');
+
+  const tfvn = bitField('tcvn', 'Transfer Frame Version Number', 'TFVN', 0, 2, v => v === 0 ? 'TC Version 1 Asynchronous Transfer Frame' : 'Not a Transfer Frame defined by this Standard');
+  bitField('tcbf', 'Bypass Flag', 'BYP', 2, 1, v => v ? 'Type-B — Frame Acceptance Checks bypassed' : 'Type-A — subject to Frame Acceptance Checks');
+  bitField('tcccf', 'Control Command Flag', 'CCF', 3, 1, v => v ? 'Type-C — Control Commands' : 'Type-D — Frame Data Unit');
+  const rsvd = bitField('tcrsvd', 'Reserved Spare', 'RSVD', 4, 2, v => v === 0 ? 'Required value' : 'Shall be ‘00’');
+  bitField('tcscid', 'Spacecraft Identifier', 'SCID', 6, 10, v => '0x' + v.toString(16).toUpperCase().padStart(3, '0'));
+  bitField('tcvcid', 'Virtual Channel Identifier', 'VCID', 16, 6, v => 'Virtual Channel ' + v);
+  const flen = bitField('tcflen', 'Frame Length', 'LEN', 22, 10, v => 'C + 1 = ' + oct(v + 1) + ' in the frame');
+  const fsn = bitField('tcfsn', 'Frame Sequence Number', 'FSN', 32, 8, () => bypass ? 'N(S) — not used by the COP in a Type-B frame' : 'N(S) — checked by the FARM');
+
+  const total = flen + 1;
+
+  if (tfvn !== 0) check('err', 'Transfer Frame Version Number is ‘' + tfvn.toString(2).padStart(2, '0') + '’ — a TC Transfer Frame carries ‘00’.', '§ 4.1.2.2.2');
+  if (!bypass && control) check('err', 'Bypass Flag ‘0’ with Control Command Flag ‘1’ is reserved for future application.', 'TABLE 4-1');
+  else check('info', frameType + ' frame' + (frameType === 'Type-AD' ? ' — Sequence-Controlled Service of the COP.' : frameType === 'Type-BD' ? ' — Expedited Service of the COP.' : ' — controls the Sequence-Controlled Service of the COP.'), 'TABLE 4-1');
+  if (rsvd !== 0) check('err', 'Reserved Spare is ‘' + rsvd.toString(2).padStart(2, '0') + '’ — it shall be ‘00’.', '§ 4.1.2.4.2');
+  if (bypass && fsn !== 0) check('warn', 'Frame Sequence Number is ' + fsn + ' in a Type-B frame — the COP does not use it and sets it to all zeroes.', '§ 4.1.2.8');
+
+  if (b.length < total) check('err', 'Frame is truncated: Frame Length declares ' + oct(total) + ', but only ' + oct(b.length) + ' received. A receiver discards these octets.', '§ 4.4.9.2.5');
+  else if (b.length === total) check('ok', 'Frame Length matches the data received: C + 1 = ' + oct(total) + '.', '§ 4.4.9.3.3');
+  if (total > set.maxLen) check('warn', 'Frame length ' + oct(total) + ' exceeds the mission Maximum Transfer Frame Length of ' + oct(set.maxLen) + '.', 'TABLE 5-1');
+
+  // Type-C frames have neither a Segment Header nor SDLS fields, whatever the settings say for Type-D frames.
+  const seg = !control && set.seg ? 1 : 0, secHdr = control ? 0 : set.secHdr, secTrl = control ? 0 : set.secTrl;
+  const fecf = set.fecf ? 2 : 0;
+  const dataLen = total - 5 - seg - secHdr - secTrl - fecf;
+
+  if (dataLen < 1) {
+    check('err', 'No room for a Data Field: Frame Length gives ' + oct(total) + ', but the headers and trailers take ' + oct(total - dataLen) + '. Check the mission settings if the frame itself looks right.', '§ 4.1.1');
+  } else {
+    let pos = 5;
+    if (control && (set.secHdr || set.secTrl)) check('info', 'Security settings are not applied: SDLS is not used for frames carrying control information.', '§ 6.3.4.1');
+    if (seg) {
+      if (b.length > pos) {
+        bitField('tcsqf', 'Sequence Flags', 'SEQF', 40, 2, v => ['Continuing portion of a service data unit', 'First portion of a service data unit', 'Last portion of a service data unit', 'No segmentation'][v]);
+        bitField('tcmap', 'Multiplexer Access Point Identifier', 'MAP', 42, 6, v => 'MAP Channel ' + v);
+      } else octField('tcseg', 'Segment Header', 'SEG', pos, 1, 'Sequence Flags and MAP Identifier');
+      pos += 1;
+    }
+    if (secHdr) {
+      check('info', 'SDLS in use per the mission settings — the User Data may be ciphertext.', '§ 6.3');
+      octField('sdsh', 'Security Header', 'SECH', pos, secHdr, 'SPI, IV, Sequence Number, Pad Length — lengths per Security Association', { proto: 'sdls' });
+      pos += secHdr;
+    } else if (secTrl) check('warn', 'A Security Trailer is set without a Security Header — without the Security Header, SDLS is not in use.', '§ 6.3.4.2');
+
+    if (control) {
+      const got = Math.min(dataLen, b.length - pos);
+      const isUnlock = dataLen === 1 && got === 1 && b[pos] === 0;
+      const isSetVr = dataLen === 3 && got === 3 && b[pos] === 0x82 && b[pos + 1] === 0;
+      octField('tccc', 'Control Commands', 'CC', pos, dataLen, isUnlock ? 'Unlock' : isSetVr ? 'Set V(R) — V(R) = ' + b[pos + 2] : got < dataLen ? 'Command not identified' : 'Reserved bit combination');
+      if (got === dataLen && !isUnlock && !isSetVr) check('err', 'Control Commands are neither Unlock (00) nor Set V(R) (82 00 XX) — all other bit combinations are reserved.', '§ 4.1.3.3.4');
+    } else {
+      octField('tcud', 'User Data', 'USER', pos, dataLen, seg ? 'Packets, a MAP_SDU, or a portion of one of them' : 'Packets or a VCA_SDU');
+    }
+    pos += dataLen;
+
+    if (secTrl) { octField('sdtr', 'Security Trailer', 'SECT', pos, secTrl, 'Message Authentication Code', { proto: 'sdls' }); pos += secTrl; }
+    if (fecf) fecfField('tcfecf', pos, '§ 4.1.4.3');
+  }
+
+  if (b.length > total) {
+    const from = Math.max(total, 5), extra = b.length - from;
+    const isFill = extra <= FILL_MAX && b.slice(from).every(x => x === FILL);
+    if (isFill) {
+      check('info', oct(extra) + ' of Fill Data after the frame, added by the Channel Coding Sublayer to complete its last Codeblock. A receiver discards them.', '§ 4.4.9.2.6');
+      octField(null, 'Fill Data', 'FILL', from, extra, 'Not part of this frame', { extra: true });
+    } else {
+      check('warn', oct(extra) + ' after the end of the frame (octet ' + from + ' onward), and they are not Fill Data — at most 6 octets of ‘01010101’. Possibly the next frame of the same data unit.', '§ 4.4.9.2.3');
+      octField(null, 'Octets after the frame', 'EXTRA', from, extra, 'Not part of this frame', { extra: true });
+    }
+  }
+
+  return { fields, checks };
+}
