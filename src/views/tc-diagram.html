@@ -1,0 +1,133 @@
+      <!-- ============ TC DIAGRAM VIEW ============ -->
+      <sc-if value="{{ showTcDiagram }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="TC SDLP frame diagram">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+            <span style="font-size:11px;letter-spacing:.2em;font-weight:600;color:var(--color-accent-700)">CCSDS RECOMMENDED STANDARD · BLUE BOOK</span>
+            <span style="font-size:11px;letter-spacing:.14em;color:var(--color-neutral-600)">ISSUE 4 · OCTOBER 2021</span>
+          </div>
+          <h1 style="margin:8px 0 0;font-size:42px;line-height:1.02;letter-spacing:.01em">TC SPACE DATA LINK PROTOCOL</h1>
+          <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+            <a class="tag tag-outline" href="https://ccsds.org/Pubs/232x0b4e1c1.pdf" target="_blank" rel="noopener" style="text-decoration:none;cursor:pointer;white-space:nowrap" style-hover="background:var(--color-accent);color:var(--color-bg)">CCSDS 232.0-B-4 ↗</a>
+            <span class="tag tag-neutral">PDU · TC TRANSFER FRAME</span>
+            <span class="tag tag-neutral">VARIABLE LENGTH · MAX 1024 OCTETS</span>
+          </div>
+          <div style="border-top:1px solid var(--color-divider);margin:24px 0 30px"></div>
+
+          <div class="blueprint" style="padding:32px 30px 26px">
+            <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+              <span style="width:0;height:0;border-top:4.5px solid transparent;border-bottom:4.5px solid transparent;border-right:8px solid var(--color-text);flex:none"></span>
+              <span style="flex:1;height:1px;background:var(--color-text)"></span>
+              <span style="font-family:var(--font-heading);font-weight:600;font-size:15px;letter-spacing:.22em;white-space:nowrap">TC TRANSFER FRAME</span>
+              <span style="flex:1;height:1px;background:var(--color-text)"></span>
+              <span style="width:0;height:0;border-top:4.5px solid transparent;border-bottom:4.5px solid transparent;border-left:8px solid var(--color-text);flex:none"></span>
+            </div>
+
+            <!-- main frame row -->
+            <div style="display:flex;align-items:stretch">
+              <div style="flex:1.4;min-width:0;display:flex;flex-direction:column">
+                <div role="button" tabindex="0" data-field="tcph" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="position:relative;border:1px solid var(--color-text);min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px 14px;cursor:pointer;background:{{ tcPhBg }};font-family:var(--font-heading);font-weight:600;font-size:17px;letter-spacing:.07em;line-height:1.35;transition:transform .13s ease,background .13s ease,box-shadow .13s ease" style-hover="transform:scale(1.03);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:6">
+                  <span style="position:absolute;top:7px;right:9px;font-size:11px;color:var(--color-accent-700)">{{ tcPhBadge }}</span>
+                  <span style="position:relative">TRANSFER FRAME PRIMARY HEADER</span>
+                </div>
+                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">5 OCTETS</div>
+              </div>
+              <div style="flex:2.6;min-width:0;display:flex;flex-direction:column;margin-left:-1px">
+                <div role="button" tabindex="0" data-field="tcdf" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="position:relative;border:1px solid var(--color-text);min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px 14px;cursor:pointer;background:{{ tcDfBg }};font-family:var(--font-heading);font-weight:600;font-size:17px;letter-spacing:.07em;line-height:1.35;transition:transform .13s ease,background .13s ease,box-shadow .13s ease" style-hover="transform:scale(1.03);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:6">
+                  <span style="position:absolute;top:7px;right:9px;font-size:11px;color:var(--color-accent-700)">{{ tcDfBadge }}</span>
+                  <span style="position:relative">TRANSFER FRAME DATA FIELD</span>
+                </div>
+                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">UP TO 1019 OCTETS · VARIES</div>
+              </div>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;margin-left:-1px">
+                <div role="button" tabindex="0" data-field="tcfecf" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="position:relative;border:1px solid var(--color-text);min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px 10px;cursor:pointer;background:var(--color-bg);font-family:var(--font-heading);font-weight:600;font-size:15px;letter-spacing:.06em;line-height:1.35;transition:transform .13s ease,background .13s ease,box-shadow .13s ease" style-hover="transform:scale(1.04);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:6">
+                  <sc-if value="{{ hatch }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(45deg,transparent 0 8px,var(--color-neutral-300) 8px 9px)"></div></sc-if>
+                  <span style="position:absolute;top:7px;right:9px;font-size:11px;color:var(--color-neutral-500)">§</span>
+                  <span style="position:relative">FRAME ERROR CONTROL FIELD<em style="display:block;font-family:var(--font-body);font-style:normal;font-weight:400;font-size:11px;letter-spacing:.08em;color:var(--color-neutral-700);margin-top:6px">(OPTIONAL)</em></span>
+                </div>
+                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">2 OCTETS</div>
+              </div>
+            </div>
+            <div style="text-align:center;font-size:12px;letter-spacing:.12em;color:var(--color-neutral-600);margin-top:18px">FIGURE 4-1 · TC TRANSFER FRAME STRUCTURAL COMPONENTS</div>
+
+            <!-- TC primary header expansion -->
+            <sc-if value="{{ tcPhOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:30px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px">
+                  <span style="font-family:var(--font-heading);font-weight:600;font-size:14px;letter-spacing:.14em"><span style="color:var(--color-accent-700)">▾</span> TRANSFER FRAME PRIMARY HEADER — 5 OCTETS · BITS 0–39</span>
+                  <span role="button" tabindex="0" data-field="tcph" sc-camel-on-click="{{ openRef }}" style="font-size:11px;letter-spacing:.12em;font-weight:600;color:var(--color-accent-700);cursor:pointer;display:inline-flex;align-items:center;gap:4px" style-hover="color:var(--color-accent-900)">OPEN REFERENCE § 4.1.2 <svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span>
+                </div>
+                <div style="display:flex;align-items:stretch">
+                  <div role="button" tabindex="0" data-field="tcvn" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:2;min-width:0;position:relative;border:1px solid var(--color-text);height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.05em;line-height:1.25">VERSION NO.</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">2 BITS · 0–1</span>
+                  </div>
+                  <div role="button" tabindex="0" data-field="tcbf" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:1.4;min-width:0;position:relative;border:1px solid var(--color-text);height:88px;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px 2px;cursor:pointer;background:var(--color-bg);margin-left:-1px;transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:10.5px;letter-spacing:.08em;writing-mode:vertical-rl;text-orientation:mixed">BYPASS FLAG · BIT 2</span>
+                  </div>
+                  <div role="button" tabindex="0" data-field="tcccf" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:1.4;min-width:0;position:relative;border:1px solid var(--color-text);height:88px;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px 2px;cursor:pointer;background:var(--color-bg);margin-left:-1px;transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:10.5px;letter-spacing:.08em;writing-mode:vertical-rl;text-orientation:mixed">CTRL CMD FLAG · BIT 3</span>
+                  </div>
+                  <div role="button" tabindex="0" data-field="tcrsvd" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:1.6;min-width:0;position:relative;border:1px solid var(--color-text);height:88px;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px 2px;cursor:pointer;background:var(--color-bg);margin-left:-1px;transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:10.5px;letter-spacing:.08em;writing-mode:vertical-rl;text-orientation:mixed">RSVD SPARE · 4–5</span>
+                  </div>
+                  <div role="button" tabindex="0" data-field="tcscid" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:10;min-width:0;position:relative;border:1px solid var(--color-text);height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);margin-left:-1px;transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.05em;line-height:1.25">SPACECRAFT ID</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">10 BITS · 6–15</span>
+                  </div>
+                  <div role="button" tabindex="0" data-field="tcvcid" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:6;min-width:0;position:relative;border:1px solid var(--color-text);height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);margin-left:-1px;transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.05em;line-height:1.25">VIRTUAL CHANNEL ID</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">6 BITS · 16–21</span>
+                  </div>
+                  <div role="button" tabindex="0" data-field="tcflen" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:10;min-width:0;position:relative;border:1px solid var(--color-text);height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);margin-left:-1px;transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.05em;line-height:1.25">FRAME LENGTH</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">10 BITS · 22–31</span>
+                  </div>
+                  <div role="button" tabindex="0" data-field="tcfsn" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:8;min-width:0;position:relative;border:1px solid var(--color-text);height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);margin-left:-1px;transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.05em;line-height:1.25">FRAME SEQUENCE NUMBER</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">8 BITS · 32–39</span>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- TC data field expansion -->
+            <sc-if value="{{ tcDfOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:22px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px">
+                  <span style="font-family:var(--font-heading);font-weight:600;font-size:14px;letter-spacing:.14em"><span style="color:var(--color-accent-700)">▾</span> TRANSFER FRAME DATA FIELD — UP TO 1019 OCTETS (1017 WITH FECF)</span>
+                  <span role="button" tabindex="0" data-field="tcdf" sc-camel-on-click="{{ openRef }}" style="font-size:11px;letter-spacing:.12em;font-weight:600;color:var(--color-accent-700);cursor:pointer;display:inline-flex;align-items:center;gap:4px" style-hover="color:var(--color-accent-900)">OPEN REFERENCE § 4.1.3 <svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span>
+                </div>
+                <div style="display:flex">
+                  <div role="button" tabindex="0" data-field="tcseg" sc-camel-on-click="{{ openRef }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:8;min-width:0;border:1px solid var(--color-neutral-500);border-bottom:0;font-size:10px;letter-spacing:.12em;text-align:center;padding:4px 2px;color:var(--color-neutral-700);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" style-hover="background:var(--color-accent-100);color:var(--color-text)">SEGMENT HEADER · 1 OCTET (OPTIONAL)</div>
+                  <div style="flex:24"></div>
+                </div>
+                <div style="display:flex;align-items:stretch">
+                  <div role="button" tabindex="0" data-field="tcsqf" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:2;min-width:0;position:relative;border:1px solid var(--color-text);height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.05em;line-height:1.25">SEQUENCE FLAGS</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">2 BITS · 0–1</span>
+                  </div>
+                  <div role="button" tabindex="0" data-field="tcmap" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:6;min-width:0;position:relative;border:1px solid var(--color-text);height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);margin-left:-1px;transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.05em;line-height:1.25">MAP IDENTIFIER</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">6 BITS · 2–7</span>
+                  </div>
+                  <div role="button" tabindex="0" data-field="tcud" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:24;min-width:0;position:relative;border:1px solid var(--color-text);height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);margin-left:-1px;transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.05em;line-height:1.25">USER DATA</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">PACKETS · MAP_SDU · VCA_SDU</span>
+                  </div>
+                </div>
+                <div style="display:flex;justify-content:flex-end;margin-top:10px">
+                  <span role="button" tabindex="0" data-field="tccc" sc-camel-on-click="{{ openRef }}" style="font-size:11px;letter-spacing:.12em;font-weight:600;color:var(--color-accent-700);cursor:pointer;display:inline-flex;align-items:center;gap:4px" style-hover="color:var(--color-accent-900)">TYPE-C FRAMES CARRY CONTROL COMMANDS INSTEAD — § 4.1.3.3 <svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="display:flex;gap:22px;flex-wrap:wrap;margin-top:20px;font-size:12px;letter-spacing:.06em;color:var(--color-neutral-600)">
+            <span><b style="color:var(--color-text);font-weight:600">HOVER</b> — field summary</span>
+            <span><b style="color:var(--color-text);font-weight:600">CLICK ▸ / ▾</b> — expand sub-fields in place</span>
+            <span><b style="color:var(--color-text);font-weight:600">CLICK A SUB-FIELD</b> — open its reference page</span>
+          </div>
+        </div>
+      </sc-if>

@@ -1,0 +1,18 @@
+      <!-- ============ PLACEHOLDER ============ -->
+      <sc-if value="{{ showPlaceholder }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Protocol placeholder">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+            <span style="font-size:11px;letter-spacing:.2em;font-weight:600;color:var(--color-accent-700)">CCSDS RECOMMENDED STANDARD · BLUE BOOK</span>
+          </div>
+          <h1 style="margin:8px 0 0;font-size:42px;line-height:1.02;letter-spacing:.01em">{{ protoTitle }}</h1>
+          <div style="display:flex;gap:8px;margin-top:14px"><a class="tag tag-outline" href="{{ protoCodeUrl }}" target="_blank" rel="noopener" style="text-decoration:none;cursor:pointer;white-space:nowrap" style-hover="background:var(--color-accent);color:var(--color-bg)">{{ protoCodeLabel }}</a></div>
+          <div style="border-top:1px solid var(--color-divider);margin:24px 0 30px"></div>
+          <div class="blueprint" style="padding:72px 40px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center">
+            <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <svg width="30" height="30" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-neutral-500)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:22px;letter-spacing:.14em">REFERENCE VIEW IN PREPARATION</div>
+            <p style="margin:0;font-size:13.5px;line-height:1.6;color:var(--color-neutral-600);max-width:46ch">The interactive frame breakdown for this protocol has not been prepared yet. The SpacePacket, TM SDLP and TC SDLP views are complete.</p>
+            <button class="btn btn-secondary" sc-camel-on-click="{{ goTm }}" style="margin-top:8px;letter-spacing:.1em;font-weight:600">OPEN TM SDLP</button>
+          </div>
+        </div>
+      </sc-if>

@@ -1,0 +1,12 @@
+    <!-- ============ TOOLTIP ============ -->
+    <sc-if value="{{ tipOn }}" hint-placeholder-val="{{ false }}">
+      <div style="{{ tipPos }}">
+        <div style="width:268px;background:var(--color-bg);border:1px solid var(--color-text);box-shadow:var(--shadow-lg);padding:12px 14px;display:flex;flex-direction:column;gap:5px;text-align:left;position:relative;animation:tipfade .15s ease">
+          <span style="font-family:var(--font-heading);font-weight:600;font-size:16px;letter-spacing:.04em;line-height:1.2">{{ tipName }}</span>
+          <span style="font-size:10.5px;letter-spacing:.1em;font-weight:600;color:var(--color-accent-700)">{{ tipMeta }}</span>
+          <span style="font-size:12.5px;line-height:1.55;color:var(--color-neutral-800)">{{ tipDesc }}</span>
+          <span style="font-size:10.5px;letter-spacing:.08em;color:var(--color-neutral-600)">{{ tipRef }} · CLICK FOR DETAILS</span>
+          <span style="position:absolute;left:50%;bottom:-5.5px;width:9px;height:9px;background:var(--color-bg);border-right:1px solid var(--color-text);border-bottom:1px solid var(--color-text);transform:translateX(-50%) rotate(45deg)"></span>
+        </div>
+      </div>
+    </sc-if>

@@ -1,0 +1,12 @@
+{
+  "name": "ccsds-viewer",
+  "private": true,
+  "description": "CCSDS protocol frame viewer — single-file build from src/",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "check": "node build.mjs --check",
+    "test": "node --test \"tests/*.test.mjs\""
+  },
+  "engines": { "node": ">=21" }
+}

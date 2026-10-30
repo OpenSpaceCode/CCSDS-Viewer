@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="asset:runtime/dc-runtime.js"></script>
+
+</head>
+<body>
+<x-dc>
+<helmet>
+<style><!--#include styles/design-system.css --></style>
+<script src="asset:runtime/design-system.js"></script>
+<style>
+html,body{margin:0;padding:0;background:var(--color-bg);color:var(--color-text)}
+a{color:var(--color-accent-700)}
+a:hover{color:var(--color-accent-900)}
+[role="button"]:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+@keyframes tipfade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</helmet>
+
+<div style="display:flex;height:100vh;overflow:hidden;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body)">
+
+  <!--#include views/sidebar.html -->
+
+  <!-- ============ MAIN ============ -->
+  <div ref="{{ mainRef }}" sc-camel-on-scroll="{{ clearTip }}" style="flex:1;min-width:0;overflow:auto;position:relative">
+    <div style="max-width:1220px;margin:0 auto;padding:40px 46px 72px">
+
+      <!--#include views/tm-diagram.html -->
+
+      <!--#include views/spp-diagram.html -->
+
+      <!--#include views/tc-diagram.html -->
+
+      <!--#include views/sdls-diagram.html -->
+
+      <!--#include views/builder.html -->
+
+      <!--#include views/decoder.html -->
+
+      <!--#include views/ep-diagram.html -->
+
+      <!--#include views/field-page.html -->
+
+      <!--#include views/placeholder.html -->
+    </div>
+
+    <!--#include views/tooltip.html -->
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{
+  &quot;startExpanded&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Diagram&quot; },
+  &quot;hatchOptional&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Diagram&quot; },
+  &quot;tooltipDetail&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;full&quot;, &quot;compact&quot;], &quot;default&quot;: &quot;full&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Tooltip&quot; }
+}">
+<!--#include lib/bits.js -->
+<!--#include protocols/tm.js -->
+<!--#include protocols/tc.js -->
+<!--#include protocols/spp.js -->
+<!--#include protocols/sdls.js -->
+<!--#include protocols/sdls-ep.js -->
+<!--#include component.js -->
+</script>
+
+
+</body></html>

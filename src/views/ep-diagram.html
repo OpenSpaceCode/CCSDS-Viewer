@@ -1,0 +1,119 @@
+      <!-- ============ EP DIAGRAM VIEW ============ -->
+      <sc-if value="{{ showEpDiagram }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="SDLS EP PDU diagram">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+            <span style="font-size:11px;letter-spacing:.2em;font-weight:600;color:var(--color-accent-700)">SDLS EXTENDED PROCEDURES · {{ epServiceLabel }}</span>
+            <span style="font-size:11px;letter-spacing:.14em;color:var(--color-neutral-600)">ISSUE 1 · FEBRUARY 2020</span>
+          </div>
+          <h1 style="margin:8px 0 0;font-size:42px;line-height:1.02;letter-spacing:.01em">{{ epTitle }}</h1>
+          <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+            <a class="tag tag-outline" href="https://ccsds.org/Pubs/355x1b1.pdf" target="_blank" rel="noopener" style="text-decoration:none;cursor:pointer;white-space:nowrap" style-hover="background:var(--color-accent);color:var(--color-bg)">CCSDS 355.1-B-1 ↗</a>
+            <span class="tag tag-neutral">{{ epFig }}</span>
+            <span class="tag tag-neutral">{{ epRefLabel }}</span>
+          </div>
+          <p style="font-size:14px;line-height:1.6;max-width:82ch;margin:18px 0 0;color:var(--color-neutral-800)">{{ epIntro }}</p>
+          <div style="border-top:1px solid var(--color-divider);margin:22px 0 30px"></div>
+
+          <div class="blueprint" style="padding:32px 30px 26px">
+            <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+              <span style="width:0;height:0;border-top:4.5px solid transparent;border-bottom:4.5px solid transparent;border-right:8px solid var(--color-text);flex:none"></span>
+              <span style="flex:1;height:1px;background:var(--color-text)"></span>
+              <span style="font-family:var(--font-heading);font-weight:600;font-size:15px;letter-spacing:.22em;white-space:nowrap;text-align:center">{{ epTitleUpper }} PDU</span>
+              <span style="flex:1;height:1px;background:var(--color-text)"></span>
+              <span style="width:0;height:0;border-top:4.5px solid transparent;border-bottom:4.5px solid transparent;border-left:8px solid var(--color-text);flex:none"></span>
+            </div>
+
+            <div style="display:flex;align-items:stretch">
+              <div style="flex:3;min-width:0;display:flex;flex-direction:column">
+                <div role="button" tabindex="0" data-field="ephdr" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="position:relative;border:1px solid var(--color-text);min-height:132px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px 14px;cursor:pointer;background:var(--color-bg);font-family:var(--font-heading);font-weight:600;font-size:16px;letter-spacing:.06em;line-height:1.35;transition:transform .13s ease,background .13s ease,box-shadow .13s ease" style-hover="transform:scale(1.03);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:6">
+                  <span style="position:absolute;top:7px;right:9px;font-size:11px;color:var(--color-accent-700)">{{ epHdrBadge }}</span>
+                  <span style="position:relative">EXTENDED PROCEDURES PDU HEADER</span>
+                </div>
+                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">3 OCTETS · 24 BITS</div>
+              </div>
+              <div style="flex:4;min-width:0;display:flex;flex-direction:column;margin-left:-1px">
+                <div role="button" tabindex="0" data-field="epdata" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="position:relative;border:1px solid var(--color-text);min-height:132px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px 14px;cursor:pointer;background:var(--color-bg);font-family:var(--font-heading);font-weight:600;font-size:16px;letter-spacing:.06em;line-height:1.35;transition:transform .13s ease,background .13s ease,box-shadow .13s ease" style-hover="transform:scale(1.03);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:6">
+                  <span style="position:absolute;top:7px;right:9px;font-size:11px;color:var(--color-accent-700)">{{ epDataBadge }}</span>
+                  <span style="position:relative">EXTENDED PROCEDURES PDU DATA FIELD</span>
+                </div>
+                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">{{ epDataBoxSub }}</div>
+              </div>
+            </div>
+            <div style="text-align:center;font-size:12px;letter-spacing:.12em;color:var(--color-neutral-600);margin-top:18px">{{ epFig }} · {{ epTitleUpper }} PDU (FIGURE 5-2 PDU FRAME)</div>
+
+            <!-- header expansion -->
+            <sc-if value="{{ epHdrOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:30px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px">
+                  <span style="font-family:var(--font-heading);font-weight:600;font-size:14px;letter-spacing:.14em"><span style="color:var(--color-accent-700)">▾</span> EXTENDED PROCEDURES PDU HEADER — 24 BITS</span>
+                  <span role="button" tabindex="0" data-field="ephdr" sc-camel-on-click="{{ openRef }}" style="font-size:11px;letter-spacing:.12em;font-weight:600;color:var(--color-accent-700);cursor:pointer;display:inline-flex;align-items:center;gap:4px" style-hover="color:var(--color-accent-900)">OPEN REFERENCE § 5.3.2.2 <svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span>
+                </div>
+                <div style="display:flex">
+                  <div role="button" tabindex="0" data-field="eptag" sc-camel-on-click="{{ openRef }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:8;min-width:0;border:1px solid var(--color-neutral-500);border-bottom:0;font-size:10px;letter-spacing:.12em;text-align:center;padding:4px 2px;color:var(--color-neutral-700);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" style-hover="background:var(--color-accent-100);color:var(--color-text)">EXTENDED PROCEDURES TAG · 8 BITS</div>
+                  <div style="flex:16"></div>
+                </div>
+                <div style="display:flex;align-items:stretch">
+                  <div role="button" tabindex="0" data-field="eptype" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:2;min-width:0;position:relative;border:1px solid var(--color-text);height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:12px;letter-spacing:.04em;line-height:1.2">PROC. TYPE</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">1 BIT · {{ epTypeBit }}</span>
+                  </div>
+                  <div role="button" tabindex="0" data-field="epuser" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:2;min-width:0;position:relative;border:1px solid var(--color-text);height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);margin-left:-1px;transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:12px;letter-spacing:.04em;line-height:1.2">USER FLAG</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">1 BIT · 1</span>
+                  </div>
+                  <div role="button" tabindex="0" data-field="epsg" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:3;min-width:0;position:relative;border:1px solid var(--color-text);height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);margin-left:-1px;transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:12px;letter-spacing:.04em;line-height:1.2">SERVICE GROUP</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">2 BITS · 2–3</span>
+                  </div>
+                  <div role="button" tabindex="0" data-field="eppi" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:5;min-width:0;position:relative;border:1px solid var(--color-text);height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);margin-left:-1px;transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:12px;letter-spacing:.04em;line-height:1.2">PROC. IDENT.</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">4 BITS · 4–7 · {{ epProcCode }}</span>
+                  </div>
+                  <div role="button" tabindex="0" data-field="eplen" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:16;min-width:0;position:relative;border:1px solid var(--color-text);height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);margin-left:-1px;transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.05em;line-height:1.25">EXTENDED PROCEDURES DATA FIELD LENGTH</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">16 BITS · 8–23</span>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- data field expansion -->
+            <sc-if value="{{ epDataOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:22px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px">
+                  <span style="font-family:var(--font-heading);font-weight:600;font-size:14px;letter-spacing:.14em"><span style="color:var(--color-accent-700)">▾</span> PDU DATA FIELD — {{ epDataNote }}</span>
+                  <span role="button" tabindex="0" data-field="{{ epDataId }}" sc-camel-on-click="{{ openRef }}" style="font-size:11px;letter-spacing:.12em;font-weight:600;color:var(--color-accent-700);cursor:pointer;display:inline-flex;align-items:center;gap:4px" style-hover="color:var(--color-accent-900)">OPEN REFERENCE {{ epRefLabel }} <svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span>
+                </div>
+                <sc-if value="{{ epNoData }}" hint-placeholder-val="{{ false }}">
+                  <div style="border:1px dashed var(--color-neutral-500);padding:24px 18px;text-align:center;font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.16em;color:var(--color-neutral-600);background:repeating-linear-gradient(45deg,transparent 0 9px,var(--color-neutral-200) 9px 10px)">THIS PDU HAS NO DATA FIELD</div>
+                </sc-if>
+                <sc-if value="{{ epHasData }}" hint-placeholder-val="{{ true }}">
+                  <sc-if value="{{ epHasIterate }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;margin-left:{{ epIterInset }}">
+                      <div style="flex:{{ epIterSpan }};min-width:0;border:1px dashed var(--color-accent-700);border-bottom:0;font-size:10px;letter-spacing:.12em;text-align:center;padding:4px 2px;color:var(--color-accent-700)">↻ ITERATE N TIMES</div>
+                      <div style="flex:{{ epIterRest }}"></div>
+                    </div>
+                  </sc-if>
+                  <div style="display:flex;align-items:stretch">
+                    <sc-for list="{{ epDataCells }}" as="c" hint-placeholder-count="3">
+                      <div role="button" tabindex="0" data-field="{{ c.id }}" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="{{ c.style }}" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
+                        <sc-if value="{{ c.opt }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(45deg,transparent 0 8px,var(--color-neutral-300) 8px 9px)"></div></sc-if>
+                        <span style="position:relative;font-family:var(--font-heading);font-weight:600;font-size:12.5px;letter-spacing:.04em;line-height:1.2">{{ c.name }}</span>
+                        <span style="position:relative;font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">{{ c.meta }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="display:flex;gap:22px;flex-wrap:wrap;margin-top:20px;font-size:12px;letter-spacing:.06em;color:var(--color-neutral-600)">
+            <span><b style="color:var(--color-text);font-weight:600">HOVER</b> — field summary</span>
+            <span><b style="color:var(--color-text);font-weight:600">CLICK ▸ / ▾</b> — expand sub-fields in place</span>
+            <span><b style="color:var(--color-text);font-weight:600">CLICK A SUB-FIELD</b> — open its reference page</span>
+          </div>
+        </div>
+      </sc-if>
