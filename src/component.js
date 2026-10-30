@@ -98,7 +98,7 @@ class Component extends DCLogic {
   DECODE_ORDER = ['spp', 'tm', 'tc', 'sdls'];
   DECODE_SPECS = {
     spp: SPP_DECODE,
-    tm: { tab: 'TM SDLP', soon: true },
+    tm: TM_DECODE,
     tc: { tab: 'TC SDLP', soon: true },
     sdls: { tab: 'SDLS', soon: true }
   };
@@ -107,7 +107,7 @@ class Component extends DCLogic {
     const spec = this.DECODE_SPECS[proto], raw = this.state.dSet[proto] || {}, out = {};
     (spec.settings || []).forEach(s => {
       const v = Number(raw[s.id] === undefined || raw[s.id] === '' ? s.def : raw[s.id]);
-      out[s.id] = isFinite(v) ? Math.min(Math.max(Math.floor(v), s.min), s.max) : s.def;
+      out[s.id] = s.opts ? v : isFinite(v) ? Math.min(Math.max(Math.floor(v), s.min), s.max) : s.def;
     });
     return out;
   }
@@ -230,11 +230,11 @@ class Component extends DCLogic {
         fid: fd.fid || '', n: fd.n, raw: fd.raw, value: fd.value,
         pos: fd.octets ? 'OCT ' + o0 + (o1 > o0 ? '–' + o1 : '') : 'BIT ' + fd.off + (fd.bits > 1 ? '–' + (fd.off + fd.bits - 1) : ''),
         meaning: fd.meaning, swatch: fd.bits ? dTint(fd, i) : 'transparent',
-        onClick: (e) => { const id = e.currentTarget.dataset.dfield; if (id && F[id]) { this.setState({ proto: st.dProto }); this.openPage(id, 'decode'); } },
+        onClick: (e) => { const id = e.currentTarget.dataset.dfield; if (id && F[id]) { this.setState({ proto: fd.proto || st.dProto }); this.openPage(id, 'decode'); } },
         rowStyle: { display: 'grid', gridTemplateColumns: '14px minmax(0,2fr) minmax(0,.9fr) minmax(0,1.5fr) minmax(0,.9fr) minmax(0,2fr)', columnGap: '10px', alignItems: 'baseline', padding: '9px 6px', borderBottom: '1px solid var(--color-divider)', cursor: fd.fid ? 'pointer' : 'default' }
       };
     });
-    const D_DUMP_MAX = 512, D_WIRE_MAX = 16;
+    const D_DUMP_MAX = 2048, D_WIRE_MAX = 16;
     const dDump = [];
     for (let r = 0; r < Math.min(dBytes.length, D_DUMP_MAX); r += 16) {
       const cells = [];
@@ -441,8 +441,9 @@ class Component extends DCLogic {
       dSpecName: dSpec.name, dSpecNote: dSpec.note, dSetNote: dSpec.setNote,
       dSettingsList: dSpec.settings.map(sd => {
         const raw = dSetRaw[sd.id], v = raw === undefined ? String(sd.def) : raw;
-        const clamped = raw !== undefined && raw !== '' && String(dSetNum[sd.id]) !== String(Number(raw));
+        const clamped = !sd.opts && raw !== undefined && raw !== '' && String(dSetNum[sd.id]) !== String(Number(raw));
         return { id: sd.id, n: sd.n, ref: sd.ref, unit: sd.unit, note: sd.note, min: String(sd.min), max: String(sd.max), value: v,
+          isEnum: !!sd.opts, isNum: !sd.opts, opts: (sd.opts || []).map(o => ({ v: String(o.v), l: o.l })),
           over: clamped, overMsg: 'Allowed range is ' + sd.min + '–' + sd.max + ' — using ' + dSetNum[sd.id] + '.',
           onInput: (e) => { const val = e.target.value, p2 = this.state.dProto; this.setState(s2 => ({ dSet: { ...s2.dSet, [p2]: { ...(s2.dSet[p2] || {}), [sd.id]: val } } })); } };
       }),

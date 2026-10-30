@@ -25,3 +25,39 @@ function hexStr(b, from, count, cap) {
   for (let i = from; i < from + n; i++) s += b[i].toString(16).toUpperCase().padStart(2, '0');
   return s + (count > n ? '…' : '');
 }
+
+function oct(n) { return n + (n === 1 ? ' octet' : ' octets'); }
+
+// CRC-16 with G(X) = X^16 + X^12 + X^5 + 1 and the register preset to all ones (FECF of TM and TC frames).
+function crc16(b, from, count) {
+  let crc = 0xFFFF;
+  for (let i = from; i < from + count; i++) {
+    crc ^= b[i] << 8;
+    for (let k = 0; k < 8; k++) crc = crc & 0x8000 ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF;
+  }
+  return crc;
+}
+
+// Collects a decoder's result. bitField/octField append to `fields` in wire order.
+function decodeHelpers(b) {
+  const fields = [], checks = [];
+  return {
+    fields, checks,
+    check: (level, msg, ref) => checks.push({ level, msg, ref }),
+    bitField: (fid, n, abbr, off, bits, meaning) => {
+      const v = readBits(b, off, bits);
+      fields.push({ fid, n, abbr, off, bits, value: String(v), raw: binStr(b, off, bits), meaning: meaning(v) });
+      return v;
+    },
+    // Octet-aligned field of `want` octets at `from`, clipped to what was received.
+    // opts: extra (received but not part of the PDU), proto (protocol whose diagram the field's page belongs to).
+    octField: (fid, n, abbr, from, want, meaning, opts) => {
+      const have = Math.max(0, Math.min(want, b.length - from));
+      fields.push({ fid, n, abbr, off: from * 8, bits: have * 8, octets: true, ...opts,
+        value: have ? oct(have) : 'MISSING',
+        raw: have ? hexStr(b, from, have, 12) : '—',
+        meaning: have < want ? 'Truncated — ' + have + ' of ' + oct(want) + ' received. ' + meaning : meaning });
+      return have;
+    }
+  };
+}

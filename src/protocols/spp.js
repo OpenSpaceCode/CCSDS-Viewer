@@ -194,23 +194,7 @@ const SPP_DECODE = { name: 'SPACE PACKET', tab: 'SpacePacket',
   decode: decodeSpp };
 
 function decodeSpp(b, set) {
-  const fields = [], checks = [];
-  const check = (level, msg, ref) => checks.push({ level, msg, ref });
-  const oct = (n) => n + (n === 1 ? ' octet' : ' octets');
-  const bitField = (fid, n, abbr, off, bits, meaning) => {
-    const v = readBits(b, off, bits);
-    fields.push({ fid, n, abbr, off, bits, value: String(v), raw: binStr(b, off, bits), meaning: meaning(v) });
-    return v;
-  };
-  // Octet-aligned field of `want` octets at `from`, clipped to what was received.
-  const octField = (fid, n, abbr, from, want, meaning, extra) => {
-    const have = Math.max(0, Math.min(want, b.length - from));
-    fields.push({ fid, n, abbr, off: from * 8, bits: have * 8, octets: true, extra: !!extra,
-      value: have ? oct(have) : 'MISSING',
-      raw: have ? hexStr(b, from, have, 12) : '—',
-      meaning: have < want ? 'Truncated — ' + have + ' of ' + oct(want) + ' received. ' + meaning : meaning });
-    return have;
-  };
+  const { fields, checks, check, bitField, octField } = decodeHelpers(b);
 
   if (b.length < 6) {
     if (b.length) check('err', 'The Packet Primary Header is 6 octets — only ' + oct(b.length) + ' received, so nothing can be decoded.', '§ 4.1.3.1');
@@ -253,7 +237,7 @@ function decodeSpp(b, set) {
   const ud = declared - (pos - 6);
   if (ud > 0) octField('spud', 'User Data Field', idle ? 'IDLE' : 'USER', pos, ud, idle ? 'Idle Data — mission-defined pattern' : 'Application data');
   else if (shf && set.tcfLen + set.adfLen <= declared) check('info', 'No User Data Field — allowed because a Packet Secondary Header is present.', '§ 4.1.4.3.2');
-  if (avail > declared) octField(null, 'Octets after the packet', 'EXTRA', total, avail - declared, 'Not part of this packet', true);
+  if (avail > declared) octField(null, 'Octets after the packet', 'EXTRA', total, avail - declared, 'Not part of this packet', { extra: true });
 
   return { fields, checks };
 }
