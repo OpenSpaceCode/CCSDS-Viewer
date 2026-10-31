@@ -68,9 +68,12 @@ function buildManifest(assets) {
 
 export function build() {
   const assets = loadAssets();
-  const template = JSON.stringify(buildTemplate()).replaceAll('</', '<\\u002F');
+  const page = buildTemplate();
+  // The shell shows its own title while it unpacks, and to anything that does not run its script.
+  const title = page.match(/<title>.*?<\/title>/)[0];
+  const template = JSON.stringify(page).replaceAll('</', '<\\u002F');
   const shell = read(join(VENDOR, 'bundler', 'shell.html'));
-  const out = shell.replace('__BUNDLE_MANIFEST__', () => JSON.stringify(buildManifest(assets)))
+  const out = shell.replace(/<title>.*?<\/title>/, () => title).replace('__BUNDLE_MANIFEST__', () => JSON.stringify(buildManifest(assets)))
     .replace('__BUNDLE_TEMPLATE__', () => template);
   if (out === shell) throw new Error('bundle shell has no placeholders');
   return out;

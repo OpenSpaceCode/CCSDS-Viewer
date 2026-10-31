@@ -107,6 +107,13 @@ test('BACK from a field page opened in the decoder returns to the decoder', () =
   assert.equal(c.state.view, 'decode');
 });
 
+test('the page is titled, both while it unpacks and once it has', () => {
+  const html = readFileSync(OUTPUT, 'utf8');
+  assert.match(html, /<title>CCSDS Protocol Viewer<\/title>/, 'the shell');
+  assert.match(html, /<title>CCSDS Protocol Viewer<\\u002Ftitle>/, 'the template inside it');
+  assert.ok(!html.includes('Bundled Page'));
+});
+
 test('CCSDS-protocol-viewer.html is up to date with src/ (run: node build.mjs)', () => {
   assert.equal(readFileSync(OUTPUT, 'utf8') === build(), true);
 });
