@@ -156,6 +156,9 @@ const SPP_CRUMBS = {
   spsh: 'SECONDARY HEADER'
 };
 
+// Field search: abbreviations in common use, by field. Initials of the name are matched without being listed.
+const SPP_ABBR = { spph: ['PH'], sppvn: ['PVN'], spptype: ['TYPE'], spshf: ['SHF'], spapid: ['APID'], spsqf: ['SEQF'], spcnt: ['PSC'], spdlen: ['PDL'], spdf: ['PDF'], spsh: ['PSH'], sptc: ['TCF', 'CUC', 'CDS'], spad: ['ADF'], spud: ['UDF'] };
+
 const SPP_BUILD = { name: 'SPACE PACKET PRIMARY HEADER', tab: 'SpacePacket',
   note: 'CCSDS 133.0-B-2 § 4.1.2 — the Space Packet Primary Header is 6 octets, mandatory and fixed in length. Packet Data Length is expressed as the number of octets in the Packet Data Field minus one.',
   fields: [

@@ -167,6 +167,10 @@ const TC_CRUMBS = {
   tcseg: 'SEGMENT HEADER'
 };
 
+// Field search: abbreviations in common use, by field. Initials of the name are matched without being listed.
+const TC_ABBR = { tcph: ['PH'], tcvn: ['TFVN', 'VN'], tcbf: ['BF', 'BYP'], tcccf: ['CCF'], tcrsvd: ['RSVD'], tcscid: ['SCID'], tcvcid: ['VCID'], tcflen: ['FL', 'LEN'], tcfsn: ['FSN', 'N(S)', 'NS'],
+  tcdf: ['DF'], tcseg: ['SEG'], tcsqf: ['SEQF'], tcmap: ['MAP', 'MAPID'], tcud: ['FDU'], tccc: ['CC', 'V(R)'], tcfecf: ['FECF', 'ECF', 'CRC'] };
+
 const TC_BUILD = { name: 'TC TRANSFER FRAME PRIMARY HEADER', tab: 'TC SDLP',
   note: 'CCSDS 232.0-B-4 § 4.1.2 — the TC Transfer Frame Primary Header is 5 octets, mandatory and fixed in length. Frame Length is expressed as total octets minus one.',
   fields: [

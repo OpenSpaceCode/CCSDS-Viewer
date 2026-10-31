@@ -20,6 +20,7 @@ src/
   styles/             design-system CSS
   protocols/          per protocol: field reference pages, maps, builder + decoder specs
   lib/bits.js         octet/bit helpers for the decoder
+  lib/search.js       field search (Ctrl+K): indexing, value matching, ranking
   component.js        state, navigation and renderVals() — the glue
 vendor/               React, dc-runtime, fonts and the self-unpacking bundle shell (not edited)
 tests/                node:test suites

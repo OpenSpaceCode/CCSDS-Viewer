@@ -219,6 +219,10 @@ const TM_CRUMBS = {
   shid: 'SH IDENTIFICATION FIELD'
 };
 
+// Field search: abbreviations in common use, by field. Initials of the name (FHP, MCFC) are matched without being listed.
+const TM_ABBR = { ph: ['PH'], mcid: ['MCID'], vn: ['TFVN', 'VN'], scid: ['SCID'], vcid: ['VCID'], ocff: ['OCFF'], mcfc: ['MCFC'], vcfc: ['VCFC'], dfs: ['DFS'],
+  shf: ['SHF'], sync: ['SYNC'], pof: ['POF'], slid: ['SLID'], fhp: ['FHP'], sh: ['TFSH', 'FSH', 'SH'], shvn: ['SHVN'], shlen: ['SHLEN'], shdf: ['SHDF'], df: ['DF'], ocf: ['OCF', 'CLCW', 'FSR'], fecf: ['FECF', 'ECF', 'CRC'] };
+
 const TM_BUILD = { name: 'TM TRANSFER FRAME PRIMARY HEADER', tab: 'TM SDLP',
   note: 'CCSDS 132.0-B-3 § 4.1.2 — the TM Transfer Frame Primary Header is 6 octets, mandatory and fixed in length. The Transfer Frame Data Field Status occupies the last 2 octets and is itself made of six sub-fields.',
   fields: [

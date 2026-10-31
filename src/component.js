@@ -1,5 +1,5 @@
 class Component extends DCLogic {
-  state = { proto: 'spp', view: 'diagram', fid: null, phOpen: null, shOpen: null, dfsOpen: null, tcPhOpen: null, tcDfOpen: null, spPhOpen: null, spShOpen: null, sdShOpen: null, sdTrOpen: null, dfsModal: false, epOpen: false, epId: null, epHdrOpen: null, epDataOpen: null, tip: null, bProto: 'spp', bVals: {}, sdCov: 'tm', dProto: 'spp', dHex: {}, dSet: {}, retView: null };
+  state = { proto: 'spp', view: 'diagram', fid: null, phOpen: null, shOpen: null, dfsOpen: null, tcPhOpen: null, tcDfOpen: null, spPhOpen: null, spShOpen: null, sdShOpen: null, sdTrOpen: null, dfsModal: false, epOpen: false, epId: null, epHdrOpen: null, epDataOpen: null, tip: null, bProto: 'spp', bVals: {}, sdCov: 'tm', dProto: 'spp', dHex: {}, dSet: {}, retView: null, qOpen: false, qText: '', qIdx: 0 };
 
   // Which part of each base frame SDLS authenticates and encrypts — see protocols/sdls.js.
   SDLS_COV_ORDER = SDLS_COVERAGE_ORDER;
@@ -132,6 +132,71 @@ class Component extends DCLogic {
   MAPS = { ...TM_MAPS, ...TC_MAPS, ...SPP_MAPS, ...SDLS_MAPS, ...SDLS_EP_MAPS };
   F = { ...TM_FIELDS, ...TC_FIELDS, ...SPP_FIELDS, ...SDLS_FIELDS, ...SDLS_EP_FIELDS };
   CRUMB_NAMES = { ...TM_CRUMBS, ...TC_CRUMBS, ...SPP_CRUMBS, ...SDLS_CRUMBS, ...SDLS_EP_CRUMBS };
+
+  // ---- field search (Ctrl+K) ----
+  Q_LIMIT = 40;
+  Q_SOURCES = [
+    { proto: 'tm', label: 'TM SDLP', fields: TM_FIELDS, abbr: TM_ABBR },
+    { proto: 'tc', label: 'TC SDLP', fields: TC_FIELDS, abbr: TC_ABBR },
+    { proto: 'spp', label: 'SpacePacket', fields: SPP_FIELDS, abbr: SPP_ABBR },
+    { proto: 'sdls', label: 'SDLS', fields: SDLS_FIELDS, abbr: SDLS_ABBR },
+    { proto: 'sdls', label: 'SDLS EP', fields: SDLS_EP_FIELDS, abbr: {} } ];
+
+  qIndex() {
+    if (!this.qIndexCache) this.qIndexCache = searchBuildIndex(this.Q_SOURCES, Object.entries(this.EP_DEF).map(([id, p]) => (
+      { id, label: 'SDLS EP', name: p.name, ref: p.ref, meta: [p.fig, p.ref, p.service].filter(Boolean).join(' · '), desc: p.intro, code: p.proc || '' })));
+    return this.qIndexCache;
+  }
+
+  qShow() {
+    this.qFocusBefore = typeof document !== 'undefined' ? document.activeElement : null;
+    this.setState({ qOpen: true, qText: '', qIdx: 0, tip: null });
+  }
+
+  qHide() {
+    this.setState({ qOpen: false });
+    const el = this.qFocusBefore;
+    this.qFocusBefore = null;
+    if (el && el.focus) el.focus();
+  }
+
+  // Stable across renders, so the input is focused once, when it appears.
+  qInputRef = (el) => { if (el) el.focus(); };
+
+  // Global: Ctrl+K or Cmd+K toggles the search from anywhere; Escape closes it.
+  qOnWindowKey = (e) => {
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      if (this.state.qOpen) this.qHide(); else this.qShow();
+    } else if (e.key === 'Escape' && this.state.qOpen) {
+      e.preventDefault();
+      this.qHide();
+    }
+  };
+
+  componentDidMount() { window.addEventListener('keydown', this.qOnWindowKey); }
+  componentWillUnmount() { window.removeEventListener('keydown', this.qOnWindowKey); }
+
+  // The procedure page BACK returns to: the one owning this field, else the one last open.
+  qEpOf(id) {
+    for (let cur = id; cur; cur = this.F[cur] ? this.F[cur].parent : null) {
+      if (cur.startsWith('epdata_')) return cur.slice('epdata_'.length);
+    }
+    return this.state.epId || Object.keys(this.EP_DEF)[0];
+  }
+
+  qGo(entry) {
+    const from = this.state.view;
+    this.qHide();
+    if (entry.kind === 'procedure') {
+      this.setState({ proto: 'sdls', epOpen: true });
+      this.openEp(entry.id);
+    } else {
+      const isEp = this.EP_FIELD_IDS.includes(entry.id);
+      this.setState({ proto: entry.proto, ...(isEp ? { epId: this.qEpOf(entry.id), epOpen: true } : {}) });
+      this.openPage(entry.id, from === 'decode' || from === 'build' ? from : undefined);
+    }
+  }
 
   // retView: where BACK leads from a field page. Kept while browsing between field pages, reset when entered from elsewhere.
   openPage(id, retView) {
@@ -290,6 +355,20 @@ class Component extends DCLogic {
       : 'VALID ' + dSpec.name;
     const dSetRaw = st.dSet[st.dProto] || {}, dSetNum = this.dSettings(st.dProto);
 
+    // ---- field search ----
+    const qHits = st.qOpen ? searchRun(this.qIndex(), st.qText, this.Q_LIMIT) : [];
+    const qActive = Math.min(st.qIdx, Math.max(qHits.length - 1, 0));
+    const qRows = qHits.map(({ entry: e, hit }, i) => ({
+      name: e.name, abbr: e.shownAbbr, hasAbbr: !!e.shownAbbr, label: e.label, meta: e.meta, desc: e.desc,
+      hasHit: !!hit, noHit: !hit, hitCode: hit ? hit.code : '', hitDesc: hit ? hit.desc : '',
+      active: String(i === qActive),
+      onClick: () => this.qGo(e),
+      style: { padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)',
+        borderLeft: '2px solid ' + (i === qActive ? 'var(--color-accent)' : 'transparent'),
+        background: i === qActive ? 'color-mix(in srgb, var(--color-accent) 10%, transparent)' : 'transparent' }
+    }));
+    const qTyped = st.qText.trim() !== '';
+
     const fromEp = !!(st.fid && this.EP_FIELD_IDS.includes(st.fid));
     const fromTc = !!(st.fid && st.fid.slice(0, 2) === 'tc');
     const fromSd = !fromEp && !!(st.fid && (st.fid.slice(0, 2) === 'sd' || ['spi', 'iv', 'sqn', 'pl', 'mac'].includes(st.fid)));
@@ -434,6 +513,30 @@ class Component extends DCLogic {
       // views
       showDiagram, showTcDiagram, showSpDiagram, showSdlsDiagram, showField, showPlaceholder,
       showBuilder,
+      qOpen: st.qOpen, qText: st.qText, qResults: qRows, qHasResults: qRows.length > 0,
+      qShowMessage: qRows.length === 0,
+      qMessage: qTyped ? 'Nothing matches ‘' + st.qText.trim() + '’.' : 'Search every field of every protocol by name, abbreviation, value or section. Values work in hex, decimal or binary: 0x7FE, 2046 and 11111111110 find the same thing. Add a protocol to narrow it down: tc scid.',
+      qCount: qRows.length === this.Q_LIMIT ? 'First ' + qRows.length + ' results' : qRows.length ? qRows.length + (qRows.length === 1 ? ' result' : ' results') : '',
+      qInputRef: this.qInputRef,
+      qOpenClick: () => this.qShow(),
+      qOnInput: (e) => this.setState({ qText: e.target.value, qIdx: 0 }),
+      qBackdrop: (e) => { if (e.target === e.currentTarget) this.qHide(); },
+      qOnKey: (e) => {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (!qHits.length) return;
+          const next = (qActive + (e.key === 'ArrowDown' ? 1 : qHits.length - 1)) % qHits.length;
+          this.setState({ qIdx: next }, () => {
+            const row = typeof document !== 'undefined' && document.querySelector('[data-qactive="true"]');
+            if (row && row.scrollIntoView) row.scrollIntoView({ block: 'nearest' });
+          });
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          if (qHits[qActive]) this.qGo(qHits[qActive].entry);
+        } else if (e.key === 'Tab') {
+          e.preventDefault();
+        }
+      },
       bProtoTabs: this.BUILD_ORDER.map(id => ({
         id, name: this.BUILD_SPECS[id].tab,
         onClick: (e) => this.setState({ bProto: e.currentTarget.dataset.bproto, tip: null }),
@@ -549,7 +652,7 @@ class Component extends DCLogic {
         this.openPage(id);
       },
       back: () => {
-        if (this.state.retView === 'decode') this.setState({ view: 'decode', fid: null, tip: null, retView: null });
+        if (this.state.retView) this.setState({ view: this.state.retView, fid: null, tip: null, retView: null });
         else if (this.state.fid && this.EP_FIELD_IDS.includes(this.state.fid) && this.state.epId) this.setState({ view: 'ep', fid: null, tip: null });
         else this.setState({ view: 'diagram', fid: null, tip: null });
       },
@@ -572,7 +675,7 @@ class Component extends DCLogic {
 
       // field page
       fieldName: f ? f.n : '', fieldDesc: f ? f.desc : '', fieldRef: f ? f.ref : '', srcDoc, srcLine,
-      backLabel: st.retView === 'decode' ? 'FRAME DECODER' : fromEp ? 'PDU DIAGRAM' : 'FRAME DIAGRAM',
+      backLabel: st.retView === 'decode' ? 'FRAME DECODER' : st.retView === 'build' ? 'FRAME BUILDER' : fromEp ? 'PDU DIAGRAM' : 'FRAME DIAGRAM',
       crumbs, fieldChips: chips, fieldQuotes: quotes,
       hasSpecial: special.length > 0, fieldSpecial: special,
       hasNotes: notes.length > 0, fieldNotes: notes,

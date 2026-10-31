@@ -102,6 +102,9 @@ const SDLS_CRUMBS = {
   sdtr: 'SECURITY TRAILER'
 };
 
+// Field search: abbreviations in common use, by field. Initials of the name are matched without being listed.
+const SDLS_ABBR = { sdsh: ['SH'], spi: ['SPI'], iv: ['IV'], sqn: ['SN', 'ARSN'], pl: ['PL'], sdtr: ['ST'], mac: ['MAC'] };
+
 // Which part of each base frame SDLS authenticates and which part it encrypts (CCSDS 355.0-B-2, figures 5-1..5-4).
 // mac: 'in' = inside the Authentication Payload · 'mask' = inside it but zeroed by the SA authentication bit mask · 'out' = outside.
 const SDLS_COVERAGE_ORDER = ['tm', 'tc', 'aos', 'uslp'];
