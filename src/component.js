@@ -41,7 +41,9 @@ class Component extends DCLogic {
     const nb = this.bFieldBits(fd, vals);
     const tint = this.bTint(fi);
     const isHex = fd.kind === 'hex';
-    const derived = !!fd.derive;
+    // An overridable field follows fd.derive until the user takes over.
+    const overridden = !!fd.overridable && vals[fd.id + '__manual'] === '1';
+    const derived = !!fd.derive && !overridden;
     const nOct = Math.floor(nb / 8);
     const max = nb > 0 ? Math.pow(2, nb) - 1 : 0;
     let bin = '', over = false, vc = 0, hexVal = '', note = '';
@@ -63,6 +65,7 @@ class Component extends DCLogic {
       bin = nb > 0 ? vc.toString(2).padStart(nb, '0') : '';
       if (over && nb > 0) note = 'Maximum for ' + nb + ' bits is ' + max + ' — clamped.';
       else if (fd.warn) note = fd.warn(vc);
+      else if (overridden && vc !== fd.derive(vals)) note = fd.overrideNote(fd.derive(vals));
     }
     for (let i = 0; i < nb; i++) allBits.push({ b: bin[i], fi, tint, fname: fd.n });
     const octRaw = vals[fd.id + '__oct'];
@@ -83,6 +86,9 @@ class Component extends DCLogic {
       opts: (fd.opts || []).map(o => ({ v: String(o.v), l: o.l })),
       value: isHex ? hexVal : String(derived ? vc : (vals[fd.id] === undefined || vals[fd.id] === '' ? fd.def : vals[fd.id])),
       derivedLabel: derived ? String(vc) : '', derivedNote: fd.deriveNote || '',
+      canOverride: !!fd.overridable && derived, isOverridden: overridden,
+      onOverride: () => { this.bSetVal(fd.id, String(vc)); this.bSetVal(fd.id + '__manual', '1'); },
+      onDerive: () => this.bSetVal(fd.id + '__manual', ''),
       hexPlaceholder: nOct > 0 ? '00'.repeat(Math.min(nOct, 12)) : 'field absent',
       max: String(max), binLabel: nb > 0 && !isHex ? bin : '',
       hasOct: !!fd.varOct && !fd.octNum, hasOctNum: !!fd.octNum, oct: octVal, octOpts, maxOct: String(fd.maxOct || 0),
@@ -90,6 +96,44 @@ class Component extends DCLogic {
       onChange: (e) => this.bSetVal(fd.id, isHex ? this.bHexClean(e.target.value) : e.target.value),
       onOct: (e) => this.bSetVal(fd.id + '__oct', e.target.value)
     };
+  }
+
+  // Builds one protocol's frame from the entered values: the field rows, field map and bits in wire order.
+  bAssemble(bSpec, bVals) {
+    const bFieldList = [], bRibbon = [], allBits = [];
+    let bIdx = 0;
+    // A managed setting puts no bits on the wire, so it takes no place in the field colour order.
+    const bAdd = (fd) => this.bMakeField(fd, fd.setting ? bIdx : bIdx++, bVals, allBits, bRibbon);
+    bSpec.fields.forEach(fd => bFieldList.push(bAdd(fd)));
+    const bSec = bSpec.sec || null, bSdls = bSpec.sdls || null;
+    // Current value of a header field or managed setting, for the rules that decide which sections exist.
+    const bDefs = Object.fromEntries([...bSpec.fields, ...(bSec && bSec.setting ? [bSec.setting] : []), SDLS_BUILD_SERVICE].map(fd => [fd.id, fd.def]));
+    const bGet = (id) => Number(bVals[id] === undefined || bVals[id] === '' ? bDefs[id] : bVals[id]);
+    // Sections are added in wire order, so their bits land in the frame in that order. head is always shown; fields only when on.
+    const bSection = (name, form, on, note, head, fields) => {
+      const list = [...head, ...(on ? fields : [])].map(bAdd);
+      const bits = list.reduce((n, f) => n + f.nb, 0);
+      return { name, form, on, off: !on, note, list, len: on ? bits + ' BITS · ' + (bits / 8) + ' OCTETS' : '' };
+    };
+    const bSections = [], bAfter = [];
+    if (bSec) {
+      const allowed = !bSec.applies || bSec.applies(bGet), on = allowed && bGet(bSec.flag) === 1;
+      bSections.push(bSection(bSec.name, bSec.form, on, on ? bSec.note : allowed ? bSec.off : bSec.blocked, bSec.setting ? [bSec.setting] : [], bSec.fields));
+    }
+    const bSvc = bSdls ? bGet('secSvc') : SDLS_NONE;
+    const bSdlsOn = !!bSdls && bSvc !== SDLS_NONE && bSdls.applies(bGet);
+    const bSdlsFields = bSdlsOn ? sdlsBuildFields(bSvc, bSdls.baseline, (fd) => this.bFieldOct(fd, bVals)) : { hdr: [], trl: [] };
+    if (bSdls) bSections.push(bSection('SECURITY HEADER', 'SPACE DATA LINK SECURITY · CCSDS 355.0-B-2 § 4.1.1', bSdlsOn,
+      bSvc !== SDLS_NONE && !bSdlsOn ? bSdls.blocked : sdlsBuildNote(bSvc), [SDLS_BUILD_SERVICE], bSdlsFields.hdr));
+    const bPayList = [];
+    if (bSpec.pay) bPayList.push(bAdd({ id: 'payload', n: bSpec.pay.field, bits: 0, def: 0, abbr: bSpec.pay.abbr, kind: 'hex', varOct: true, octNum: true, defOct: 0, minOct: 0, maxOct: 128, defHex: '' }));
+    const bPayBits = bPayList.length ? bPayList[0].nb : 0;
+    if (bSdlsFields.trl.length) bAfter.push(bSection('SECURITY TRAILER', 'SPACE DATA LINK SECURITY · CCSDS 355.0-B-2 § 4.1.2', true, SDLS_BUILD_TRAILER_NOTE, [], bSdlsFields.trl));
+    if (bSpec.trail) {
+      const on = bGet(bSpec.trail.flag) === 1;
+      bAfter.push(bSection(bSpec.trail.name, bSpec.trail.form, on, on ? bSpec.trail.note(bVals) : bSpec.trail.off, [], bSpec.trail.fields));
+    }
+    return { bFieldList, bRibbon, allBits, bSections, bAfter, bPayList, bPayBits, bSvc, bSdlsOn };
   }
 
   bSetVal(id, raw) {
@@ -288,39 +332,10 @@ class Component extends DCLogic {
     // ---- frame builder ----
     const bSpec = this.BUILD_SPECS[st.bProto] || this.BUILD_SPECS.tm;
     const bVals = st.bVals[st.bProto] || {};
-    const bFieldList = [], bRibbon = [], allBits = [];
-    let bIdx = 0;
-    // A managed setting puts no bits on the wire, so it takes no place in the field colour order.
-    const bAdd = (fd) => this.bMakeField(fd, fd.setting ? bIdx : bIdx++, bVals, allBits, bRibbon);
-    bSpec.fields.forEach(fd => bFieldList.push(bAdd(fd)));
-    const bSec = bSpec.sec || null, bSdls = bSpec.sdls || null;
-    // Current value of a header field or managed setting, for the rules that decide which sections exist.
-    const bDefs = Object.fromEntries([...bSpec.fields, ...(bSec && bSec.setting ? [bSec.setting] : []), SDLS_BUILD_SERVICE].map(fd => [fd.id, fd.def]));
-    const bGet = (id) => Number(bVals[id] === undefined || bVals[id] === '' ? bDefs[id] : bVals[id]);
-    // Sections are added in wire order, so their bits land in the frame in that order. head is always shown; fields only when on.
-    const bSection = (name, form, on, note, head, fields) => {
-      const list = [...head, ...(on ? fields : [])].map(bAdd);
-      const bits = list.reduce((n, f) => n + f.nb, 0);
-      return { name, form, on, off: !on, note, list, len: on ? bits + ' BITS · ' + (bits / 8) + ' OCTETS' : '' };
-    };
-    const bSections = [], bAfter = [];
-    if (bSec) {
-      const allowed = !bSec.applies || bSec.applies(bGet), on = allowed && bGet(bSec.flag) === 1;
-      bSections.push(bSection(bSec.name, bSec.form, on, on ? bSec.note : allowed ? bSec.off : bSec.blocked, bSec.setting ? [bSec.setting] : [], bSec.fields));
-    }
-    const bSvc = bSdls ? bGet('secSvc') : SDLS_NONE;
-    const bSdlsOn = !!bSdls && bSvc !== SDLS_NONE && bSdls.applies(bGet);
-    const bSdlsFields = bSdlsOn ? sdlsBuildFields(bSvc, bSdls.baseline, (fd) => this.bFieldOct(fd, bVals)) : { hdr: [], trl: [] };
-    if (bSdls) bSections.push(bSection('SECURITY HEADER', 'SPACE DATA LINK SECURITY · CCSDS 355.0-B-2 § 4.1.1', bSdlsOn,
-      bSvc !== SDLS_NONE && !bSdlsOn ? bSdls.blocked : sdlsBuildNote(bSvc), [SDLS_BUILD_SERVICE], bSdlsFields.hdr));
-    const bPayList = [];
-    if (bSpec.pay) bPayList.push(bAdd({ id: 'payload', n: bSpec.pay.field, bits: 0, def: 0, abbr: bSpec.pay.abbr, kind: 'hex', varOct: true, octNum: true, defOct: 0, minOct: 0, maxOct: 128, defHex: '' }));
-    const bPayBits = bPayList.length ? bPayList[0].nb : 0;
-    if (bSdlsFields.trl.length) bAfter.push(bSection('SECURITY TRAILER', 'SPACE DATA LINK SECURITY · CCSDS 355.0-B-2 § 4.1.2', true, SDLS_BUILD_TRAILER_NOTE, [], bSdlsFields.trl));
-    if (bSpec.trail) {
-      const on = bGet(bSpec.trail.flag) === 1;
-      bAfter.push(bSection(bSpec.trail.name, bSpec.trail.form, on, on ? bSpec.trail.note(bVals) : bSpec.trail.off, [], bSpec.trail.fields));
-    }
+    // A field sized by the frame sits ahead of what it measures, but its width is fixed: assemble once to measure, once with the value.
+    const bFirst = this.bAssemble(bSpec, bVals);
+    const bBuilt = bSpec.fields.some(fd => fd.overridable) ? this.bAssemble(bSpec, { ...bVals, __frameOct: bFirst.allBits.length / 8 }) : bFirst;
+    const { bFieldList, bRibbon, allBits, bSections, bAfter, bPayList, bPayBits, bSvc, bSdlsOn } = bBuilt;
     const bOctets = [];
     for (let i = 0; i < allBits.length; i += 8) {
       const chunk = allBits.slice(i, i + 8);

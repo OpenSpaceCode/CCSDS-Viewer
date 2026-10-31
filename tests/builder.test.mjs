@@ -151,7 +151,7 @@ test('round trip TM, authenticated encryption, with a Secondary Header', () => {
 
 test('round trip TC, authentication, with a Segment Header', () => {
   const total = 5 + 1 + 6 + 4 + 16;
-  const v = build('tc', { secSvc: AUTH, tcflen: String(total - 1), segf: '1', segmap: '9', spi: '2', secSn: '0000012C', payload__oct: '4', payload: 'CAFEF00D' });
+  const v = build('tc', { secSvc: AUTH, segf: '1', segmap: '9', spi: '2', secSn: '0000012C', payload__oct: '4', payload: 'CAFEF00D' });
   assert.equal(v.bTotalLabel, total * 8 + ' BITS · ' + total + ' OCTETS');
   const d = decode('tc', v.bHex, { fecf: '0', secSvc: AUTH });
   assert.deepEqual(errors(d), []);
@@ -171,7 +171,7 @@ test('round trip for every service and length combination the builder offers', (
       if (svc === AE && iv === 0 && sn === 0) continue;   // not offered: see the test on allowed lengths
       const lens = { secIv__oct: String(iv), secSn__oct: String(sn), secPl__oct: String(pl), secMac__oct: String(mac) };
       const total = (proto === 'tm' ? 6 : 5) + 2 + iv + sn + pl + 3 + mac;
-      const vals = { ...base, secSvc: svc, ...lens, payload__oct: '3', payload: '112233', secPl: pl ? '00'.repeat(pl) : '', ...(proto === 'tc' ? { tcflen: String(total - 1) } : {}) };
+      const vals = { ...base, secSvc: svc, ...lens, payload__oct: '3', payload: '112233', secPl: pl ? '00'.repeat(pl) : '' };
       const v = build(proto, vals);
       assert.equal(v.bTotalLabel, total * 8 + ' BITS · ' + total + ' OCTETS');
       const set = { fecf: '0', secSvc: svc, secIv: String(iv), secSn: String(sn), secPl: String(pl), secMac: String(mac), ...base };
@@ -253,6 +253,87 @@ test('an Only Idle Data frame can still carry an OCF (132.0 § 4.1.4.6.3, note 1
 
 test('only TM has an OCF section', () => {
   for (const p of ['tc', 'spp']) assert.equal(section(build(p), 'OPERATIONAL CONTROL FIELD'), undefined, p);
+});
+
+test('TC Frame Length follows the frame: C = total octets − 1 (232.0 § 4.1.2.7)', () => {
+  const len = (vals) => { const v = build('tc', vals); return [Number(v.bFieldList.find(f => f.id === 'tcflen').derivedLabel), Number(v.bTotalLabel.match(/(\d+) OCTETS/)[1])]; };
+  const check = (vals, octets) => assert.deepEqual(len(vals), [octets - 1, octets], JSON.stringify(vals));
+  check({}, 6);                                               // header + Segment Header
+  check({ seg: '0' }, 5);                                     // header alone
+  check({ ccf: '1' }, 5);                                     // Type-C has no Segment Header
+  check({ payload__oct: '10' }, 16);
+  check({ ccf: '1', payload__oct: '3', payload: '82002A' }, 8);
+  check({ secSvc: AUTH, payload__oct: '4' }, 5 + 1 + 6 + 4 + 16);
+  check({ secSvc: AE, secIv__oct: '12', secSn__oct: '0', payload__oct: '4' }, 5 + 1 + 14 + 4 + 16);
+  check({ secSvc: ENC, secIv__oct: '12', payload__oct: '4' }, 5 + 1 + 14 + 4);
+});
+
+test('the derived value reaches the wire, in the right bits', () => {
+  assert.equal(build('tc').bHex, '20 2A 04 05 00 C0');
+  assert.equal(build('tc', { payload__oct: '128' }).bHex.split(' ').slice(2, 4).join(' '), '04 85', '134 octets → C = 133, in the low 10 bits, VCID untouched');
+  assert.equal(build('tc', { tcvcid: '63', payload__oct: '128' }).bHex.split(' ').slice(2, 4).join(' '), 'FC 85');
+  const v = build('tc', { payload__oct: '10' });
+  const field = v.bRibbon.find(r => r.abbr === 'LEN');
+  assert.equal(field.value, '15');
+});
+
+test('a derived Frame Length shows as derived, with no input', () => {
+  const f = build('tc').bFieldList.find(x => x.id === 'tcflen');
+  assert.equal(f.isDerived, true);
+  assert.equal(f.isNum, false);
+  assert.equal(f.canOverride, true);
+  assert.equal(f.isOverridden, false);
+  assert.equal(f.derivedNote, 'total octets − 1');
+});
+
+test('override: starts from the derived value, then holds whatever is entered', () => {
+  const c = new Component({});
+  c.state = { ...c.state, view: 'build', bProto: 'tc', bVals: { tc: { payload__oct: '10' } } };
+  const row = () => c.renderVals().bFieldList.find(f => f.id === 'tcflen');
+  row().onOverride();
+  assert.equal(row().isOverridden, true);
+  assert.equal(row().isNum, true);
+  assert.equal(row().isDerived, false);
+  assert.equal(row().value, '15', 'nothing jumps when taking over');
+  assert.equal(row().over, false);
+  row().onChange({ target: { value: '63' } });
+  assert.equal(row().value, '63');
+  assert.equal(c.renderVals().bHex.split(' ')[3], '3F');
+  assert.match(row().overMsg, /Differs from the frame as built: 16 octets, so the derived value is 15/);
+  c.bSetVal('payload__oct', '20');
+  assert.equal(row().value, '63', 'an override is not moved by later changes');
+  assert.match(row().overMsg, /26 octets, so the derived value is 25/);
+  row().onDerive();
+  assert.equal(row().isDerived, true);
+  assert.equal(row().derivedLabel, '25', 'back to following the frame');
+  assert.equal(c.renderVals().bHex.split(' ')[3], '19');
+});
+
+test('an override that matches the frame raises no note', () => {
+  const f = build('tc', { tcflen__manual: '1', tcflen: '5' }).bFieldList.find(x => x.id === 'tcflen');
+  assert.equal(f.over, false);
+});
+
+test('an out-of-range override is clamped, and says so', () => {
+  const v = build('tc', { tcflen__manual: '1', tcflen: '5000' });
+  assert.match(v.bFieldList.find(x => x.id === 'tcflen').overMsg, /Maximum for 10 bits is 1023/);
+});
+
+test('a wrong Frame Length can still be built on purpose, and the decoder catches it', () => {
+  const v = build('tc', { tcflen__manual: '1', tcflen: '40', payload__oct: '2' });
+  const d = decode('tc', v.bHex, { fecf: '0' });
+  assert.ok(d.dChecks.some(c => /Frame is truncated/.test(c.msg)));
+});
+
+test('RESET returns Frame Length to derived', () => {
+  const c = new Component({});
+  c.state = { ...c.state, view: 'build', bProto: 'tc', bVals: { tc: { tcflen__manual: '1', tcflen: '40' } } };
+  c.renderVals().bReset();
+  assert.equal(c.renderVals().bFieldList.find(f => f.id === 'tcflen').isDerived, true);
+});
+
+test('only TC derives a frame length', () => {
+  for (const p of ['tm', 'spp']) assert.ok(!build(p).bFieldList.some(f => f.canOverride), p);
 });
 
 test('RESET clears the SDLS settings too', () => {
