@@ -1,8 +1,10 @@
 # CCSDS Protocol Viewer
 
+**Live version: <https://openspacecode.github.io/CCSDS-Viewer/>**
+
 Quick-reference viewer for a layered space link stack — Space Packet, TM / TC SDLP, SDLS and SDLS Extended Procedures — built from the CCSDS Blue Books. Frame diagrams, field reference pages, a Frame Builder, a Frame Decoder and printable one-page cheat sheets.
 
-**To use it**, open `CCSDS-protocol-viewer.html` in a browser. It is a single self-contained file: no server and no network needed.
+**To use it offline**, open `CCSDS-protocol-viewer.html` in a browser. It is a single self-contained file: no server and no network needed.
 
 ## Development
 
