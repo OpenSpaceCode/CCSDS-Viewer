@@ -3,9 +3,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadSrc } from './load.mjs';
 
-const { decodeTc, parseHex, crc16, TC_DECODE } = loadSrc(['lib/bits.js', 'protocols/tc.js'], ['decodeTc', 'parseHex', 'crc16', 'TC_DECODE']);
+const { decodeTc, parseHex, crc16, TC_DECODE } = loadSrc(['lib/bits.js', 'protocols/sdls.js', 'protocols/tc.js'], ['decodeTc', 'parseHex', 'crc16', 'TC_DECODE']);
 
-const DEFAULTS = { fecf: 1, seg: 1, maxLen: 1024, secHdr: 0, secTrl: 0 };
+const DEFAULTS = { fecf: 1, seg: 1, maxLen: 1024, secSvc: 0, secIv: 0, secSn: 4, secPl: 0, secMac: 16 };
 const bytes = (hex) => { const { bytes: b, err } = parseHex(hex); assert.equal(err, ''); return b; };
 const decode = (hex, set = {}) => decodeTc(bytes(hex), { ...DEFAULTS, ...set });
 const toHex = (b) => b.map(x => x.toString(16).padStart(2, '0')).join(' ');
@@ -80,13 +80,10 @@ test('other Control Command bit combinations are reserved (§ 4.1.3.3.4)', () =>
     assert.deepEqual(refs(decode(frame({ ccf: 1 }, data)), 'err'), ['§ 4.1.3.3.4'], data);
 });
 
-test('Type-C frames have no Segment Header or SDLS fields (§ 4.1.3.2.2.1.3, § 6.3.4.1)', () => {
-  const r = decode(frame({ ccf: 1 }, '82 00 2A'), { seg: 1, secHdr: 4, secTrl: 8 });
+test('Type-C frames have no Segment Header (§ 4.1.3.2.2.1.3)', () => {
+  const r = decode(frame({ ccf: 1 }, '82 00 2A'), { seg: 1 });
   assert.equal(field(r, 'tcsqf'), undefined);
-  assert.equal(field(r, 'sdsh'), undefined);
-  assert.equal(field(r, 'sdtr'), undefined);
   assert.equal(field(r, 'tccc').raw, '82002A');
-  assert.ok(refs(r, 'info').includes('§ 6.3.4.1'));
   assert.deepEqual(refs(r, 'err'), []);
 });
 
@@ -170,20 +167,6 @@ test('the longest frame the Frame Length can express is 1024 octets (§ 4.1.2.7)
   assert.equal(field(r, 'tcflen').value, '1023');
   assert.equal(field(r, 'tcud').bits / 8, 1016);
   assert.deepEqual(refs(r, 'err'), []);
-});
-
-test('SDLS: fields follow Segment Header → Security Header → User Data → Security Trailer → FECF (§ 6.3)', () => {
-  const r = decode(frame({}, 'C5 00 01 11 22 33 44 77 88'), { secHdr: 2, secTrl: 2 });
-  assert.deepEqual(r.fields.slice(10).map(f => [f.fid, f.off / 8, f.raw]), [
-    ['sdsh', 6, '0001'], ['tcud', 8, '11223344'], ['sdtr', 12, '7788'], ['tcfecf', 14, field(r, 'tcfecf').raw]]);
-  assert.equal(field(r, 'sdsh').proto, 'sdls');
-  assert.equal(field(r, 'sdtr').proto, 'sdls');
-  assert.deepEqual(refs(r, 'err'), []);
-  assert.ok(refs(r, 'info').includes('§ 6.3'));
-});
-
-test('SDLS: Security Trailer without a Security Header is flagged (§ 6.3.4.2)', () => {
-  assert.deepEqual(refs(decode(frame({}, 'C5 11 22 33'), { secTrl: 2 }), 'warn'), ['§ 6.3.4.2']);
 });
 
 test('built-in examples decode as labelled', () => {

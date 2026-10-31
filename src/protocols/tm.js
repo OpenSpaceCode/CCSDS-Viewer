@@ -245,24 +245,24 @@ const TM_BUILD = { name: 'TM TRANSFER FRAME PRIMARY HEADER', tab: 'TM SDLP',
 
 // Frame Decoder spec — see DECODE_SPECS in component.js for the decode() contract.
 const TM_DECODE = { name: 'TM TRANSFER FRAME', tab: 'TM SDLP',
-  note: 'CCSDS 132.0-B-3 § 4.1 — a TM Transfer Frame is a 6-octet Primary Header, an optional Secondary Header of up to 64 octets, the Data Field, and an optional Trailer (OCF, FECF). With SDLS (§ 6.3) a Security Header and optional Security Trailer surround the Data Field. The Trailer is located from the end of the frame, which is why the Frame Length matters.',
-  setNote: 'The frame does not signal these itself; they are established by management (tables 5-1 and 6-1). The Secondary Header and the OCF need no setting: header flags signal their presence, and the Secondary Header carries its own length.',
+  note: 'CCSDS 132.0-B-3 § 4.1 — a TM Transfer Frame is a 6-octet Primary Header, an optional Secondary Header of up to 64 octets, the Data Field, and an optional Trailer (OCF, FECF). With SDLS (§ 6.3, CCSDS 355.0-B-2) a Security Header and optional Security Trailer surround the Data Field. The Trailer is located from the end of the frame, which is why the Frame Length matters.',
+  setNote: 'The frame does not signal these itself; they are established by management (tables 5-1 and 6-1). The Secondary Header and the OCF need no setting: header flags signal their presence, and the Secondary Header carries its own length. SDLS adds its fields inside this frame, with lengths from the Security Association.',
   settings: [
     { id: 'frameLen', n: 'Transfer Frame Length', ref: 'TABLE 5-1', unit: 'octets', def: 0, min: 0, max: 65535,
       note: 'Fixed for the Physical Channel. 0 = take the number of octets received as the frame length.' },
     { id: 'fecf', n: 'Presence of Frame Error Control', ref: 'TABLE 5-1', def: 1, opts: [{ v: 1, l: 'Present — last 2 octets are the FECF' }, { v: 0, l: 'Absent' }],
       note: 'If present, the CRC is computed and compared with the received value.' },
-    { id: 'secHdr', n: 'Security Header length', ref: 'TABLE 6-1', unit: 'octets', def: 0, min: 0, max: 64,
-      note: 'Per Virtual Channel. 0 = SDLS not in use.' },
-    { id: 'secTrl', n: 'Security Trailer length', ref: 'TABLE 6-1', unit: 'octets', def: 0, min: 0, max: 64,
-      note: 'Per Virtual Channel. 0 = no Security Trailer.' } ],
+    ...sdlsSettings({ iv: 12, sn: 0, pl: 0, mac: 16 }) ],   // annex E1 baseline of 355.0
+  exampleSet: SDLS_OFF,
   examples: [
     { l: 'Packets · OCF', hex: '02 A3 11 05 18 00 08 64 C0 01 00 0B 3A 5C 01 00 01 02 03 04 05 06 07 08 01 00 00 05 A8 4C' },
     { l: 'Secondary Header · split Packet', hex: '02 A2 12 06 98 04 02 A1 B2 AA BB CC DD 00 05 C0 0A 00 03 11 22 33 44 B3 49' },
     { l: 'Only Idle Data', hex: '02 AE 13 09 1F FE FF FF FF FF 6D B6 D8 61 45 1F 11 F1 97 16 72 3C BE 7E 00 B1 DE 90 B2 62 B9 3B' },
     { l: 'VCA_SDU', hex: '02 A4 14 07 47 FF 48 65 6C 6C 6F 20 54 4D 87 7A' },
     { l: 'Bad FECF', hex: '02 A3 11 05 18 00 08 64 C0 01 00 0B 2A 5C 01 00 01 02 03 04 05 06 07 08 01 00 00 05 A8 4C' },
-    { l: 'FHP past Data Field', hex: '02 A2 15 08 18 C8 08 64 C0 01 00 0B 3A 5C 01 00 01 02 03 04 05 06 07 08 B2 E6' } ],
+    { l: 'FHP past Data Field', hex: '02 A2 15 08 18 C8 08 64 C0 01 00 0B 3A 5C 01 00 01 02 03 04 05 06 07 08 B2 E6' },
+    { l: 'SDLS · baseline', set: { secSvc: SDLS_AE, secIv: 12, secSn: 0, secPl: 0, secMac: 16 },
+      hex: '02 A3 11 05 18 00 00 01 0A B3 06 82 30 35 66 1B B8 DB A2 1C F8 DC B3 43 08 E5 C6 9F 46 A3 3C AF A6 2B D9 22 47 6B 34 8A 62 9F 5C EE D0 32 C3 E8 70 6E C4 7D 9B FA 01 00 00 05 FB 83' } ],
   decode: decodeTm };
 
 // OID data is a 32-cell LFSR sequence (D0 + D1 + D2 + D22 + D32, § 4.1.4.6.2) that is never restarted, so a frame holds
@@ -276,7 +276,8 @@ function oidMismatch(b, from, count) {
 }
 
 function decodeTm(b, set) {
-  const { fields, checks, check, bitField, octField, fecfField } = decodeHelpers(b);
+  const h = decodeHelpers(b);
+  const { fields, checks, check, bitField, octField, fecfField } = h;
   const FHP_NONE = 0x7FF, FHP_OID = 0x7FE;
 
   if (b.length < 6) {
@@ -291,9 +292,10 @@ function decodeTm(b, set) {
   const trailer = (ocff ? 4 : 0) + (set.fecf ? 2 : 0);
   // An OID frame identifies a Virtual Channel that does not use SDLS (§ 6.4.6.2), whatever the settings say for other VCs.
   const oid = !sync && fhp === FHP_OID;
-  const secHdr = oid ? 0 : set.secHdr, secTrl = oid ? 0 : set.secTrl;
-  const dfStart = 6 + shTotal + secHdr;
-  const dfLen = frameLen - trailer - secTrl - dfStart;
+  const sec = sdlsLayout(set, !oid);
+  const dfStart = 6 + shTotal + sec.hdr;
+  const dfLen = frameLen - trailer - sec.trl - dfStart;
+  const dfMeaning = (m) => sec.encrypted ? m + ' — ciphertext' : m;
 
   const tfvn = bitField('vn', 'Transfer Frame Version Number', 'TFVN', 0, 2, v => v === 0 ? 'TM Version 1 Synchronous Transfer Frame' : 'Not a Transfer Frame defined by this Standard');
   bitField('scid', 'Spacecraft Identifier', 'SCID', 2, 10, () => 'MCID 0x' + readBits(b, 0, 12).toString(16).toUpperCase().padStart(3, '0'));
@@ -320,6 +322,8 @@ function decodeTm(b, set) {
   else if (b.length > frameLen) check('warn', oct(b.length - frameLen) + ' after the end of the frame (octet ' + frameLen + ' onward) — not part of this frame. Possibly the next frame.', '§ 4.1.1.2');
   else check('ok', 'Received length matches the mission Transfer Frame Length of ' + oct(frameLen) + '.', '§ 4.1.1.2');
 
+  if (sec.on) sdlsCheckSettings(check, set);
+
   let pos = 6;
   if (shf) {
     if (b.length > 6) {
@@ -335,15 +339,15 @@ function decodeTm(b, set) {
   if (dfLen < 1) {
     check('err', 'No room for a Data Field: the frame is ' + oct(frameLen) + ', but the headers and trailers take ' + oct(frameLen - dfLen) + '.', '§ 4.1.4.2');
   } else {
-    if (oid && (set.secHdr || set.secTrl)) check('info', 'Security settings are not applied: an Only Idle Data frame identifies a Virtual Channel that does not use SDLS.', '§ 6.4.6.2');
-    if (secHdr) {
-      check('info', 'SDLS in use per the mission settings — the Data Field may be ciphertext.', '§ 6.3');
-      octField('sdsh', 'Security Header', 'SECH', pos, secHdr, 'SPI, IV, Sequence Number, Pad Length — lengths per Security Association', { proto: 'sdls' });
-      pos += secHdr;
-    } else if (secTrl) check('warn', 'A Security Trailer is set without a Security Header — the Security Header is what indicates SDLS is in use.', '§ 6.3.1');
+    if (oid && set.secSvc !== SDLS_NONE) check('info', 'Security settings are not applied: an Only Idle Data frame identifies a Virtual Channel that does not use SDLS.', '§ 6.4.6.2');
+    if (sec.on) {
+      sdlsCoverage(check, set, dfStart, dfStart + dfLen, '355.0 § 5.1');
+      sdlsHeaderFields(h, b, pos, set, dfLen);
+      pos += sec.hdr;
+    }
 
     if (sync) {
-      octField('df', 'Transfer Frame Data Field', 'DATA', pos, dfLen, 'One VCA_SDU');
+      octField('df', 'Transfer Frame Data Field', 'DATA', pos, dfLen, dfMeaning('One VCA_SDU'));
     } else if (oid) {
       octField('df', 'Transfer Frame Data Field', 'OID', pos, dfLen, 'Only Idle Data — PN sequence');
       const got = Math.min(dfLen, b.length - pos);
@@ -354,17 +358,17 @@ function decodeTm(b, set) {
         else check('warn', 'Data Field does not follow the Only Idle Data PN sequence (first difference at Data Field bit ' + bad + ').', '§ 4.1.4.6.2');
       }
     } else if (fhp === FHP_NONE) {
-      octField('df', 'Transfer Frame Data Field', 'DATA', pos, dfLen, 'Middle of a Packet begun in an earlier frame');
+      octField('df', 'Transfer Frame Data Field', 'DATA', pos, dfLen, dfMeaning('Middle of a Packet begun in an earlier frame'));
     } else if (fhp >= dfLen) {
       check('err', 'First Header Pointer is ' + fhp + ', past the end of the ' + oct(dfLen) + ' Data Field (valid: 0–' + (dfLen - 1) + ', or the reserved values 2046 and 2047).', '§ 4.1.2.7.6.3');
-      octField('df', 'Transfer Frame Data Field', 'DATA', pos, dfLen, 'Packet boundaries unknown — First Header Pointer is invalid');
+      octField('df', 'Transfer Frame Data Field', 'DATA', pos, dfLen, dfMeaning('Packet boundaries unknown — First Header Pointer is invalid'));
     } else {
-      if (fhp > 0) octField('df', 'Data Field · end of previous Packet', 'RESID', pos, fhp, 'Continues a Packet from an earlier frame of this Virtual Channel');
-      octField('df', fhp > 0 ? 'Data Field · from first Packet Header' : 'Transfer Frame Data Field', 'PKTS', pos + fhp, dfLen - fhp, 'Packets, contiguous and in forward order');
+      if (fhp > 0) octField('df', 'Data Field · end of previous Packet', 'RESID', pos, fhp, dfMeaning('Continues a Packet from an earlier frame of this Virtual Channel'));
+      octField('df', fhp > 0 ? 'Data Field · from first Packet Header' : 'Transfer Frame Data Field', 'PKTS', pos + fhp, dfLen - fhp, dfMeaning('Packets, contiguous and in forward order'));
     }
     pos += dfLen;
 
-    if (secTrl) { octField('sdtr', 'Security Trailer', 'SECT', pos, secTrl, 'Message Authentication Code', { proto: 'sdls' }); pos += secTrl; }
+    if (sec.trl) { sdlsTrailerField(h, pos, set); pos += sec.trl; }
     if (ocff) {
       const type = b.length > pos ? b[pos] >> 6 : -1;
       octField('ocf', 'Operational Control Field', 'OCF', pos, 4, type < 0 ? 'Report type unknown' : type < 2 ? 'Type-1 Report — CLCW' : type === 2 ? 'Type-2 Report — project-specific' : 'Type-2 Report — SDLS Frame Security Report');

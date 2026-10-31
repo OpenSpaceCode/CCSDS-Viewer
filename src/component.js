@@ -95,12 +95,11 @@ class Component extends DCLogic {
   //           octets = octet string (raw is hex), extra = received but not part of the PDU
   //   checks: [{ level: 'ok' | 'info' | 'warn' | 'err', msg, ref }]
   // settings are the mission's managed parameters, resolved to numbers by dSettings().
-  DECODE_ORDER = ['spp', 'tm', 'tc', 'sdls'];
+  DECODE_ORDER = ['spp', 'tm', 'tc'];
   DECODE_SPECS = {
     spp: SPP_DECODE,
     tm: TM_DECODE,
-    tc: TC_DECODE,
-    sdls: { tab: 'SDLS', soon: true }
+    tc: TC_DECODE
   };
 
   dSettings(proto) {
@@ -434,12 +433,12 @@ class Component extends DCLogic {
       openDecoder: () => { this.setState({ view: 'decode', fid: null, tip: null, retView: null }); if (this.mainEl) this.mainEl.scrollTop = 0; },
       dProtoTabs: this.DECODE_ORDER.map(id => {
         const sp = this.DECODE_SPECS[id], on = id === st.dProto;
-        return { id, name: sp.tab, soon: !!sp.soon, title: sp.soon ? 'Decoder not implemented yet' : '',
-          onClick: sp.soon ? (() => {}) : ((e) => this.setState({ dProto: e.currentTarget.dataset.dproto, tip: null })),
-          style: { padding: '8px 15px', border: '1px solid ' + (on ? 'var(--color-accent)' : 'var(--color-divider)'), background: on ? 'color-mix(in srgb, var(--color-accent) 12%, var(--color-bg))' : 'var(--color-bg)', cursor: sp.soon ? 'default' : 'pointer', opacity: sp.soon ? '.55' : '1', fontSize: '12.5px', letterSpacing: '.06em', fontFamily: 'var(--font-heading)', fontWeight: '600', whiteSpace: 'nowrap', color: on ? 'var(--color-accent-900)' : 'var(--color-text)' } };
+        return { id, name: sp.tab,
+          onClick: (e) => this.setState({ dProto: e.currentTarget.dataset.dproto, tip: null }),
+          style: { padding: '8px 15px', border: '1px solid ' + (on ? 'var(--color-accent)' : 'var(--color-divider)'), background: on ? 'color-mix(in srgb, var(--color-accent) 12%, var(--color-bg))' : 'var(--color-bg)', cursor: 'pointer', fontSize: '12.5px', letterSpacing: '.06em', fontFamily: 'var(--font-heading)', fontWeight: '600', whiteSpace: 'nowrap', color: on ? 'var(--color-accent-900)' : 'var(--color-text)' } };
       }),
       dSpecName: dSpec.name, dSpecNote: dSpec.note, dSetNote: dSpec.setNote,
-      dSettingsList: dSpec.settings.map(sd => {
+      dSettingsList: dSpec.settings.filter(sd => !sd.showIf || sd.showIf(dSetNum)).map(sd => {
         const raw = dSetRaw[sd.id], v = raw === undefined ? String(sd.def) : raw;
         const clamped = !sd.opts && raw !== undefined && raw !== '' && String(dSetNum[sd.id]) !== String(Number(raw));
         return { id: sd.id, n: sd.n, ref: sd.ref, unit: sd.unit, note: sd.note, min: String(sd.min), max: String(sd.max), value: v,
@@ -450,7 +449,10 @@ class Component extends DCLogic {
       dHexText: dText,
       dOnHex: (e) => { const val = e.target.value, p2 = this.state.dProto; this.setState(s2 => ({ dHex: { ...s2.dHex, [p2]: val } })); },
       dClear: () => this.setState(s2 => ({ dHex: { ...s2.dHex, [s2.dProto]: '' } })),
-      dExamples: dSpec.examples.map(x => ({ l: x.l, hex: x.hex, onClick: () => this.setState(s2 => ({ dHex: { ...s2.dHex, [s2.dProto]: x.hex } })) })),
+      dExamples: dSpec.examples.map(x => ({ l: x.l, hex: x.hex, onClick: () => this.setState(s2 => {
+        const apply = Object.entries({ ...dSpec.exampleSet, ...x.set }).map(([k, v]) => [k, String(v)]);
+        return { dHex: { ...s2.dHex, [s2.dProto]: x.hex }, dSet: { ...s2.dSet, [s2.dProto]: { ...(s2.dSet[s2.dProto] || {}), ...Object.fromEntries(apply) } } };
+      }) })),
       dParseBad: !!dParsed.err, dParseErr: dParsed.err,
       dParseLabel: dParsed.err ? 'INVALID' : dBytes.length + (dBytes.length === 1 ? ' OCTET' : ' OCTETS'),
       dTotalLabel: dParsed.err ? 'INVALID INPUT' : dBytes.length * 8 + ' BITS · ' + dBytes.length + ' OCTETS',

@@ -42,13 +42,13 @@ function crc16(b, from, count) {
 function decodeHelpers(b) {
   const fields = [], checks = [];
   const check = (level, msg, ref) => checks.push({ level, msg, ref });
-  const bitField = (fid, n, abbr, off, bits, meaning) => {
+  // opts: extra (received but not part of the PDU), proto (protocol whose diagram the field's page belongs to).
+  const bitField = (fid, n, abbr, off, bits, meaning, opts) => {
     const v = readBits(b, off, bits);
-    fields.push({ fid, n, abbr, off, bits, value: String(v), raw: binStr(b, off, bits), meaning: meaning(v) });
+    fields.push({ fid, n, abbr, off, bits, value: String(v), raw: binStr(b, off, bits), meaning: meaning(v), ...opts });
     return v;
   };
   // Octet-aligned field of `want` octets at `from`, clipped to what was received.
-  // opts: extra (received but not part of the PDU), proto (protocol whose diagram the field's page belongs to).
   const octField = (fid, n, abbr, from, want, meaning, opts) => {
     const have = Math.max(0, Math.min(want, b.length - from));
     fields.push({ fid, n, abbr, off: from * 8, bits: have * 8, octets: true, ...opts,

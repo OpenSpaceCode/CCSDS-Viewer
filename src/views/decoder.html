@@ -9,8 +9,8 @@
           <p style="margin:14px 0 0;max-width:74ch;font-size:14.5px;line-height:1.6;color:var(--color-neutral-700);text-wrap:pretty">Choose a protocol, set the mission parameters the Standard leaves to management, and paste raw hex. Every field is extracted, explained and checked against the Blue Book.</p>
 
           <div style="display:flex;gap:8px;margin-top:20px;flex-wrap:wrap">
-            <sc-for list="{{ dProtoTabs }}" as="t" hint-placeholder-count="4">
-              <div role="button" tabindex="0" data-dproto="{{ t.id }}" sc-camel-on-click="{{ t.onClick }}" style="{{ t.style }}" title="{{ t.title }}">{{ t.name }}<sc-if value="{{ t.soon }}" hint-placeholder-val="{{ false }}"><span style="margin-left:8px;font-size:9px;letter-spacing:.14em;color:var(--color-neutral-500)">SOON</span></sc-if></div>
+            <sc-for list="{{ dProtoTabs }}" as="t" hint-placeholder-count="3">
+              <div role="button" tabindex="0" data-dproto="{{ t.id }}" sc-camel-on-click="{{ t.onClick }}" style="{{ t.style }}">{{ t.name }}</div>
             </sc-for>
           </div>
           <div style="border-top:1px solid var(--color-divider);margin:22px 0 28px"></div>

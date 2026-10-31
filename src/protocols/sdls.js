@@ -1,5 +1,6 @@
 // Space Data Link Security Protocol — CCSDS 355.0-B-2.
-// Field reference pages, structure maps, breadcrumb names, Frame Builder spec and the SDLS coverage view.
+// Field reference pages, structure maps, breadcrumb names, Frame Builder spec, the SDLS coverage view,
+// and the Frame Decoder extension used by the Transfer Frame decoders.
 
 const SDLS_FIELDS = {
   sdhdr: { n: 'Transfer Frame Header(s)', parent: 'sdframe', bits: null, len: 'PER BASE PROTOCOL', pres: 'FROM BASE FRAME', ref: '§ 3.3.2',
@@ -154,3 +155,83 @@ const SDLS_COVERAGE = {
       { n: 'OCF', sub: 'opt.', len: '4 OCT', w: 0.8, mac: 'out', enc: false, pay: false },
       { n: 'FECF', sub: 'opt.', len: '2/4 OCT', w: 0.8, mac: 'out', enc: false, pay: false } ] }
 };
+
+// Frame Decoder extension. SDLS has no frame of its own: the TM or TC protocol calls it, and it only adds a Security
+// Header and Trailer inside that frame (§ 3.1, § 4.1). Their field lengths are not in the frame either; the SPI selects
+// a Security Association that holds them. So these settings describe one SA, and each frame decoder embeds the fields.
+const SDLS_NONE = 0, SDLS_AUTH = 1, SDLS_ENC = 2, SDLS_AE = 3;
+
+// Applied when loading an example that does not use SDLS, so settings left over from one that does cannot misplace its fields.
+const SDLS_OFF = { secSvc: SDLS_NONE };
+
+// baseline: the protocol's annex E lengths, as the defaults once a service is selected.
+function sdlsSettings(baseline) {
+  const on = (set) => set.secSvc !== SDLS_NONE;
+  const length = (id, n, ref, max, note, def) => ({ id, n, ref, unit: 'octets', def, min: 0, max, note, showIf: on });
+  return [
+    { id: 'secSvc', n: 'Space Data Link Security', ref: '355.0 TABLE 6-1', def: SDLS_NONE,
+      opts: [{ v: SDLS_NONE, l: 'Not in use' }, { v: SDLS_AUTH, l: 'Authentication' }, { v: SDLS_ENC, l: 'Encryption' }, { v: SDLS_AE, l: 'Authenticated Encryption' }],
+      note: 'SA service type. The lengths below describe that one Security Association, and apply to every frame decoded here.' },
+    length('secIv', 'Initialization Vector length', '355.0 TABLE 6-1', 32, 'SA_length_IV: 1–32 octets, 0 = not used.', baseline.iv),
+    length('secSn', 'Sequence Number length', '355.0 TABLE 6-1', 8, 'SA_length_SN: 2–8 octets, 0 = not used.', baseline.sn),
+    length('secPl', 'Pad Length field length', '355.0 TABLE 6-1', 2, 'SA_length_PL: 1–2 octets, 0 = not used.', baseline.pl),
+    length('secMac', 'MAC length', '355.0 TABLE 6-1', 64, 'SA_length_MAC: 8–64 octets, 0 = no Security Trailer.', baseline.mac)
+  ];
+}
+
+// applies: false for frames that never carry SDLS fields, whatever the settings say.
+function sdlsLayout(set, applies) {
+  const on = applies && set.secSvc !== SDLS_NONE;
+  return { on,
+    hdr: on ? 2 + set.secIv + set.secSn + set.secPl : 0,
+    trl: on ? set.secMac : 0,
+    encrypted: on && set.secSvc !== SDLS_AUTH };
+}
+
+// Is this a Security Association the Standard allows?
+function sdlsCheckSettings(check, set) {
+  const auth = set.secSvc !== SDLS_ENC;
+  if (set.secSn === 1) check('warn', 'Sequence Number length of 1 octet is outside the allowed 2–8 octets.', '355.0 TABLE 6-1');
+  if (set.secMac > 0 && set.secMac < 8) check('warn', 'MAC length of ' + oct(set.secMac) + ' is outside the allowed 8–64 octets.', '355.0 TABLE 6-1');
+  if (!auth && set.secSn > 0) check('err', 'Encryption without authentication has no anti-replay check, so the Sequence Number field shall be zero octets.', '355.0 § 4.1.1.4.4');
+  if (!auth && set.secMac > 0) check('warn', 'Encryption without authentication produces no MAC, yet a MAC length is set.', '355.0 § 4.2.3.3');
+  if (auth && set.secMac === 0) check('err', 'A Security Trailer shall be present whenever authentication or authenticated encryption is applied, but the MAC length is 0.', '355.0 § 4.1.2.2');
+  // With authenticated encryption an incrementing IV may serve as the Sequence Number (note to § 4.1.1.4.2).
+  if (auth && set.secSn === 0 && !(set.secSvc === SDLS_AE && set.secIv > 0)) check('warn', 'No anti-replay Sequence Number: the field is 0 octets' + (set.secSvc === SDLS_AE ? ', and there is no IV to serve as one.' : '.'), '355.0 § 4.1.1.4.2');
+}
+
+function sdlsHeaderFields(h, b, pos, set, dataLen) {
+  const page = { proto: 'sdls' };
+  const complete = (from, count) => b.length >= from + count;
+  if (complete(pos, 2)) {
+    const spi = h.bitField('spi', 'Security Parameter Index', 'SPI', pos * 8, 16, v => v === 0 || v === 0xFFFF ? 'Reserved by CCSDS' : 'Identifies the Security Association', page);
+    if (spi === 0 || spi === 0xFFFF) h.check('err', 'SPI ' + spi + ' is reserved by CCSDS for future use — valid values are 1–65534.', '355.0 § 4.1.1.2.3');
+  } else h.octField('spi', 'Security Parameter Index', 'SPI', pos, 2, 'Identifies the Security Association', page);
+  pos += 2;
+  if (set.secIv) { h.octField('iv', 'Initialization Vector', 'IV', pos, set.secIv, 'Input to the cryptographic algorithm', page); pos += set.secIv; }
+  if (set.secSn) {
+    const count = complete(pos, set.secSn) ? ' = ' + BigInt('0x' + hexStr(b, pos, set.secSn)) : '';
+    h.octField('sqn', 'Sequence Number', 'SN', pos, set.secSn, 'Anti-replay count' + count, page);
+    pos += set.secSn;
+  }
+  if (set.secPl) {
+    const whole = complete(pos, set.secPl);
+    const pad = whole ? readBits(b, pos * 8, set.secPl * 8) : 0;
+    h.octField('pl', 'Pad Length', 'PL', pos, set.secPl, whole ? oct(pad) + ' of fill in the Frame Data' : 'Count of fill octets', page);
+    if (whole && pad > dataLen) h.check('warn', 'Pad Length is ' + oct(pad) + ', more than the ' + oct(dataLen) + ' of Frame Data it is removed from.', '355.0 § 4.1.1.5.2');
+  }
+}
+
+function sdlsTrailerField(h, pos, set) {
+  h.octField('mac', 'Message Authentication Code', 'MAC', pos, set.secMac, 'Not verified — that needs the SA key', { proto: 'sdls' });
+}
+
+// What this frame's service protects. dataStart/dataEnd are the octets of Frame Data; the MAC covers all that precedes the trailer.
+function sdlsCoverage(check, set, dataStart, dataEnd, ref) {
+  const range = (a, z) => 'octets ' + a + '–' + z;
+  const mac = 'The MAC covers ' + range(0, dataEnd - 1) + ', less any bits zeroed by the SA’s authentication mask. It is not verified here: that needs the key.';
+  const cipher = range(dataStart, dataEnd - 1) + ' (Frame Data) are ciphertext; the headers stay in clear.';
+  check('info', set.secSvc === SDLS_AUTH ? 'Authentication — the Frame Data is plaintext. ' + mac
+    : set.secSvc === SDLS_ENC ? 'Encryption — ' + cipher
+    : 'Authenticated Encryption — ' + cipher + ' ' + mac, ref);
+}

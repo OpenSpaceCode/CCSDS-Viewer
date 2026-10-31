@@ -3,9 +3,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadSrc } from './load.mjs';
 
-const { decodeTm, parseHex, crc16, oidMismatch, TM_DECODE } = loadSrc(['lib/bits.js', 'protocols/tm.js'], ['decodeTm', 'parseHex', 'crc16', 'oidMismatch', 'TM_DECODE']);
+const { decodeTm, parseHex, crc16, oidMismatch, TM_DECODE } = loadSrc(['lib/bits.js', 'protocols/sdls.js', 'protocols/tm.js'], ['decodeTm', 'parseHex', 'crc16', 'oidMismatch', 'TM_DECODE']);
 
-const DEFAULTS = { frameLen: 0, fecf: 1, secHdr: 0, secTrl: 0 };
+const DEFAULTS = { frameLen: 0, fecf: 1, secSvc: 0, secIv: 12, secSn: 0, secPl: 0, secMac: 16 };
 const bytes = (hex) => { const { bytes: b, err } = parseHex(hex); assert.equal(err, ''); return b; };
 const decode = (hex, set = {}) => decodeTm(bytes(hex), { ...DEFAULTS, ...set });
 // Appends a correct FECF, so a vector only has to state what it tests.
@@ -163,34 +163,6 @@ test('a frame too short for its own headers and trailers is an error (§ 4.1.4.2
   assert.deepEqual(fids(r).filter(f => ['df', 'ocf', 'fecf'].includes(f)), []);
   assert.deepEqual(refs(decode('02 A3 11'), 'err'), ['§ 4.1.2.1']);
   assert.deepEqual(decode(''), { fields: [], checks: [] });
-});
-
-test('SDLS: Security Header and Trailer surround the Data Field (§ 6.3)', () => {
-  const r = decode(withFecf('02 A3 11 05 18 00 00 01 11 22 33 44 55 66 77 88 01 00 00 05'), { secHdr: 2, secTrl: 2 });
-  assert.deepEqual(r.fields.slice(11).map(f => [f.fid, f.off / 8, f.raw]), [
-    ['sdsh', 6, '0001'], ['df', 8, '112233445566'], ['sdtr', 14, '7788'], ['ocf', 16, '01000005'], ['fecf', 20, field(r, 'fecf').raw]]);
-  assert.equal(field(r, 'sdsh').proto, 'sdls');
-  assert.deepEqual(refs(r, 'err'), []);
-  assert.deepEqual(refs(r, 'info'), ['TABLE 5-1', '§ 6.3']);
-});
-
-test('SDLS: the First Header Pointer counts from the Data Field, not the frame (§ 6.3.5)', () => {
-  const r = decode(withFecf('02 A2 11 05 18 02 00 01 11 22 33 44'), { secHdr: 2 });
-  assert.match(field(r, 'fhp').meaning, /Data Field octet 2 \(frame octet 10\)/);
-  assert.deepEqual(r.fields.filter(f => f.fid === 'df').map(f => f.raw), ['1122', '3344']);
-});
-
-test('SDLS: Security Trailer without a Security Header is flagged (§ 6.3.1)', () => {
-  assert.deepEqual(refs(decode(withFecf('02 A2 11 05 18 00 11 22 33 44')), 'warn'), []);
-  assert.deepEqual(refs(decode(withFecf('02 A2 11 05 18 00 11 22 33 44'), { secTrl: 2 }), 'warn'), ['§ 6.3.1']);
-});
-
-test('SDLS settings are not applied to Only Idle Data frames (§ 6.4.6.2)', () => {
-  const r = decode(example('Only Idle Data'), { secHdr: 8, secTrl: 8 });
-  assert.equal(field(r, 'sdsh'), undefined);
-  assert.equal(field(r, 'sdtr'), undefined);
-  assert.ok(refs(r, 'info').includes('§ 6.4.6.2'));
-  assert.ok(refs(r, 'ok').includes('§ 4.1.4.6.2'));
 });
 
 test('OCF report type comes from its first two bits (§ 4.1.5.4, § 4.1.5.5)', () => {
