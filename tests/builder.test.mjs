@@ -151,7 +151,7 @@ test('round trip TM, authenticated encryption, with a Secondary Header', () => {
 
 test('round trip TC, authentication, with a Segment Header', () => {
   const total = 5 + 1 + 6 + 4 + 16;
-  const v = build('tc', { secSvc: AUTH, tcflen: String(total - 1), tcfsn: '0', segf: '1', segmap: '9', spi: '2', secSn: '0000012C', payload__oct: '4', payload: 'CAFEF00D' });
+  const v = build('tc', { secSvc: AUTH, tcflen: String(total - 1), segf: '1', segmap: '9', spi: '2', secSn: '0000012C', payload__oct: '4', payload: 'CAFEF00D' });
   assert.equal(v.bTotalLabel, total * 8 + ' BITS · ' + total + ' OCTETS');
   const d = decode('tc', v.bHex, { fecf: '0', secSvc: AUTH });
   assert.deepEqual(errors(d), []);
@@ -171,7 +171,7 @@ test('round trip for every service and length combination the builder offers', (
       if (svc === AE && iv === 0 && sn === 0) continue;   // not offered: see the test on allowed lengths
       const lens = { secIv__oct: String(iv), secSn__oct: String(sn), secPl__oct: String(pl), secMac__oct: String(mac) };
       const total = (proto === 'tm' ? 6 : 5) + 2 + iv + sn + pl + 3 + mac;
-      const vals = { ...base, secSvc: svc, ...lens, payload__oct: '3', payload: '112233', secPl: pl ? '00'.repeat(pl) : '', ...(proto === 'tc' ? { tcflen: String(total - 1), tcfsn: '0' } : {}) };
+      const vals = { ...base, secSvc: svc, ...lens, payload__oct: '3', payload: '112233', secPl: pl ? '00'.repeat(pl) : '', ...(proto === 'tc' ? { tcflen: String(total - 1) } : {}) };
       const v = build(proto, vals);
       assert.equal(v.bTotalLabel, total * 8 + ' BITS · ' + total + ' OCTETS');
       const set = { fecf: '0', secSvc: svc, secIv: String(iv), secSn: String(sn), secPl: String(pl), secMac: String(mac), ...base };
