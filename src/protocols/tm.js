@@ -256,6 +256,23 @@ const TM_BUILD = { name: 'TM TRANSFER FRAME PRIMARY HEADER', tab: 'TM SDLP',
       { id: 'shdf', n: 'TFSH Data Field', bits: 0, def: 0, abbr: 'SHDF', kind: 'hex', varOct: true, defOct: 2, minOct: 1, maxOct: 63, defHex: 'A1B2' } ] },
   pay: { name: 'TRANSFER FRAME DATA FIELD', field: 'Data Field', abbr: 'DATA', note: 'Optional. The Data Field carries the payload — Packets, a VCA_SDU or a Bitstream. Give its length in octets and its content as raw hex; leave the length at 0 to build the header only.' } };
 
+// One-page cheat sheet.
+const TM_SHEET = { doc: 'tm', title: 'TM SPACE DATA LINK PROTOCOL', layout: 'tm', frameTitle: 'TM TRANSFER FRAME',
+  frame: [{ n: 'PRIMARY HEADER', len: '6 OCTETS', w: 1.5 }, { n: 'SECONDARY HEADER', len: '2–64 · OPTIONAL', w: 1.5, opt: true }, { n: 'DATA FIELD', len: 'VARIES', w: 3 }, { n: 'OCF', len: '4 · OPTIONAL', w: 1, opt: true }, { n: 'FECF', len: '2 · OPTIONAL', w: 1, opt: true }],
+  headerTitle: 'PRIMARY HEADER · 6 OCTETS',
+  rows: [[['TFVN', 2, 'vn'], ['SCID', 10, 'scid'], ['VCID', 3, 'vcid'], ['OCFF', 1, 'ocff']], [['MCFC', 8, 'mcfc'], ['VCFC', 8, 'vcfc']], [['SHF', 1, 'shf'], ['SYNC', 1, 'sync'], ['POF', 1, 'pof'], ['SLID', 2, 'slid'], ['FHP', 11, 'fhp']]],
+  fields: [
+    ['vn', 'TFVN', '‘00’ only.'], ['scid', 'SCID', 'Assigned by SANA, static for the mission.'], ['vcid', 'VCID', 'Virtual Channel, 0–7.'], ['ocff', 'OCFF', '1 = OCF present.'],
+    ['mcfc', 'MCFC', 'Modulo-256, per Master Channel.'], ['vcfc', 'VCFC', 'Modulo-256, per Virtual Channel.'], ['shf', 'SHF', '1 = Secondary Header present.'],
+    ['sync', 'SYNC', '0 = Packets or Idle Data. 1 = VCA_SDU; POF, SLID, FHP undefined.'], ['pof', 'POF', '‘0’ when SYNC is 0.'], ['slid', 'SLID', '‘11’ when SYNC is 0.'],
+    ['fhp', 'FHP', 'Position in the Data Field of the first Packet that starts there, from 0.'],
+    ['shvn', 'SHVN', 'Secondary Header, first 2 bits: ‘00’ only.'], ['shlen', 'SHLEN', 'Next 6 bits: total Secondary Header octets − 1.'], ['ocf', 'OCF', 'First bits: 0x = Type-1, CLCW. 10 = Type-2, project-specific. 11 = Type-2, SDLS FSR.'], ['fecf', 'FECF', 'CRC of all octets before it, preset to ones. G(X) = X¹⁶ + X¹² + X⁵ + 1.'] ],
+  specials: [['FHP 0x7FF', '‘11111111111’: no Packet starts in this frame.', '§ 4.1.2.7.6.4'], ['FHP 0x7FE', '‘11111111110’: Only Idle Data (OID) frame.', '§ 4.1.2.7.6.5'],
+    ['OID DATA', 'PN from a 32-cell LFSR, D⁰ + D¹ + D² + D²² + D³². Starts FF FF FF FF 6D B6 D8 61 45 1F; not restarted between frames.', '§ 4.1.4.6.2']],
+  rules: [['Frame length is constant for a Physical Channel during a Mission Phase.', '§ 4.1.1.2'], ['Data Field length = frame − Primary and Secondary Headers − Trailer.', '§ 4.1.4.2'],
+    ['Packets are contiguous and in forward order; the first and last may be split across frames.', '§ 4.1.4.5'], ['FHP skips the residue of a split Packet, and points to the next one that starts.', '§ 4.1.2.7.6.3'],
+    ['With SDLS: Security Header follows the Secondary Header; Security Trailer precedes the OCF.', '§ 6.3.1'], ['An OID frame identifies a Virtual Channel that does not use SDLS.', '§ 6.4.6.2']] };
+
 // Frame Decoder spec — see DECODE_SPECS in component.js for the decode() contract.
 const TM_DECODE = { name: 'TM TRANSFER FRAME', tab: 'TM SDLP',
   note: 'CCSDS 132.0-B-3 § 4.1 — a TM Transfer Frame is a 6-octet Primary Header, an optional Secondary Header of up to 64 octets, the Data Field, and an optional Trailer (OCF, FECF). With SDLS (§ 6.3, CCSDS 355.0-B-2) a Security Header and optional Security Trailer surround the Data Field. The Trailer is located from the end of the frame, which is why the Frame Length matters.',

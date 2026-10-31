@@ -347,7 +347,7 @@ test('the coverage view gives concrete ranges for TM and TC', () => {
   assert.deepEqual(tm.sdCovCells.map(c => c.len), ['6 OCTETS · 0–5', '8 OCTETS · 6–13', '14 OCTETS · 14–27', '50 OCTETS · 28–77', '16 OCTETS · 78–93', '4 OCTETS · 94–97', '2 OCTETS · 98–99']);
   const tc = v(on(mission(SECURED), { proto: 'sdls', sdCov: 'tc' }));
   assert.match(tc.sdCovRanges, /Nothing is encrypted/);
-  assert.equal(tc.sdCovCells[1].len, '1 OCTET · 5–5');
+  assert.equal(tc.sdCovCells[1].len, '1 OCTET · 5');
   const aos = v(on(mission(SECURED), { proto: 'sdls', sdCov: 'aos' }));
   assert.equal(aos.sdCovHasRanges, false);
   assert.equal(aos.sdCovCells[0].len, '6–8 OCT', 'the Standard’s wording');

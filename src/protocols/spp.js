@@ -181,6 +181,20 @@ const SPP_BUILD = { name: 'SPACE PACKET PRIMARY HEADER', tab: 'SpacePacket',
       { id: 'spadf', n: 'Ancillary Data Field', bits: 0, def: 0, abbr: 'ADF', kind: 'hex', varOct: true, defOct: 0, minOct: 0, maxOct: 32, defHex: '' } ] },
   pay: { name: 'PACKET USER DATA FIELD', field: 'User Data Field', abbr: 'USER', note: 'Optional. The User Data Field holds the application data. Give its length in octets and its content as raw hex; leave the length at 0 to build the header only. Packet Data Length above follows it.' } };
 
+// One-page cheat sheet.
+const SPP_SHEET = { doc: 'spp', title: 'SPACE PACKET PROTOCOL', layout: 'spp', frameTitle: 'SPACE PACKET · 7 TO 65542 OCTETS',
+  frame: [{ n: 'PRIMARY HEADER', len: '6 OCTETS', w: 1.5 }, { n: 'SECONDARY HEADER', len: 'VARIABLE · OPTIONAL', w: 2, opt: true }, { n: 'USER DATA FIELD', len: 'VARIABLE', w: 3.5 }],
+  headerTitle: 'PRIMARY HEADER · 6 OCTETS',
+  rows: [[['PVN', 3, 'sppvn'], ['TYPE', 1, 'spptype'], ['SHF', 1, 'spshf'], ['APID', 11, 'spapid']], [['SEQF', 2, 'spsqf'], ['PSC', 14, 'spcnt']], [['PDL', 16, 'spdlen']]],
+  fields: [
+    ['sppvn', 'PVN', '‘000’ only.'], ['spptype', 'TYPE', '0 = telemetry (reporting). 1 = telecommand (requesting).'], ['spshf', 'SHF', '1 = Secondary Header present. Static per APID; 0 for Idle Packets.'], ['spapid', 'APID', 'Names the data path. Unique only within its naming domain.'],
+    ['spsqf', 'SEQF', '‘01’ first segment, ‘00’ continuation, ‘10’ last, ‘11’ unsegmented.'], ['spcnt', 'PSC', 'Modulo-16384 count per APID. A telecommand may carry a Packet Name instead.'], ['spdlen', 'PDL', 'C = octets in the Packet Data Field − 1.'],
+    ['sptc', 'TCF', 'Optional: a CCSDS time code, fixed per managed data path.'], ['spad', 'ADF', 'Optional: mission-defined ancillary data.'], ['spud', 'UDF', 'Application data, or Idle Data in an Idle Packet.'] ],
+  specials: [['APID 0x7FF', '‘11111111111’: Idle Packet, the only reserved APID.', '§ 4.1.3.3.4.4'], ['SEQF ‘11’', 'Always, where the Octet String service is used.', '§ 4.1.3.4.2.3']],
+  rules: [['A Packet is 7 to 65542 octets: 6 of header, then a Packet Data Field of 1 to 65536.', '§ 4.1.2.2'], ['The Packet Data Field holds at least one octet.', '§ 4.1.4.1.2'],
+    ['The Secondary Header is mandatory if there is no User Data Field.', '§ 4.1.4.2.1.2'], ['The User Data Field is mandatory if there is no Secondary Header.', '§ 4.1.4.3.2'], ['Secondary Header contents are not in the packet: they are set per APID, by management.', '§ 4.1.4.2.1.4'],
+    ['A Secondary Header is a Time Code Field, an Ancillary Data Field, or both, in that order.', '§ 4.1.4.2.1.5'], ['The time code’s P-field, if used, is fixed for the data path.', '§ 4.1.4.2.2.5']] };
+
 // Frame Decoder spec — see DECODE_SPECS in component.js for the decode() contract.
 const SPP_DECODE = { name: 'SPACE PACKET', tab: 'SpacePacket',
   note: 'CCSDS 133.0-B-2 § 4.1 — a Space Packet is a 6-octet Primary Header followed by a Packet Data Field of 1 to 65536 octets (7 to 65542 octets in total). The Packet Secondary Header has no structure defined by the Standard; its split into Time Code and Ancillary Data Fields comes from the mission settings.',

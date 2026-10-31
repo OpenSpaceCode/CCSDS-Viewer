@@ -1,5 +1,5 @@
 class Component extends DCLogic {
-  state = { proto: 'spp', view: 'diagram', fid: null, phOpen: null, shOpen: null, dfsOpen: null, tcPhOpen: null, tcDfOpen: null, spPhOpen: null, spShOpen: null, sdShOpen: null, sdTrOpen: null, dfsModal: false, epOpen: false, epId: null, epHdrOpen: null, epDataOpen: null, tip: null, bProto: 'spp', bVals: {}, sdCov: 'tm', dProto: 'spp', dHex: {}, dSet: {}, retView: null, qOpen: false, qText: '', qIdx: 0, profile: null, profileOn: false, pDraft: {}, pMsg: '', pErrors: [], pStoreFailed: false };
+  state = { proto: 'spp', view: 'diagram', fid: null, phOpen: null, shOpen: null, dfsOpen: null, tcPhOpen: null, tcDfOpen: null, spPhOpen: null, spShOpen: null, sdShOpen: null, sdTrOpen: null, dfsModal: false, epOpen: false, epId: null, epHdrOpen: null, epDataOpen: null, tip: null, bProto: 'spp', bVals: {}, sdCov: 'tm', dProto: 'spp', dHex: {}, dSet: {}, retView: null, qOpen: false, qText: '', qIdx: 0, cProto: 'spp', profile: null, profileOn: false, pDraft: {}, pMsg: '', pErrors: [], pStoreFailed: false };
 
   // Which part of each base frame SDLS authenticates and encrypts — see protocols/sdls.js.
   SDLS_COV_ORDER = SDLS_COVERAGE_ORDER;
@@ -240,6 +240,80 @@ class Component extends DCLogic {
     }
   };
 
+  // ---- cheat sheets ----
+  CHEAT_ORDER = ['spp', 'tm', 'tc', 'sdls', 'ep'];
+  CHEAT_SHEETS = { spp: SPP_SHEET, tm: TM_SHEET, tc: TC_SHEET, sdls: SDLS_SHEET, ep: SDLS_EP_SHEET };
+  CHEAT_TABS = { spp: 'SpacePacket', tm: 'TM SDLP', tc: 'TC SDLP', sdls: 'SDLS', ep: 'SDLS EP' };
+
+  // Which sheet to open: the protocol in view, as long as it has one.
+  cheatProtoFor(st) {
+    if (st.view === 'ep' || (st.view === 'field' && st.fid && this.fieldDoc(st.fid) === 'ep')) return 'ep';
+    if (st.view === 'diagram' && this.CHEAT_SHEETS[st.proto]) return st.proto;
+    if (st.view === 'field' && st.fid) return this.fieldDoc(st.fid);
+    if (st.view === 'build' && this.CHEAT_SHEETS[st.bProto]) return st.bProto;
+    if (st.view === 'decode' && this.CHEAT_SHEETS[st.dProto]) return st.dProto;
+    return st.cProto;
+  }
+
+  cheatPrint(sheetCode) {
+    // The browser offers the page title as the name of the PDF.
+    const title = document.title;
+    document.title = sheetCode + ' cheat sheet';
+    window.print();
+    document.title = title;
+  }
+
+  cheatVals(st, pr, shown) {
+    const open = { cOpen: () => { this.setState(s => ({ view: 'cheat', fid: null, tip: null, retView: null, cProto: this.cheatProtoFor(s) })); if (this.mainEl) this.mainEl.scrollTop = 0; } };
+    if (!shown) return open;
+    const doc = st.cProto, sheet = this.CHEAT_SHEETS[doc], book = BLUE_BOOKS[doc];
+    const linked = (ref) => ({ ref, ...this.bbRefVals(doc, ref) });
+    const box = (w, i, extra) => ({ flex: String(w) + ' 1 0', minWidth: 0, border: '.6pt solid var(--color-text)', marginLeft: i ? '-.6pt' : 0, padding: '2.5pt 1.5pt', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: '.5pt', ...extra });
+    const strip = (title, cells) => ({ title, cells: cells.map((c, i) => ({ n: c.n, len: c.len.replace(/ OCTETS? · /, ' OCT · '), style: box(c.w, i, c.shade ? { background: 'var(--color-accent-100)' } : c.opt ? { background: 'repeating-linear-gradient(45deg,transparent 0 3pt,var(--color-neutral-300) 3pt 3.4pt)' } : {}) })) });
+    const laid = (proto) => profileLayout(pr, proto).fields.filter(f => f.len !== 0).map(f => ({ n: f.n.toUpperCase(), len: profileFieldLabel(f), w: f.key === 'data' ? 3 : 1.2, shade: f.key === 'sech' || f.key === 'sect' }));
+    const covered = (link) => { const lay = pr ? profileLayout(pr, link) : null; return this.SDLS_COV[link].cells.map(c => ({ n: c.n, len: lay && c.k ? profileFieldLabel(lay.fields.find(f => f.key === c.k)) : c.len, w: c.w, shade: c.n.startsWith('SECURITY') })); };
+    const cStrips = sheet.links ? sheet.links.map(l => strip(this.SDLS_COV[l].name + ' WITH SDLS', covered(l)))
+      : sheet.frame ? [strip(sheet.frameTitle, pr && sheet.layout ? laid(sheet.layout) : sheet.frame)] : [];
+    let bit = 0;
+    const cRows = sheet.rows.map(row => {
+      const total = row.reduce((n, c) => n + c[1], 0), from = bit;
+      const cells = row.map(([abbr, bits, , size], i) => ({ abbr, size: size || (bits === 1 ? '1 BIT' : bits + ' BITS'), style: box(bits, i) }));
+      const fixed = row.every(c => !c[3]);
+      bit += total;
+      return { label: fixed ? 'OCT ' + from / 8 + (total > 8 ? '–' + ((from + total) / 8 - 1) : '') : '', cells };
+    });
+    const cFields = sheet.fields.map(([id, abbr, v]) => {
+      const f = this.F[id];
+      return { id, abbr, v, n: f.n, pos: String(f.bits || f.len).replace(/^BITS? /, '').replace(/^SH BITS /, 'SH ').replace(/^SEG HDR BITS /, 'SEG ').replace(/ OR /, '/').replace(/ OCTETS?$/, ' oct').replace(/^MANAGED.*/, 'managed'), ...linked(f.ref),
+        onClick: () => { this.setState({ proto: this.fieldDoc(id) === 'ep' ? 'sdls' : this.fieldDoc(id) }); this.openPage(id, 'cheat'); } };
+    });
+    const groups = sheet.procedures ? this.EP_GROUPS.map(g => ({ name: g.name, items: g.items.filter(it => it.id && this.EP_DEF[it.id]).map(it => {
+      const p = this.EP_DEF[it.id];
+      return { id: it.id, name: p.name, pi: p.proc, ref: p.ref, onClick: () => { this.setState({ proto: 'sdls', epOpen: true }); this.openEp(it.id, 'cheat'); } };
+    }) })) : [];
+    const spec = this.DECODE_SPECS[doc];
+    const set = pr && spec ? profileSettings(pr, doc) : null;
+    const value = (sd) => { if (!set) return sd.opts ? (sd.opts.length > 2 ? 'Service type' : sd.opts.map(o => o.l.split(' — ')[0]).join(' / ')) : (sd.unit === 'octets' ? 'N octets' : ''); return sd.opts ? sd.opts.find(o => o.v === set[sd.id]).l.split(' — ')[0] : set[sd.id] + ' ' + (sd.unit || ''); };
+    const managed = spec ? spec.settings.filter(sd => !sd.showIf || (set && sd.showIf(set))).map(sd => ({ id: sd.id, n: sd.n, value: value(sd), refShort: sd.ref, ...this.bbRefVals(doc, sd.ref) })) : [];
+    const sdlsRow = (id, key, n) => ({ id, n, refShort: 'TABLE 6-1', ...this.bbRefVals('sdls', 'TABLE 6-1'),
+      value: pr ? 'TM ' + (pr.tm.sdls.service === 'none' ? '—' : pr.tm.sdls[key]) + ' · TC ' + (pr.tc.sdls.service === 'none' ? '—' : pr.tc.sdls[key]) : { iv: '1–32 octets', sn: '2–8 octets', pl: '1–2 octets', mac: '8–64 octets' }[key] });
+    const cManaged = doc === 'sdls' ? [sdlsRow('iv', 'iv', 'SA_length_IV'), sdlsRow('sn', 'sn', 'SA_length_SN'), sdlsRow('pl', 'pl', 'SA_length_PL'), sdlsRow('mac', 'mac', 'SA_length_MAC')] : managed;
+    const rev = blueBookRevision(doc);
+    return { ...open,
+      cTabs: this.CHEAT_ORDER.map(id => ({ id, name: this.CHEAT_TABS[id], onClick: () => this.setState({ cProto: id }),
+        style: { padding: '8px 15px', border: '1px solid ' + (id === doc ? 'var(--color-accent)' : 'var(--color-divider)'), background: id === doc ? 'color-mix(in srgb, var(--color-accent) 12%, var(--color-bg))' : 'var(--color-bg)', cursor: 'pointer', fontSize: '12.5px', letterSpacing: '.06em', fontFamily: 'var(--font-heading)', fontWeight: '600', whiteSpace: 'nowrap', color: id === doc ? 'var(--color-accent-900)' : 'var(--color-text)' } })),
+      cPrint: () => this.cheatPrint(book.code), cStop: (e) => e.stopPropagation(),
+      cTitle: sheet.title, cCode: book.code, cRev: rev, cRevShort: rev.toLowerCase().replace(/^issue/, 'Issue').replace(/ · /g, ', ').replace(/\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/g, m => m[0].toUpperCase() + m.slice(1)).replace(/cor\. 1/, 'Cor. 1').replace(/ec (\d)/g, 'EC $1'), cUrl: book.url,
+      cMission: pr ? ' · ' + pr.name.toUpperCase() : '',
+      cStrips, cHeaderTitle: sheet.headerTitle, cRows, cFields,
+      cHasServices: !!sheet.services, cServices: (sheet.services || []).map(([a, b, c, d]) => ({ a, b, c, d })),
+      cHasProcedures: !!sheet.procedures, cProcedures: groups,
+      cSpecialTitle: doc === 'sdls' ? 'VALUES AND BASELINES' : doc === 'ep' ? 'SERVICE GROUPS' : 'SPECIAL VALUES',
+      cSpecials: sheet.specials.map(([c, d, ref]) => ({ c, d, ...linked(ref) })),
+      cRules: sheet.rules.map(([t, ref]) => ({ t, ...linked(ref) })),
+      cHasManaged: cManaged.length > 0, cManaged, cManagedTitle: pr ? 'MANAGED PARAMETERS · ' + pr.name.toUpperCase() : 'MANAGED PARAMETERS · NOT IN THE FRAME' };
+  }
+
   // ---- Blue Book links ----
   // Which book a field page quotes.
   fieldDoc(id) {
@@ -348,10 +422,10 @@ class Component extends DCLogic {
     return {
       showProfile, pHas: !!p, pNone: !p, pOn: !!pr,
       pName: p ? p.name : '', pSubtitle: p ? p.name : 'Not defined',
-      pBarShow: ['diagram', 'build', 'decode'].includes(st.view),
+      pBarShow: ['diagram', 'build', 'decode', 'cheat'].includes(st.view),
       pManualStyle: barStyle(!pr, true), pProfileStyle: barStyle(!!pr, !!p),
       pBarLabel: p ? p.name : 'Mission profile',
-      pBarNote: !pr ? '' : st.view === 'diagram' && st.proto === 'sdls' ? (['tm', 'tc'].includes(st.sdCov || 'tm') ? 'Offsets are for the ' + (st.sdCov || 'tm').toUpperCase() + ' link, chosen in the coverage view below.' : 'The profile covers TM and TC: choose one in the coverage view below for offsets.') : st.view === 'diagram' ? 'Octet offsets come from the profile.' : st.view === 'decode' ? 'Settings come from the profile.' : 'Values start from the profile.',
+      pBarNote: !pr ? '' : st.view === 'diagram' && st.proto === 'sdls' ? (['tm', 'tc'].includes(st.sdCov || 'tm') ? 'Offsets are for the ' + (st.sdCov || 'tm').toUpperCase() + ' link, chosen in the coverage view below.' : 'The profile covers TM and TC: choose one in the coverage view below for offsets.') : st.view === 'diagram' ? 'Octet offsets come from the profile.' : st.view === 'decode' ? 'Settings come from the profile.' : st.view === 'cheat' ? 'Offsets and values come from the profile.' : 'Values start from the profile.',
       pBarManual: () => this.setState({ profileOn: false }),
       pBarProfile: () => { if (this.state.profile) this.setState({ profileOn: true }); },
       pOpen: () => { this.setState({ view: 'profile', fid: null, tip: null, retView: null, pMsg: '', pErrors: [] }); if (this.mainEl) this.mainEl.scrollTop = 0; },
@@ -371,7 +445,7 @@ class Component extends DCLogic {
   // ---- refresh ----
   // What survives a refresh: where you are and what you entered. Tooltips, dialogs and the search are not worth reopening.
   SESSION_STATE = ['proto', 'view', 'fid', 'retView', 'phOpen', 'shOpen', 'dfsOpen', 'tcPhOpen', 'tcDfOpen', 'spPhOpen', 'spShOpen', 'sdShOpen', 'sdTrOpen',
-    'epOpen', 'epId', 'epHdrOpen', 'epDataOpen', 'bProto', 'bVals', 'sdCov', 'dProto', 'dHex', 'dSet', 'profileOn'];
+    'epOpen', 'epId', 'epHdrOpen', 'epDataOpen', 'bProto', 'bVals', 'sdCov', 'dProto', 'dHex', 'dSet', 'profileOn', 'cProto'];
 
   constructor(props) {
     super(props);
@@ -389,9 +463,10 @@ class Component extends DCLogic {
     const isMap = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
     const has = (table, v) => typeof v === 'string' && Object.prototype.hasOwnProperty.call(table, v);
     known('proto', v => ['tm', 'tc', 'spp', 'sdls'].includes(v));
-    known('view', v => ['diagram', 'field', 'ep', 'build', 'decode', 'profile'].includes(v));
+    known('view', v => ['diagram', 'field', 'ep', 'build', 'decode', 'profile', 'cheat'].includes(v));
+    known('cProto', v => has(this.CHEAT_SHEETS, v));
     known('profileOn', v => typeof v === 'boolean');
-    known('retView', v => v === null || v === 'decode' || v === 'build');
+    known('retView', v => v === null || ['decode', 'build', 'cheat'].includes(v));
     known('fid', v => v === null || has(this.F, v));
     known('epId', v => v === null || has(this.EP_DEF, v));
     known('bProto', v => has(this.BUILD_SPECS, v));
@@ -438,7 +513,7 @@ class Component extends DCLogic {
     } else {
       const isEp = this.EP_FIELD_IDS.includes(entry.id);
       this.setState({ proto: entry.proto, ...(isEp ? { epId: this.qEpOf(entry.id), epOpen: true } : {}) });
-      this.openPage(entry.id, from === 'decode' || from === 'build' ? from : undefined);
+      this.openPage(entry.id, ['decode', 'build', 'cheat'].includes(from) ? from : undefined);
     }
   }
 
@@ -449,9 +524,9 @@ class Component extends DCLogic {
     if (this.mainEl) this.mainEl.scrollTop = 0;
   }
 
-  openEp(id) {
+  openEp(id, retView) {
     if (!this.EP_DEF[id]) return;
-    this.setState({ view: 'ep', epId: id, fid: null, tip: null, dfsModal: false });
+    this.setState({ view: 'ep', epId: id, fid: null, tip: null, dfsModal: false, retView: retView || null });
     if (this.mainEl) this.mainEl.scrollTop = 0;
   }
 
@@ -492,6 +567,7 @@ class Component extends DCLogic {
     const showField = st.view === 'field' && !!f;
     const showBuilder = st.view === 'build';
     const showProfile = st.view === 'profile';
+    const showCheat = st.view === 'cheat';
 
     // ---- frame builder ----
     const bSpec = this.BUILD_SPECS[st.bProto] || this.BUILD_SPECS.tm;
@@ -717,7 +793,7 @@ class Component extends DCLogic {
 
     return {
       // nav
-      isSpp: proto === 'spp' && !showBuilder && !showDecoder && !showProfile, isTm: proto === 'tm' && !showBuilder && !showDecoder && !showProfile, isTc: proto === 'tc' && !showBuilder && !showDecoder && !showProfile, isSdls: proto === 'sdls' && !showBuilder && !showDecoder && !showProfile,
+      isSpp: proto === 'spp' && !showBuilder && !showDecoder && !showProfile && !showCheat, isTm: proto === 'tm' && !showBuilder && !showDecoder && !showProfile && !showCheat, isTc: proto === 'tc' && !showBuilder && !showDecoder && !showProfile && !showCheat, isSdls: proto === 'sdls' && !showBuilder && !showDecoder && !showProfile && !showCheat,
       pickProto: (e) => this.setState({ proto: e.currentTarget.dataset.proto, view: 'diagram', tip: null, retView: null }),
       toggleEp: () => this.setState(s => ({ epOpen: !s.epOpen })),
       epOpen: st.epOpen,
@@ -730,6 +806,7 @@ class Component extends DCLogic {
       showDiagram, showTcDiagram, showSpDiagram, showSdlsDiagram, showField,
       lay, ...this.profileVals(st, pr, showProfile),
       bb: this.bbVals(),
+      showCheat, ...this.cheatVals(st, pr, showCheat),
       showBuilder,
       qOpen: st.qOpen, qText: st.qText, qResults: qRows, qHasResults: qRows.length > 0,
       qShowMessage: qRows.length === 0,
@@ -907,7 +984,8 @@ class Component extends DCLogic {
 
       // field page
       fieldName: f ? f.n : '', fieldDesc: f ? f.desc : '', fieldRef: f ? f.ref : '', srcDoc, srcLine,
-      backLabel: st.retView === 'decode' ? 'FRAME DECODER' : st.retView === 'build' ? 'FRAME BUILDER' : fromEp ? 'PDU DIAGRAM' : 'FRAME DIAGRAM',
+      epCanGoBack: st.retView === 'cheat',
+      backLabel: st.retView === 'decode' ? 'FRAME DECODER' : st.retView === 'build' ? 'FRAME BUILDER' : st.retView === 'cheat' ? 'CHEAT SHEET' : fromEp ? 'PDU DIAGRAM' : 'FRAME DIAGRAM',
       crumbs, fieldChips: chips, fieldQuotes: quotes,
       hasSpecial: special.length > 0, fieldSpecial: special,
       hasNotes: notes.length > 0, fieldNotes: notes,

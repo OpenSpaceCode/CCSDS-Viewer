@@ -119,7 +119,7 @@ test('TM layout without a frame length: the head is known, the tail is measured 
 test('TC layout: the frame varies, so the Data Field is an upper bound', () => {
   const p = withValues({ 'tc.maxFrameLen': 100, 'tc.sdls.service': 'authentication' });
   assert.equal(label(p, 'tc', 'ph'), '5 OCTETS · 0–4');
-  assert.equal(label(p, 'tc', 'seg'), '1 OCTET · 5–5');
+  assert.equal(label(p, 'tc', 'seg'), '1 OCTET · 5', 'one octet is a position, not a range');
   assert.equal(label(p, 'tc', 'sech'), '6 OCTETS · 6–11');
   assert.equal(label(p, 'tc', 'data'), 'UP TO 70 OCTETS · FROM 12');
   assert.equal(label(p, 'tc', 'sect'), '16 OCTETS · END−18');

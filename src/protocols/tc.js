@@ -198,6 +198,22 @@ const TC_BUILD = { name: 'TC TRANSFER FRAME PRIMARY HEADER', tab: 'TC SDLP',
       { id: 'segmap', n: 'Multiplexer Access Point Identifier', bits: 6, def: 0, abbr: 'MAP' } ] },
   pay: { name: 'TRANSFER FRAME DATA FIELD', field: 'Data Field', abbr: 'DATA', note: 'Optional. The Data Field carries the payload — one or more Packets, a Segment or a VCA_SDU. Give its length in octets and its content as raw hex; leave the length at 0 to build the header only.' } };
 
+// One-page cheat sheet.
+const TC_SHEET = { doc: 'tc', title: 'TC SPACE DATA LINK PROTOCOL', layout: 'tc', frameTitle: 'TC TRANSFER FRAME',
+  frame: [{ n: 'PRIMARY HEADER', len: '5 OCTETS', w: 1.5 }, { n: 'DATA FIELD', len: 'UP TO 1019 (1017 WITH FECF)', w: 4.5 }, { n: 'FECF', len: '2 · OPTIONAL', w: 1, opt: true }],
+  headerTitle: 'PRIMARY HEADER · 5 OCTETS',
+  rows: [[['TFVN', 2, 'tcvn'], ['BYP', 1, 'tcbf'], ['CCF', 1, 'tcccf'], ['RSVD', 2, 'tcrsvd'], ['SCID', 10, 'tcscid']], [['VCID', 6, 'tcvcid'], ['LEN', 10, 'tcflen']], [['FSN', 8, 'tcfsn']]],
+  fields: [
+    ['tcvn', 'TFVN', '‘00’ only.'], ['tcbf', 'BYP', '0 = Type-A, FARM acceptance checks. 1 = Type-B, checks bypassed.'], ['tcccf', 'CCF', '0 = Type-D, Frame Data Unit. 1 = Type-C, Control Commands.'], ['tcrsvd', 'RSVD', '‘00’.'],
+    ['tcscid', 'SCID', 'Static for the mission.'], ['tcvcid', 'VCID', 'Virtual Channel, 0–63.'], ['tcflen', 'LEN', 'C = total frame octets − 1, FECF included. Maximum frame 1024.'], ['tcfsn', 'FSN', 'N(S), per Virtual Channel, checked by the FARM. All zeroes in Type-B frames.'],
+    ['tcsqf', 'SEQF', 'Segment Header, first 2 bits: ‘01’ first, ‘00’ continuing, ‘10’ last, ‘11’ no segmentation.'], ['tcmap', 'MAP', 'Segment Header, next 6 bits: MAP Identifier, 0–63.'], ['tccc', 'CC', 'Type-C frames only: see below.'],
+    ['tcfecf', 'FECF', 'CRC of all octets before it, preset to ones. G(X) = X¹⁶ + X¹² + X⁵ + 1.'] ],
+  specials: [['BYP CCF 00', 'Type-AD: data, Sequence-Controlled Service.', 'TABLE 4-1'], ['BYP CCF 10', 'Type-BD: data, Expedited Service.', 'TABLE 4-1'], ['BYP CCF 11', 'Type-BC: Control Commands.', 'TABLE 4-1'], ['BYP CCF 01', 'Reserved.', 'TABLE 4-1'],
+    ['00', 'Unlock Control Command.', '§ 4.1.3.3.2'], ['82 00 XX', 'Set V(R) Control Command: V(R) = XX.', '§ 4.1.3.3.3'], ['0x55 FILL', 'Up to 6 Fill Data octets from the Channel Coding Sublayer after a frame; discarded.', '§ 4.4.9.2.6']],
+  rules: [['Segment Header presence is managed per Virtual Channel; if used, it is in every Type-D frame there.', '§ 4.1.3.2.1.4'], ['Required with more than one MAP, or with data too large for one frame.', '§ 4.1.3.2.1.4'],
+    ['Never in a Type-C frame; nor is SDLS.', '§ 4.1.3.2.2.1.3'], ['Fewer octets received than LEN says: all are discarded.', '§ 4.4.9.2.5'],
+    ['A frame failing the version, MCID, length or CRC test is rejected.', '§ 4.4.9.3.3'], ['With SDLS: Security Header follows the Segment Header; Security Trailer follows the User Data.', '§ 6.3.4.2']] };
+
 // Frame Decoder spec — see DECODE_SPECS in component.js for the decode() contract.
 const TC_DECODE = { name: 'TC TRANSFER FRAME', tab: 'TC SDLP',
   note: 'CCSDS 232.0-B-4 § 4.1 — a TC Transfer Frame is a 5-octet Primary Header, a Data Field of up to 1019 octets and an optional 2-octet FECF. The Data Field holds a Frame Data Unit (Type-D, with an optional Segment Header) or Control Commands (Type-C). With SDLS (§ 6.3, CCSDS 355.0-B-2) a Security Header and optional Security Trailer surround the User Data of Type-D frames.',

@@ -1,6 +1,6 @@
 # CCSDS Protocol Viewer
 
-Quick-reference viewer for a layered space link stack — Space Packet, TM / TC SDLP, SDLS and SDLS Extended Procedures — built from the CCSDS Blue Books. Frame diagrams, field reference pages, a Frame Builder and a Frame Decoder.
+Quick-reference viewer for a layered space link stack — Space Packet, TM / TC SDLP, SDLS and SDLS Extended Procedures — built from the CCSDS Blue Books. Frame diagrams, field reference pages, a Frame Builder, a Frame Decoder and printable one-page cheat sheets.
 
 **To use it**, open `CCSDS-protocol-viewer.html` in a browser. It is a single self-contained file: no server and no network needed.
 
@@ -30,5 +30,7 @@ vendor/               React, dc-runtime, fonts and the self-unpacking bundle she
 tests/                node:test suites
 build.mjs             the bundler
 ```
+
+Each protocol's cheat sheet (`*_SHEET` in `src/protocols/`) is curated text; `npm test` checks its fields and references, but not that it still fits one page. After changing a sheet or `src/views/cheat.html`, print the fullest case (TM with a mission profile that uses SDLS) and check the page count.
 
 The scripts in `src/` are plain scripts that share one scope (no modules), in the order listed at the bottom of `src/index.html`. Reference vendor files as `asset:<path>`, for example `url("asset:fonts/barlow-400-latin.woff2")`.

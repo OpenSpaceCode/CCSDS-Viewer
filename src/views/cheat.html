@@ -1,0 +1,149 @@
+      <!-- ============ CHEAT SHEET VIEW ============ -->
+      <sc-if value="{{ showCheat }}" hint-placeholder-val="{{ false }}">
+        <style>
+          /* No page margin: browsers print the file path, date and page number there. The sheet's padding is the margin. */
+          @page { size: A4; margin: 0; }
+          @media print {
+            :root { --color-bg: #fff; }
+            html, body { background: #fff; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            [data-print-root] { display: block !important; height: auto !important; overflow: visible !important; }
+            [data-print-hide] { display: none !important; }
+            [data-print-main] { overflow: visible !important; }
+            [data-print-pad] { padding: 0 !important; max-width: none !important; }
+            [data-cheat-sheet] { width: 210mm !important; border: 0 !important; margin: 0 !important; box-shadow: none !important; }
+            [data-cheat-sheet] a { color: inherit !important; }
+          }
+        </style>
+        <div data-screen-label="Cheat sheet">
+          <div data-print-hide="1" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+            <sc-for list="{{ cTabs }}" as="t" hint-placeholder-count="5">
+              <div role="button" tabindex="0" data-cproto="{{ t.id }}" sc-camel-on-click="{{ t.onClick }}" style="{{ t.style }}">{{ t.name }}</div>
+            </sc-for>
+            <div role="button" tabindex="0" data-cprint="1" sc-camel-on-click="{{ cPrint }}" style="margin-left:auto;padding:8px 18px;border:1px solid var(--color-accent);background:var(--color-accent);color:var(--color-bg);cursor:pointer;font-size:11.5px;letter-spacing:.13em;font-family:var(--font-heading);font-weight:600">PRINT · A4</div>
+          </div>
+
+          <div data-cheat-sheet="1" style="width:210mm;box-sizing:border-box;padding:10mm;margin:0 auto;border:1px solid var(--color-divider);background:var(--color-bg);box-shadow:var(--shadow-sm);font-size:9.2pt;line-height:1.3;color:var(--color-text)">
+            <div style="display:flex;align-items:flex-end;gap:10pt;border-bottom:1.2pt solid var(--color-text);padding-bottom:4pt">
+              <div style="flex:1;min-width:0">
+                <div style="font-size:7.5pt;letter-spacing:.2em;font-weight:600;color:var(--color-accent-700)">CHEAT SHEET{{ cMission }}</div>
+                <div style="font-family:var(--font-heading);font-weight:600;font-size:19.6pt;line-height:1.05;letter-spacing:.01em">{{ cTitle }}</div>
+              </div>
+              <div style="text-align:right;font-size:7.5pt;letter-spacing:.05em;line-height:1.35;color:var(--color-neutral-700)">
+                <a data-cbook="1" href="{{ cUrl }}" target="_blank" rel="noopener" style="font-weight:600;font-size:8.6pt;text-decoration:none;color:var(--color-accent-800)">{{ cCode }}</a>
+                <div data-crev="1">{{ cRev }}</div>
+              </div>
+            </div>
+
+            <sc-for list="{{ cStrips }}" as="s" hint-placeholder-count="1">
+              <div style="margin-top:8pt">
+                <div style="font-family:var(--font-heading);font-weight:600;font-size:8.6pt;letter-spacing:.15em;padding-bottom:3pt">{{ s.title }}</div>
+                <div style="display:flex;align-items:stretch">
+                  <sc-for list="{{ s.cells }}" as="c" hint-placeholder-count="5">
+                    <div style="{{ c.style }}">
+                      <span style="font-family:var(--font-heading);font-weight:600;font-size:7.5pt;letter-spacing:.03em;line-height:1.1">{{ c.n }}</span>
+                      <span style="font-size:6.3pt;letter-spacing:.02em;color:var(--color-neutral-700);line-height:1.15">{{ c.len }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:8.6pt;letter-spacing:.15em;margin-top:8pt;padding-bottom:3pt">{{ cHeaderTitle }}</div>
+            <sc-for list="{{ cRows }}" as="r" hint-placeholder-count="3">
+              <div style="display:flex;align-items:stretch;margin-top:-.75pt">
+                <span style="width:13mm;flex:none;align-self:center;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:6.3pt;color:var(--color-neutral-600)">{{ r.label }}</span>
+                <div style="flex:1;min-width:0;display:flex;align-items:stretch">
+                  <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="4">
+                    <div style="{{ c.style }}">
+                      <span style="font-family:var(--font-heading);font-weight:600;font-size:8.1pt;line-height:1.1">{{ c.abbr }}</span>
+                      <span style="font-size:6.3pt;color:var(--color-neutral-700);line-height:1.1;white-space:nowrap">{{ c.size }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+
+            <div style="margin-top:8pt">
+              <div style="display:grid;grid-template-columns:12mm 48mm 13mm 1fr 22mm;column-gap:2mm;font-size:6.3pt;letter-spacing:.1em;color:var(--color-neutral-600);border-bottom:.6pt solid var(--color-text);padding-bottom:2pt">
+                <span>ABBR</span><span>FIELD</span><span>BITS</span><span>MEANING</span><span style="text-align:right">§</span>
+              </div>
+              <sc-for list="{{ cFields }}" as="f" hint-placeholder-count="10">
+                <div role="button" tabindex="0" data-cfield="{{ f.id }}" sc-camel-on-click="{{ f.onClick }}" style="display:grid;grid-template-columns:12mm 48mm 13mm 1fr 22mm;column-gap:2mm;align-items:baseline;padding:1.3pt 0;border-bottom:.3pt solid var(--color-divider);cursor:pointer" style-hover="background:color-mix(in srgb, var(--color-accent) 8%, transparent)">
+                  <span style="font-family:var(--font-heading);font-weight:600;font-size:8.6pt;color:var(--color-accent-800)">{{ f.abbr }}</span>
+                  <span style="font-size:8.1pt;line-height:1.2">{{ f.n }}</span>
+                  <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:6.9pt;color:var(--color-neutral-700)">{{ f.pos }}</span>
+                  <span style="font-size:8.1pt;line-height:1.25;color:var(--color-neutral-800)">{{ f.v }}</span>
+                  <sc-if value="{{ f.hasLink }}" hint-placeholder-val="{{ true }}"><a href="{{ f.href }}" title="{{ f.linkTitle }}" target="_blank" rel="noopener" sc-camel-on-click="{{ cStop }}" style="text-align:right;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:6.3pt;text-decoration:none;color:var(--color-neutral-600);white-space:nowrap">{{ f.ref }}</a></sc-if>
+                  <sc-if value="{{ f.noLink }}" hint-placeholder-val="{{ false }}"><span style="text-align:right;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:6.3pt;color:var(--color-neutral-600);white-space:nowrap">{{ f.ref }}</span></sc-if>
+                </div>
+              </sc-for>
+            </div>
+
+            <sc-if value="{{ cHasServices }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:8pt">
+                <div style="display:grid;grid-template-columns:46mm 1fr 1fr 1fr;column-gap:2mm;font-size:6.3pt;letter-spacing:.1em;color:var(--color-neutral-600);border-bottom:.6pt solid var(--color-text);padding-bottom:2pt"><span>SERVICE</span><span>SEQUENCE NUMBER</span><span>MAC</span><span>FRAME DATA</span></div>
+                <sc-for list="{{ cServices }}" as="s" hint-placeholder-count="3">
+                  <div style="display:grid;grid-template-columns:46mm 1fr 1fr 1fr;column-gap:2mm;padding:1.3pt 0;font-size:8.1pt;border-bottom:.3pt solid var(--color-divider)"><span style="font-weight:500">{{ s.a }}</span><span>{{ s.b }}</span><span>{{ s.c }}</span><span>{{ s.d }}</span></div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ cHasProcedures }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:8pt;display:grid;grid-template-columns:1fr 1fr 1fr;column-gap:3mm;align-items:start">
+                <sc-for list="{{ cProcedures }}" as="g" hint-placeholder-count="3">
+                  <div>
+                    <div style="font-family:var(--font-heading);font-weight:600;font-size:8.1pt;letter-spacing:.1em;border-bottom:.6pt solid var(--color-text);padding-bottom:2pt">{{ g.name }}</div>
+                    <sc-for list="{{ g.items }}" as="p" hint-placeholder-count="8">
+                      <div role="button" tabindex="0" data-cproc="{{ p.id }}" sc-camel-on-click="{{ p.onClick }}" style="display:flex;gap:2mm;align-items:baseline;padding:1.3pt 0;border-bottom:.3pt solid var(--color-divider);cursor:pointer" style-hover="background:color-mix(in srgb, var(--color-accent) 8%, transparent)">
+                        <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:6.9pt;font-weight:600;color:var(--color-accent-800)">{{ p.pi }}</span>
+                        <span style="flex:1;min-width:0;font-size:7.5pt;line-height:1.2">{{ p.name }}</span>
+                        <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:6.3pt;color:var(--color-neutral-600);white-space:nowrap">{{ p.ref }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <div style="margin-top:8pt;display:grid;grid-template-columns:1fr 1fr;column-gap:4mm;align-items:start">
+              <div>
+                <div style="font-family:var(--font-heading);font-weight:600;font-size:8.6pt;letter-spacing:.15em;border-bottom:.6pt solid var(--color-text);padding-bottom:2pt">{{ cSpecialTitle }}</div>
+                <sc-for list="{{ cSpecials }}" as="s" hint-placeholder-count="3">
+                  <div style="display:grid;grid-template-columns:18mm 1fr auto;column-gap:1.5mm;align-items:baseline;padding:1.3pt 0;border-bottom:.3pt solid var(--color-divider)">
+                    <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:6.9pt;font-weight:600">{{ s.c }}</span>
+                    <span style="font-size:8.1pt;line-height:1.25">{{ s.d }}</span>
+                    <a href="{{ s.href }}" title="{{ s.linkTitle }}" target="_blank" rel="noopener" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:6.3pt;text-decoration:none;color:var(--color-neutral-600);white-space:nowrap">{{ s.ref }}</a>
+                  </div>
+                </sc-for>
+              </div>
+              <div>
+                <div style="font-family:var(--font-heading);font-weight:600;font-size:8.6pt;letter-spacing:.15em;border-bottom:.6pt solid var(--color-text);padding-bottom:2pt">RULES</div>
+                <sc-for list="{{ cRules }}" as="s" hint-placeholder-count="4">
+                  <div style="display:grid;grid-template-columns:1fr auto;column-gap:1.5mm;align-items:baseline;padding:1.3pt 0;border-bottom:.3pt solid var(--color-divider)">
+                    <span style="font-size:8.1pt;line-height:1.25">{{ s.t }}</span>
+                    <a href="{{ s.href }}" title="{{ s.linkTitle }}" target="_blank" rel="noopener" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:6.3pt;text-decoration:none;color:var(--color-neutral-600);white-space:nowrap">{{ s.ref }}</a>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <sc-if value="{{ cHasManaged }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:8pt">
+                <div style="font-family:var(--font-heading);font-weight:600;font-size:8.6pt;letter-spacing:.15em;border-bottom:.6pt solid var(--color-text);padding-bottom:2pt">{{ cManagedTitle }}</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;column-gap:4mm">
+                  <sc-for list="{{ cManaged }}" as="m" hint-placeholder-count="4">
+                    <div style="display:flex;gap:2mm;align-items:baseline;padding:1.3pt 0;border-bottom:.3pt solid var(--color-divider)">
+                      <span style="flex:1;min-width:0;font-size:8.1pt">{{ m.n }}</span>
+                      <span data-cmanaged="{{ m.id }}" style="font-size:8.1pt;font-weight:600;color:var(--color-accent-800);white-space:nowrap">{{ m.value }}</span>
+                      <a href="{{ m.href }}" title="{{ m.linkTitle }}" target="_blank" rel="noopener" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:6.3pt;text-decoration:none;color:var(--color-neutral-600);white-space:nowrap">{{ m.refShort }}</a>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <div style="margin-top:8pt;font-size:6.3pt;letter-spacing:.04em;color:var(--color-neutral-600)">A summary for quick reference, from {{ cCode }}, {{ cRevShort }}. Bit 0 is the first transmitted, and the most significant. The Blue Book is normative.</div>
+          </div>
+        </div>
+      </sc-if>

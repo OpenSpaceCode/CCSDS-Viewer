@@ -19,13 +19,13 @@ a:hover{color:var(--color-accent-900)}
 </style>
 </helmet>
 
-<div style="display:flex;height:100vh;overflow:hidden;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body)">
+<div data-print-root="1" style="display:flex;height:100vh;overflow:hidden;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body)">
 
   <!--#include views/sidebar.html -->
 
   <!-- ============ MAIN ============ -->
-  <div ref="{{ mainRef }}" sc-camel-on-scroll="{{ clearTip }}" style="flex:1;min-width:0;overflow:auto;position:relative">
-    <div style="max-width:1220px;margin:0 auto;padding:40px 46px 72px">
+  <div data-print-main="1" ref="{{ mainRef }}" sc-camel-on-scroll="{{ clearTip }}" style="flex:1;min-width:0;overflow:auto;position:relative">
+    <div data-print-pad="1" style="max-width:1220px;margin:0 auto;padding:40px 46px 72px">
 
       <!--#include views/profile-bar.html -->
 
@@ -46,6 +46,8 @@ a:hover{color:var(--color-accent-900)}
       <!--#include views/field-page.html -->
 
       <!--#include views/profile.html -->
+
+      <!--#include views/cheat.html -->
     </div>
 
     <!--#include views/tooltip.html -->

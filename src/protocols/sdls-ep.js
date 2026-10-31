@@ -207,6 +207,15 @@ const SDLS_EP_PROCEDURES = {
 
 const SDLS_EP_FIELD_IDS = ['ephdr', 'eptag', 'eptype', 'epuser', 'epsg', 'eppi', 'eplen', 'epdata_otar', 'epdata_keyact', 'epdata_keydeact', 'epdata_keydestr', 'mkid', 'epiv', 'ekid', 'ekey', 'epmac', 'epkeyid', 'kdkeyid', 'kxkeyid', 'epdata_keyver', 'kvkeyid', 'kvchal', 'epdata_keyverrep', 'krkeyid', 'kriv', 'krechal', 'krmac', 'epdata_keyinv', 'kifirst', 'kilast', 'epdata_keyinvrep', 'kitotal', 'kikeyid', 'kistate', 'epdata_startsa', 'saspi', 'sagvcid', 'epdata_stopsa', 'ssaspi', 'epdata_rekeysa', 'rkspi', 'rkenckey', 'rkauthkey', 'rkarsn', 'rkiv', 'epdata_expiresa', 'exspi', 'epdata_createsa', 'csspi', 'csenc', 'csauth', 'csivlen', 'cssnlen', 'cspllen', 'csmaclen', 'csenclen', 'csencid', 'csivvlen', 'csivval', 'csauthlen', 'csauthid', 'csbmlen', 'csbmval', 'csarsnlen', 'csarsnval', 'cswinlen', 'cswinval', 'epdata_deletesa', 'dsspi', 'epdata_setarsn', 'saraspi', 'sarval', 'epdata_setarsnw', 'sarwspi', 'sarwval', 'epdata_sastat', 'ssqspi', 'epdata_sastatrep', 'ssrspi', 'ssrdir', 'epdata_readarsn', 'rdspi', 'epdata_readarsnrep', 'rdarsnval', 'epdata_ping', 'epdata_pingrep', 'epdata_logstat', 'epdata_logstatrep', 'lsevents', 'lsspace', 'epdata_dumplog', 'epdata_dumplogrep', 'dltag', 'dllen', 'dlval', 'epdata_eraselog', 'epdata_eraselogrep', 'elevents', 'elspace', 'epdata_selftest', 'epdata_selftestrep', 'stresult', 'epdata_alarmreset'];
 
+// One-page cheat sheet. The procedures table comes from SDLS_EP_PROCEDURES.
+const SDLS_EP_SHEET = { doc: 'ep', title: 'SDLS EXTENDED PROCEDURES', procedures: true,
+  headerTitle: 'PDU HEADER · 3 OCTETS',
+  rows: [[['PT', 1, 'eptype'], ['UF', 1, 'epuser'], ['SG', 2, 'epsg'], ['PI', 4, 'eppi'], ['DATA FIELD LENGTH', 16, 'eplen']]],
+  fields: [
+    ['eptype', 'PT', '0 = command, 1 = reply.'], ['epuser', 'UF', '0 = CCSDS defined procedure, 1 = user defined.'], ['epsg', 'SG', 'Service Group, which also scopes the Procedure Identification.'], ['eppi', 'PI', 'Procedure Identification: see the table below, within its Service Group.'], ['eplen', 'LEN', 'Length of the PDU Data Field, in bits. Octet-aligned.'] ],
+  specials: [['SG ‘00’', 'Key Management.', '§ 5.3.2.2.2.3.2'], ['SG ‘01’', 'SA Management, SAs handling Initiator → Recipient traffic.', '§ 5.3.2.2.2.3.3'], ['SG ‘10’', 'SA Management, SAs handling Recipient → Initiator traffic.', '§ 5.3.2.2.2.3.4'], ['SG ‘11’', 'Security Monitoring & Control.', '§ 5.3.2.2.2.3.5'] ],
+  rules: [['The Data Field Length counts bits, not octets, and is octet-aligned.', '§ 5.3.2.3.2'], ['A length of zero means there is no Data Field.', '§ 5.3.2.4.3']] };
+
 const SDLS_EP_FIELDS = {
   ephdr: { n: 'Extended Procedures PDU Header', parent: 'epframe', bits: 'BITS 0–23', len: '3 OCTETS · 24 BITS', pres: 'MANDATORY', ref: '§ 5.3.2.2',
     desc: 'The mandatory 24-bit header of every Extended Procedures PDU. It carries the Extended Procedures Tag — which identifies the procedure — followed by the Data Field Length.',

@@ -176,14 +176,15 @@ function profileLayout(p, proto) {
 
 // A field's place in the layout, as a short label for the diagrams.
 function profileFieldLabel(f) {
+  const span = f.from === f.to ? f.from : f.from + '–' + f.to;
   if (!f.len && f.fromEnd === undefined && f.upTo === undefined && f.from === null) return 'ABSENT';
   if (f.key === 'data' || f.upTo !== undefined) {
     if (f.len === null) return 'VARIES · FROM ' + f.from;
     if (f.len < 1) return 'NO ROOM';
-    return f.upTo ? 'UP TO ' + oct(f.len).toUpperCase() + ' · FROM ' + f.from : oct(f.len).toUpperCase() + ' · ' + f.from + '–' + f.to;
+    return f.upTo ? 'UP TO ' + oct(f.len).toUpperCase() + ' · FROM ' + f.from : oct(f.len).toUpperCase() + ' · ' + span;
   }
   if (!f.len) return 'ABSENT';
-  return f.from !== null ? oct(f.len).toUpperCase() + ' · ' + f.from + '–' + f.to : oct(f.len).toUpperCase() + ' · END−' + f.fromEnd;
+  return f.from !== null ? oct(f.len).toUpperCase() + ' · ' + span : oct(f.len).toUpperCase() + ' · END−' + f.fromEnd;
 }
 
 // Frame values for the Builder when it starts from the profile. Strings, as entered values are.

@@ -1,5 +1,5 @@
   <!-- ============ SIDEBAR ============ -->
-  <div style="width:236px;flex:none;display:flex;flex-direction:column;overflow-y:auto;border-right:1px solid var(--color-divider);background:var(--color-bg)" data-screen-label="Protocol sidebar">
+  <div data-print-hide="1" style="width:236px;flex:none;display:flex;flex-direction:column;overflow-y:auto;border-right:1px solid var(--color-divider);background:var(--color-bg)" data-screen-label="Protocol sidebar">
     <div style="padding:var(--space-6) var(--space-4) var(--space-4);border-bottom:1px solid var(--color-divider)">
       <div style="font-size:10px;letter-spacing:.22em;font-weight:600;color:var(--color-accent-700)">CCSDS · ECSS</div>
       <div style="font-family:var(--font-heading);font-weight:600;font-size:21px;letter-spacing:.06em;margin-top:4px">PROTOCOL FRAME VIEWER</div>
@@ -78,6 +78,14 @@
         <sc-if value="{{ showProfile }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;background:color-mix(in srgb, var(--color-accent) 10%, transparent);border-left:2px solid var(--color-accent);pointer-events:none"></div></sc-if>
         <span style="position:relative;font-size:14px;font-weight:500">Mission Profile</span>
         <span style="position:relative;font-size:10.5px;letter-spacing:.08em;color:var(--color-neutral-600)">{{ pSubtitle }}</span>
+      </div>
+    </div>
+    <div style="padding:var(--space-4) var(--space-4) var(--space-2);border-top:1px solid var(--color-divider);font-size:10px;letter-spacing:.18em;color:var(--color-neutral-600)">REFERENCE</div>
+    <div style="display:flex;flex-direction:column;padding-bottom:8px">
+      <div role="button" tabindex="0" sc-camel-on-click="{{ cOpen }}" style="position:relative;padding:10px 16px;cursor:pointer;display:flex;flex-direction:column;gap:2px" style-hover="background:color-mix(in srgb, var(--color-accent) 8%, transparent)">
+        <sc-if value="{{ showCheat }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;background:color-mix(in srgb, var(--color-accent) 10%, transparent);border-left:2px solid var(--color-accent);pointer-events:none"></div></sc-if>
+        <span style="position:relative;font-size:14px;font-weight:500">Cheat Sheets</span>
+        <span style="position:relative;font-size:10.5px;letter-spacing:.08em;color:var(--color-neutral-600)">One printable page per protocol</span>
       </div>
     </div>
     <div style="padding:var(--space-4);border-top:1px solid var(--color-divider);font-size:11px;line-height:1.55;color:var(--color-neutral-600)">Reference views built from the CCSDS Blue Books. SpacePacket, TM SDLP, TC SDLP and SDLS are all interactive.</div>

@@ -1,6 +1,9 @@
       <!-- ============ EP DIAGRAM VIEW ============ -->
       <sc-if value="{{ showEpDiagram }}" hint-placeholder-val="{{ false }}">
         <div data-screen-label="SDLS EP PDU diagram">
+          <sc-if value="{{ epCanGoBack }}" hint-placeholder-val="{{ false }}">
+            <button class="btn btn-ghost" data-ep-back="1" sc-camel-on-click="{{ back }}" style="letter-spacing:.12em;font-size:12px;font-weight:600;margin:0 0 12px -6px"><svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>{{ backLabel }}</button>
+          </sc-if>
           <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
             <span style="font-size:11px;letter-spacing:.2em;font-weight:600;color:var(--color-accent-700)">SDLS EXTENDED PROCEDURES · {{ epServiceLabel }}</span>
             <span data-bb-rev="ep" style="font-size:11px;letter-spacing:.14em;color:var(--color-neutral-600);text-align:right" title="{{ bb.epDetail }}">{{ bb.epRev }}</span>

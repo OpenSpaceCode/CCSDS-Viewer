@@ -105,6 +105,19 @@ const SDLS_CRUMBS = {
 // Field search: abbreviations in common use, by field. Initials of the name are matched without being listed.
 const SDLS_ABBR = { sdsh: ['SH'], spi: ['SPI'], iv: ['IV'], sqn: ['SN', 'ARSN'], pl: ['PL'], sdtr: ['ST'], mac: ['MAC'] };
 
+// One-page cheat sheet. SDLS has no frame of its own, so it shows the TM and TC frames it sits in.
+const SDLS_SHEET = { doc: 'sdls', title: 'SPACE DATA LINK SECURITY PROTOCOL', links: ['tm', 'tc'],
+  headerTitle: 'SECURITY HEADER · UP TO 64 OCTETS',
+  rows: [[['SPI', 16, 'spi', '16 BITS'], ['IV', 16, 'iv', '0 · 1–32 OCTETS'], ['SN', 12, 'sqn', '0 · 2–8 OCTETS'], ['PL', 8, 'pl', '0 · 1–2 OCTETS']]],
+  fields: [
+    ['spi', 'SPI', 'Selects the Security Association, which holds all the lengths below. Unique on the physical channel.'], ['iv', 'IV', 'Initialization Vector, or the transmitted part of it.'], ['sqn', 'SN', 'Anti-replay count. Zero octets without authentication, or when a counter-mode IV serves as one.'],
+    ['pl', 'PL', 'Count of fill octets added by the cryptographic process. Zero octets if none is needed.'], ['mac', 'MAC', 'The Security Trailer: 8–64 octets, present with authentication or authenticated encryption.'] ],
+  specials: [['SPI 0', 'Reserved by CCSDS.', '§ 4.1.1.2.3'], ['SPI 65535', 'Reserved by CCSDS.', '§ 4.1.1.2.3'], ['TM BASELINE', 'AES-GCM authenticated encryption: IV 12, SN 0, PL 0, MAC 16; 14-octet header.', 'ANNEX E'], ['TC BASELINE', 'AES-CMAC authentication: IV 0, SN 4, PL 0, MAC 16; 6-octet header.', 'ANNEX E']],
+  services: [['Authentication', 'Required', 'Required', 'Plaintext'], ['Encryption', 'Zero octets', 'Not used', 'Ciphertext'], ['Authenticated Encryption', 'Required, or a counter-mode IV', 'Required', 'Ciphertext']],
+  rules: [['The MAC covers the Primary, Secondary or Segment Header, the Security Header and the Frame Data; not the OCF or FECF.', '§ 5.1'], ['Encryption covers the Frame Data only.', '§ 5.1'],
+    ['The field lengths are not in the frame: the SPI selects the SA that holds them.', '§ 4.1.1.1.3'], ['Only one SA at a time is active on a Virtual Channel or MAP.', '§ 4.2.2.2.2'],
+    ['No SA is created for Virtual Channels carrying Only Idle Data frames.', '§ 4.2.2.2.3'], ['Each TC SA is associated with one Virtual Channel only.', '§ 5.2']] };
+
 // Which part of each base frame SDLS authenticates and which part it encrypts (CCSDS 355.0-B-2, figures 5-1..5-4).
 // mac: 'in' = inside the Authentication Payload · 'mask' = inside it but zeroed by the SA authentication bit mask · 'out' = outside.
 const SDLS_COVERAGE_ORDER = ['tm', 'tc', 'aos', 'uslp'];
