@@ -64,8 +64,7 @@ class Component extends DCLogic {
       vc = over ? max : v;
       bin = nb > 0 ? vc.toString(2).padStart(nb, '0') : '';
       if (over && nb > 0) note = 'Maximum for ' + nb + ' bits is ' + max + ' — clamped.';
-      else if (fd.warn) note = fd.warn(vc);
-      else if (overridden && vc !== fd.derive(vals)) note = fd.overrideNote(fd.derive(vals));
+      else note = (fd.warn && fd.warn(vc, vals)) || (overridden && vc !== fd.derive(vals) ? fd.overrideNote(fd.derive(vals)) : '');
     }
     for (let i = 0; i < nb; i++) allBits.push({ b: bin[i], fi, tint, fname: fd.n });
     const octRaw = vals[fd.id + '__oct'];

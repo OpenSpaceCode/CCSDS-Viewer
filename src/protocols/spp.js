@@ -168,14 +168,18 @@ const SPP_BUILD = { name: 'SPACE PACKET PRIMARY HEADER', tab: 'SpacePacket',
     { id: 'apid', n: 'Application Process Identifier', bits: 11, def: 100, abbr: 'APID' },
     { id: 'seqf', n: 'Sequence Flags', bits: 2, def: 3, abbr: 'SEQF', kind: 'enum', opts: [{ v: 0, l: '00 · Continuation segment' }, { v: 1, l: '01 · First segment' }, { v: 2, l: '10 · Last segment' }, { v: 3, l: '11 · Unsegmented' }] },
     { id: 'pseq', n: 'Packet Sequence Count', bits: 14, def: 1, abbr: 'PSC' },
-    { id: 'pdlen', n: 'Packet Data Length', bits: 16, def: 15, abbr: 'PDL' } ],
+    { id: 'pdlen', n: 'Packet Data Length', bits: 16, def: 0, abbr: 'PDL', overridable: true, deriveNote: 'data octets − 1',
+      derive: (vals) => Math.max((vals.__frameOct || 7) - 7, 0),
+      // With no data there is no right value: C = octets − 1 cannot express zero octets.
+      warn: (v, vals) => vals.__frameOct === 6 ? 'The Packet Data Field is empty, but it shall contain at least one octet (§ 4.1.4.1.2). Add User Data or a Secondary Header.' : '',
+      overrideNote: (want) => 'Differs from the packet as built: ' + oct(want + 1) + ' in the Packet Data Field, so the derived value is ' + want + '.' } ],
   sec: { flag: 'pshf', name: 'PACKET SECONDARY HEADER', form: 'NO DEFINED FORM · CCSDS 133.0-B-2 § 4.1.3',
     note: 'The Standard fixes no internal structure. The header is an optional Time Code Field followed by an optional Ancillary Data Field, both mission-defined, with at least one of the two present. Set each length in octets and give the content as raw hex.',
     off: 'The Secondary Header Flag is ‘0’, so no Packet Secondary Header is transmitted. Set the flag to ‘1’ above to build one.',
     fields: [
       { id: 'sptcf', n: 'Time Code Field', bits: 0, def: 0, abbr: 'TCF', kind: 'hex', varOct: true, defOct: 4, minOct: 0, maxOct: 32, defHex: '3A5C0100' },
       { id: 'spadf', n: 'Ancillary Data Field', bits: 0, def: 0, abbr: 'ADF', kind: 'hex', varOct: true, defOct: 0, minOct: 0, maxOct: 32, defHex: '' } ] },
-  pay: { name: 'PACKET USER DATA FIELD', field: 'User Data Field', abbr: 'USER', note: 'Optional. The User Data Field holds the application data. Give its length in octets and its content as raw hex; leave the length at 0 to build the header only. Packet Data Length above is not derived from it.' } };
+  pay: { name: 'PACKET USER DATA FIELD', field: 'User Data Field', abbr: 'USER', note: 'Optional. The User Data Field holds the application data. Give its length in octets and its content as raw hex; leave the length at 0 to build the header only. Packet Data Length above follows it.' } };
 
 // Frame Decoder spec — see DECODE_SPECS in component.js for the decode() contract.
 const SPP_DECODE = { name: 'SPACE PACKET', tab: 'SpacePacket',

@@ -332,8 +332,96 @@ test('RESET returns Frame Length to derived', () => {
   assert.equal(c.renderVals().bFieldList.find(f => f.id === 'tcflen').isDerived, true);
 });
 
-test('only TC derives a frame length', () => {
-  for (const p of ['tm', 'spp']) assert.ok(!build(p).bFieldList.some(f => f.canOverride), p);
+test('only TC and SpacePacket derive a length: a TM frame has no length field', () => {
+  assert.ok(!build('tm').bFieldList.some(f => f.canOverride));
+  assert.ok(build('tc').bFieldList.some(f => f.canOverride));
+  assert.ok(build('spp').bFieldList.some(f => f.canOverride));
+});
+
+const pdlRow = (v) => v.bFieldList.find(f => f.id === 'pdlen');
+
+test('SPP Packet Data Length follows the data field: C = octets − 1 (133.0 § 4.1.3.5)', () => {
+  const check = (vals, dataOctets) => {
+    const v = build('spp', vals);
+    assert.equal(pdlRow(v).derivedLabel, String(dataOctets - 1), JSON.stringify(vals));
+    assert.equal(v.bTotalLabel, (6 + dataOctets) * 8 + ' BITS · ' + (6 + dataOctets) + ' OCTETS', JSON.stringify(vals));
+  };
+  check({ payload__oct: '1' }, 1);
+  check({ payload__oct: '10' }, 10);
+  check({ pshf: '1' }, 4);                                                  // the default Time Code Field alone
+  check({ pshf: '1', payload__oct: '10' }, 14);
+  check({ pshf: '1', sptcf__oct: '2', spadf__oct: '3', payload__oct: '5' }, 10);
+  check({ pshf: '1', sptcf__oct: '0', spadf__oct: '1' }, 1);
+  check({ pshf: '0', sptcf__oct: '8', payload__oct: '5' }, 5);              // lengths are ignored while the flag is off
+});
+
+test('the derived value reaches the wire, across both length octets', () => {
+  assert.equal(build('spp', { payload__oct: '1' }).bHex, '00 64 C0 01 00 00 00');
+  assert.equal(build('spp', { payload__oct: '2', payload: 'AABB' }).bHex, '00 64 C0 01 00 01 AA BB');
+  // 128 octets of User Data + 32 + 32 of Secondary Header = 192, so C = 191 = 0x00BF.
+  assert.deepEqual(build('spp', { pshf: '1', sptcf__oct: '32', spadf__oct: '32', payload__oct: '128' }).bHex.split(' ').slice(4, 6), ['00', 'BF']);
+});
+
+test('an empty Packet Data Field cannot have a right value, and says so (133.0 § 4.1.4.1.2)', () => {
+  const row = pdlRow(build('spp'));
+  assert.equal(row.isDerived, true);
+  assert.equal(row.derivedLabel, '0');
+  assert.match(row.overMsg, /shall contain at least one octet \(§ 4\.1\.4\.1\.2\)/);
+  assert.equal(pdlRow(build('spp', { payload__oct: '1' })).over, false, 'one octet is valid, and also C = 0');
+  // Still flagged while overridden: no value would make it valid.
+  assert.match(pdlRow(build('spp', { pdlen__manual: '1', pdlen: '5' })).overMsg, /at least one octet/);
+});
+
+test('SPP override: starts from the derived value, holds what is entered, and flags a mismatch', () => {
+  const c = new Component({});
+  c.state = { ...c.state, view: 'build', bProto: 'spp', bVals: { spp: { payload__oct: '10' } } };
+  const row = () => pdlRow(c.renderVals());
+  row().onOverride();
+  assert.equal(row().value, '9');
+  assert.equal(row().over, false);
+  row().onChange({ target: { value: '300' } });
+  assert.deepEqual(c.renderVals().bHex.split(' ').slice(4, 6), ['01', '2C']);
+  assert.match(row().overMsg, /Differs from the packet as built: 10 octets in the Packet Data Field, so the derived value is 9/);
+  c.bSetVal('payload__oct', '20');
+  assert.equal(row().value, '300', 'not moved by later changes');
+  row().onDerive();
+  assert.equal(row().derivedLabel, '19');
+});
+
+test('a wrong Packet Data Length can be built on purpose, and the decoder catches it', () => {
+  const v = build('spp', { pdlen__manual: '1', pdlen: '40', payload__oct: '2' });
+  const d = decode('spp', v.bHex, {});
+  assert.ok(d.dChecks.some(c => /Packet is truncated/.test(c.msg)));
+});
+
+test('round trip SPP, with and without a Secondary Header', () => {
+  const plain = decode('spp', build('spp', { payload__oct: '4', payload: 'CAFEF00D' }).bHex, {});
+  assert.deepEqual(errors(plain), []);
+  assert.equal(plain.dSummary, 'VALID SPACE PACKET');
+  assert.equal(row(plain, 'spud').raw, 'CAFEF00D');
+
+  const v = build('spp', { pshf: '1', sptcf__oct: '2', sptcf: 'ABCD', spadf__oct: '3', spadf: '112233', payload__oct: '4', payload: 'CAFEF00D' });
+  const d = decode('spp', v.bHex, { tcfLen: '2', adfLen: '3' });
+  assert.deepEqual(errors(d), []);
+  assert.equal(row(d, 'spdlen').value, '8');
+  assert.equal(row(d, 'sptc').raw, 'ABCD');
+  assert.equal(row(d, 'spad').raw, '112233');
+  assert.equal(row(d, 'spud').raw, 'CAFEF00D');
+
+  const onlySh = decode('spp', build('spp', { pshf: '1' }).bHex, {});
+  assert.deepEqual(errors(onlySh), [], 'a Secondary Header alone is a complete data field');
+});
+
+test('RESET returns Packet Data Length to derived', () => {
+  const c = new Component({});
+  c.state = { ...c.state, view: 'build', bProto: 'spp', bVals: { spp: { pdlen__manual: '1', pdlen: '40' } } };
+  c.renderVals().bReset();
+  assert.equal(pdlRow(c.renderVals()).isDerived, true);
+});
+
+test('the User Data note no longer says the length is not derived', () => {
+  assert.doesNotMatch(build('spp').bPayNote, /not derived/);
+  assert.match(build('spp').bPayNote, /Packet Data Length above follows it/);
 });
 
 test('RESET clears the SDLS settings too', () => {
