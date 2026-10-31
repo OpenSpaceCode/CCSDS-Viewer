@@ -38,28 +38,28 @@
                   <span style="position:absolute;top:7px;right:9px;font-size:11px;color:var(--color-accent-700)">{{ sdShBadge }}</span>
                   <span style="position:relative">SECURITY HEADER</span>
                 </div>
-                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">≤ 64 OCTETS</div>
+                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">{{ lay.sdHdr }}</div>
               </div>
               <div style="flex:2.4;min-width:0;display:flex;flex-direction:column;margin-left:-1px">
                 <div role="button" tabindex="0" data-field="sddata" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="position:relative;border:1px solid var(--color-text);min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px 12px;cursor:pointer;background:var(--color-bg);font-family:var(--font-heading);font-weight:600;font-size:15px;letter-spacing:.06em;line-height:1.35;transition:transform .13s ease,background .13s ease,box-shadow .13s ease" style-hover="transform:scale(1.03);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:6">
                   <span style="position:absolute;top:7px;right:9px;font-size:11px;color:var(--color-neutral-500)">§</span>
                   <span style="position:relative">FRAME DATA FIELD<em style="display:block;font-family:var(--font-body);font-style:normal;font-weight:400;font-size:11px;letter-spacing:.06em;color:var(--color-neutral-700);margin-top:6px">encrypted when applicable</em></span>
                 </div>
-                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">VARIES</div>
+                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">{{ lay.sdData }}</div>
               </div>
               <div style="flex:1.8;min-width:0;display:flex;flex-direction:column;margin-left:-1px">
                 <div role="button" tabindex="0" data-field="sdtr" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="position:relative;border:1px solid var(--color-text);min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px 12px;cursor:pointer;background:{{ sdTrBg }};font-family:var(--font-heading);font-weight:600;font-size:16px;letter-spacing:.06em;line-height:1.35;transition:transform .13s ease,background .13s ease,box-shadow .13s ease" style-hover="transform:scale(1.03);background:var(--color-accent-200);box-shadow:var(--shadow-md);z-index:6">
                   <span style="position:absolute;top:7px;right:9px;font-size:11px;color:var(--color-accent-700)">{{ sdTrBadge }}</span>
                   <span style="position:relative">SECURITY TRAILER<em style="display:block;font-family:var(--font-body);font-style:normal;font-weight:400;font-size:11px;letter-spacing:.06em;color:var(--color-neutral-700);margin-top:6px">(auth / auth-enc)</em></span>
                 </div>
-                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">MANAGED</div>
+                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">{{ lay.sdTrl }}</div>
               </div>
               <div style="flex:1.2;min-width:0;display:flex;flex-direction:column;margin-left:-1px">
                 <div style="position:relative;border:1px solid var(--color-text);min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px 8px;background:var(--color-bg);font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.05em;line-height:1.35">
                   <sc-if value="{{ hatch }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(45deg,transparent 0 8px,var(--color-neutral-300) 8px 9px)"></div></sc-if>
                   <span style="position:relative">FECF<em style="display:block;font-family:var(--font-body);font-style:normal;font-weight:400;font-size:10px;letter-spacing:.06em;color:var(--color-neutral-700);margin-top:4px">(base protocol, optional)</em></span>
                 </div>
-                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">2 OCT</div>
+                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">{{ lay.sdEcf }}</div>
               </div>
             </div>
             <div style="text-align:center;font-size:12px;letter-spacing:.12em;color:var(--color-neutral-600);margin-top:18px">FIGURES 4-1 / 4-2 · SECURITY HEADER AND TRAILER WITHIN A TRANSFER FRAME</div>
@@ -68,7 +68,7 @@
             <sc-if value="{{ sdShOpen }}" hint-placeholder-val="{{ false }}">
               <div style="margin-top:30px">
                 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px">
-                  <span style="font-family:var(--font-heading);font-weight:600;font-size:14px;letter-spacing:.14em"><span style="color:var(--color-accent-700)">▾</span> SECURITY HEADER — ≤ 64 OCTETS</span>
+                  <span style="font-family:var(--font-heading);font-weight:600;font-size:14px;letter-spacing:.14em"><span style="color:var(--color-accent-700)">▾</span> SECURITY HEADER — {{ lay.sdHdrHead }}</span>
                   <span role="button" tabindex="0" data-field="sdsh" sc-camel-on-click="{{ openRef }}" style="font-size:11px;letter-spacing:.12em;font-weight:600;color:var(--color-accent-700);cursor:pointer;display:inline-flex;align-items:center;gap:4px" style-hover="color:var(--color-accent-900)">OPEN REFERENCE § 4.1.1 <svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span>
                 </div>
                 <div style="display:flex;align-items:stretch">
@@ -78,15 +78,15 @@
                   </div>
                   <div role="button" tabindex="0" data-field="iv" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:9;min-width:0;position:relative;border:1px solid var(--color-text);height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);margin-left:-1px;transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
                     <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.05em;line-height:1.25">INITIALIZATION VECTOR</span>
-                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">MANAGED · OPTIONAL</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">{{ lay.sdIv }}</span>
                   </div>
                   <div role="button" tabindex="0" data-field="sqn" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:7;min-width:0;position:relative;border:1px solid var(--color-text);height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);margin-left:-1px;transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
                     <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.05em;line-height:1.25">SEQUENCE NUMBER</span>
-                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">MANAGED · OPTIONAL</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">{{ lay.sdSn }}</span>
                   </div>
                   <div role="button" tabindex="0" data-field="pl" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:5;min-width:0;position:relative;border:1px solid var(--color-text);height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);margin-left:-1px;transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
                     <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.05em;line-height:1.25">PAD LENGTH</span>
-                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">MANAGED · OPTIONAL</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">{{ lay.sdPl }}</span>
                   </div>
                 </div>
               </div>
@@ -96,13 +96,13 @@
             <sc-if value="{{ sdTrOpen }}" hint-placeholder-val="{{ false }}">
               <div style="margin-top:22px">
                 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px">
-                  <span style="font-family:var(--font-heading);font-weight:600;font-size:14px;letter-spacing:.14em"><span style="color:var(--color-accent-700)">▾</span> SECURITY TRAILER — MANAGED LENGTH</span>
+                  <span style="font-family:var(--font-heading);font-weight:600;font-size:14px;letter-spacing:.14em"><span style="color:var(--color-accent-700)">▾</span> SECURITY TRAILER — {{ lay.sdTrlHead }}</span>
                   <span role="button" tabindex="0" data-field="sdtr" sc-camel-on-click="{{ openRef }}" style="font-size:11px;letter-spacing:.12em;font-weight:600;color:var(--color-accent-700);cursor:pointer;display:inline-flex;align-items:center;gap:4px" style-hover="color:var(--color-accent-900)">OPEN REFERENCE § 4.1.2 <svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span>
                 </div>
                 <div style="display:flex;align-items:stretch">
                   <div role="button" tabindex="0" data-field="mac" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:1;min-width:0;position:relative;border:1px solid var(--color-text);height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
                     <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.05em;line-height:1.25">MESSAGE AUTHENTICATION CODE (MAC)</span>
-                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">MANAGED · OPTIONAL</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">{{ lay.sdMac }}</span>
                   </div>
                 </div>
               </div>
@@ -184,6 +184,9 @@
               <span style="display:inline-flex;align-items:center;gap:7px"><span style="width:22px;height:11px;border:1px dashed var(--color-neutral-500);flex:none"></span>outside</span>
             </div>
 
+            <sc-if value="{{ sdCovHasRanges }}" hint-placeholder-val="{{ false }}">
+              <p data-cov-ranges="1" style="margin:18px 0 0;font-size:13px;line-height:1.6;font-weight:500;color:var(--color-accent-800);max-width:92ch">{{ sdCovRanges }}</p>
+            </sc-if>
             <p style="margin:18px 0 0;font-size:12px;line-height:1.65;color:var(--color-neutral-700);max-width:92ch;border-top:1px solid var(--color-divider);padding-top:14px;text-wrap:pretty"><b style="font-weight:600">{{ sdCovName }} — {{ sdCovFig }}:</b> “{{ sdCovNote }}”</p>
             <p style="margin:10px 0 0;font-size:11.5px;line-height:1.65;color:var(--color-neutral-600);max-width:92ch;text-wrap:pretty">The ApplySecurity Payload handed to the sending function runs from the first octet of the Primary Header to the last octet of the Frame Data Field, with the Security Header still empty (§ 3.2.2). The MAC is computed after the SA’s authentication bit mask has been bitwise-ANDed over that span, so any field the mask clears — the Insert Zone, and any volatile field a mission chooses to exclude — contributes zeros instead of its value. At the receiving end the ProcessSecurity Payload additionally carries the Security Trailer, which holds the MAC being verified (§ 3.3.2).</p>
           </div>

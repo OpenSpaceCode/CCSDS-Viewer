@@ -247,6 +247,7 @@ function decodeTc(b, set) {
 
   const total = flen + 1;
 
+  if (set.expect && readBits(b, 6, 10) !== set.expect.scid) check('warn', 'Spacecraft Identifier is ' + readBits(b, 6, 10) + ', but the mission profile says ' + set.expect.scid + '.', 'TABLE 5-1');
   if (tfvn !== 0) check('err', 'Transfer Frame Version Number is ‘' + tfvn.toString(2).padStart(2, '0') + '’ — a TC Transfer Frame carries ‘00’.', '§ 4.1.2.2.2');
   if (!bypass && control) check('err', 'Bypass Flag ‘0’ with Control Command Flag ‘1’ is reserved for future application.', 'TABLE 4-1');
   else check('info', frameType + ' frame' + (frameType === 'Type-AD' ? ' — Sequence-Controlled Service of the COP.' : frameType === 'Type-BD' ? ' — Expedited Service of the COP.' : ' — controls the Sequence-Controlled Service of the COP.'), 'TABLE 4-1');

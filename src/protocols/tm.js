@@ -332,6 +332,12 @@ function decodeTm(b, set) {
     : v < dfLen ? 'First Packet starts at Data Field octet ' + v + ' (frame octet ' + (dfStart + v) + ')'
     : 'Points past the Data Field');
 
+  if (set.expect) {
+    const scid = readBits(b, 2, 10), actualSh = shf ? shTotal : 0;
+    if (scid !== set.expect.scid) check('warn', 'Spacecraft Identifier is ' + scid + ', but the mission profile says ' + set.expect.scid + '.', 'TABLE 5-1');
+    if (!!ocff !== set.expect.ocf) check('warn', 'Operational Control Field Flag is ‘' + ocff + '’, but the mission profile says the OCF is ' + (set.expect.ocf ? 'present' : 'absent') + '.', '§ 4.1.2.4.3');
+    if (actualSh !== set.expect.shLen) check('warn', 'This frame has ' + (actualSh ? 'a Secondary Header of ' + oct(actualSh) : 'no Secondary Header') + ', but the mission profile says ' + (set.expect.shLen ? oct(set.expect.shLen) : 'none') + '.', '§ 4.1.3.1.6');
+  }
   if (tfvn !== 0) check('err', 'Transfer Frame Version Number is ‘' + tfvn.toString(2).padStart(2, '0') + '’ — a TM Transfer Frame carries ‘00’.', '§ 4.1.2.2.2.2');
   if (!sync && pof) check('warn', 'Packet Order Flag is ‘1’ — with the Synchronization Flag at ‘0’ it is reserved and set to ‘0’.', '§ 4.1.2.7.4');
   if (!sync && slid !== 3) check('err', 'Segment Length Identifier is ‘' + slid.toString(2).padStart(2, '0') + '’ — it shall be ‘11’ when the Synchronization Flag is ‘0’.', '§ 4.1.2.7.5.2');

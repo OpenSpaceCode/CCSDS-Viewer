@@ -1,0 +1,111 @@
+      <!-- ============ MISSION PROFILE VIEW ============ -->
+      <sc-if value="{{ showProfile }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Mission profile">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+            <span style="font-size:11px;letter-spacing:.2em;font-weight:600;color:var(--color-accent-700)">MANAGED PARAMETERS</span>
+            <span style="font-size:11px;letter-spacing:.14em;color:var(--color-neutral-600)">{{ pName }}</span>
+          </div>
+          <h1 style="margin:8px 0 0;font-size:42px;line-height:1.02;letter-spacing:.01em">MISSION PROFILE</h1>
+          <p style="margin:14px 0 0;max-width:74ch;font-size:14.5px;line-height:1.6;color:var(--color-neutral-700);text-wrap:pretty">The parameters a frame does not carry itself, in one place. Define them here or import a file, then choose Mission profile in the Decoder, the Builder or a diagram. The profile stays in this browser until you delete it; export it to share or keep a copy.</p>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;align-items:center">
+            <sc-if value="{{ pNone }}" hint-placeholder-val="{{ true }}">
+              <div role="button" tabindex="0" data-paction="create" sc-camel-on-click="{{ pCreate }}" style="padding:8px 15px;border:1px solid var(--color-accent);background:var(--color-accent);color:var(--color-bg);cursor:pointer;font-size:11.5px;letter-spacing:.13em;font-family:var(--font-heading);font-weight:600">CREATE PROFILE</div>
+            </sc-if>
+            <sc-if value="{{ pHas }}" hint-placeholder-val="{{ false }}">
+              <div role="button" tabindex="0" data-paction="export" sc-camel-on-click="{{ pExport }}" style="padding:8px 15px;border:1px solid var(--color-divider);cursor:pointer;font-size:11.5px;letter-spacing:.13em;font-family:var(--font-heading);font-weight:600" style-hover="border-color:var(--color-accent);color:var(--color-accent-700)">EXPORT JSON</div>
+            </sc-if>
+            <label style="position:relative;padding:8px 15px;border:1px solid var(--color-divider);cursor:pointer;font-size:11.5px;letter-spacing:.13em;font-family:var(--font-heading);font-weight:600" style-hover="border-color:var(--color-accent);color:var(--color-accent-700)">IMPORT JSON<input type="file" accept=".json,application/json" data-paction="import" sc-camel-on-change="{{ pImport }}" style="position:absolute;width:1px;height:1px;opacity:0"></label>
+            <sc-if value="{{ pHas }}" hint-placeholder-val="{{ false }}">
+              <div role="button" tabindex="0" data-paction="delete" sc-camel-on-click="{{ pDelete }}" style="padding:8px 15px;border:1px solid var(--color-divider);cursor:pointer;font-size:11.5px;letter-spacing:.13em;font-family:var(--font-heading);font-weight:600" style-hover="border-color:#b4483c;color:#b4483c">DELETE</div>
+            </sc-if>
+          </div>
+          <sc-if value="{{ pHasMsg }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:12px;font-size:12.5px;color:var(--color-accent-800)">{{ pMsg }}</div>
+          </sc-if>
+          <sc-if value="{{ pHasErrors }}" hint-placeholder-val="{{ false }}">
+            <div data-perrors="1" style="margin-top:12px;padding:10px 14px;border:1px solid #b4483c;font-size:12.5px;line-height:1.6">
+              <div style="font-weight:600;color:#b4483c">Not imported. Your current profile is unchanged.</div>
+              <sc-for list="{{ pErrors }}" as="e" hint-placeholder-count="2"><div>{{ e.t }}</div></sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ pStoreFailed }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:12px;font-size:12.5px;color:#b4483c">This browser would not save the profile, so it will be lost on closing. Export it to keep it.</div>
+          </sc-if>
+          <div style="border-top:1px solid var(--color-divider);margin:22px 0 28px"></div>
+
+          <sc-if value="{{ pNone }}" hint-placeholder-val="{{ true }}">
+            <p style="margin:0;font-size:13.5px;line-height:1.6;color:var(--color-neutral-600)">No mission profile yet. Create one, or import a file exported earlier.</p>
+          </sc-if>
+          <sc-if value="{{ pHas }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-wrap:wrap;gap:34px;align-items:flex-start">
+              <div style="flex:0 1 420px;min-width:300px;display:flex;flex-direction:column;gap:26px">
+                <sc-for list="{{ pSections }}" as="sec" hint-placeholder-count="4">
+                  <div>
+                    <div style="display:flex;align-items:baseline;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--color-text)">
+                      <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.18em;flex:1">{{ sec.title }}</span>
+                      <span style="font-size:10px;letter-spacing:.08em;color:var(--color-neutral-600)">{{ sec.ref }}</span>
+                    </div>
+                    <sc-for list="{{ sec.rows }}" as="f" hint-placeholder-count="4">
+                      <div style="display:flex;flex-direction:column;gap:5px;padding:11px 0;border-bottom:1px solid var(--color-divider)">
+                        <div style="display:flex;align-items:baseline;gap:8px">
+                          <span style="font-size:12.5px;font-weight:500;line-height:1.3;flex:1">{{ f.n }}</span>
+                          <span style="font-size:10px;letter-spacing:.09em;color:var(--color-neutral-600);font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap">{{ f.ref }}</span>
+                        </div>
+                        <div style="display:flex;gap:7px;align-items:center">
+                          <sc-if value="{{ f.isText }}" hint-placeholder-val="{{ false }}">
+                            <input type="text" data-pfield="{{ f.path }}" value="{{ f.value }}" sc-camel-on-change="{{ f.onInput }}" sc-camel-on-input="{{ f.onInput }}" style="flex:1;min-width:0;font-family:var(--font-body);font-size:13px;padding:6px 8px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
+                          </sc-if>
+                          <sc-if value="{{ f.isInt }}" hint-placeholder-val="{{ true }}">
+                            <input type="number" min="{{ f.min }}" max="{{ f.max }}" data-pfield="{{ f.path }}" value="{{ f.value }}" sc-camel-on-change="{{ f.onInput }}" sc-camel-on-input="{{ f.onInput }}" style="width:104px;flex:none;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;padding:6px 8px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
+                            <span style="font-size:10.5px;letter-spacing:.06em;color:var(--color-neutral-600)">{{ f.unit }}</span>
+                          </sc-if>
+                          <sc-if value="{{ f.isSelect }}" hint-placeholder-val="{{ false }}">
+                            <sc-raw-select data-pfield="{{ f.path }}" value="{{ f.value }}" sc-camel-on-change="{{ f.onInput }}" style="flex:1;min-width:0;font-family:var(--font-body);font-size:12.5px;padding:6px 8px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
+                              <sc-for list="{{ f.opts }}" as="o" hint-placeholder-count="2">
+                                <option value="{{ o.v }}">{{ o.l }}</option>
+                              </sc-for>
+                            </sc-raw-select>
+                          </sc-if>
+                        </div>
+                        <sc-if value="{{ f.hasNote }}" hint-placeholder-val="{{ false }}">
+                          <div style="font-size:11px;line-height:1.5;color:var(--color-neutral-600)">{{ f.note }}</div>
+                        </sc-if>
+                        <sc-if value="{{ f.hasErr }}" hint-placeholder-val="{{ false }}">
+                          <div style="font-size:11px;color:#b4483c">{{ f.err }}</div>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="flex:1 1 400px;min-width:0;display:flex;flex-direction:column;gap:22px">
+                <sc-if value="{{ pHasWarnings }}" hint-placeholder-val="{{ false }}">
+                  <div data-pwarnings="1" style="padding:12px 16px;border:1px solid #b07d2a;background:color-mix(in srgb, #b07d2a 10%, var(--color-bg))">
+                    <div style="font-family:var(--font-heading);font-weight:600;font-size:12.5px;letter-spacing:.18em;padding-bottom:6px">DOES NOT HANG TOGETHER</div>
+                    <sc-for list="{{ pWarnings }}" as="w" hint-placeholder-count="1">
+                      <div style="display:flex;gap:10px;align-items:baseline;padding:4px 0;font-size:12.5px;line-height:1.5"><span style="flex:1">{{ w.msg }}</span><span style="font-size:10px;font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--color-neutral-600);white-space:nowrap">{{ w.ref }}</span></div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <sc-for list="{{ pLayouts }}" as="l" hint-placeholder-count="3">
+                  <div class="blueprint" style="padding:20px 22px 16px;min-width:0">
+                    <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                    <div style="font-family:var(--font-heading);font-weight:600;font-size:12.5px;letter-spacing:.2em;padding-bottom:10px">{{ l.name }}</div>
+                    <sc-for list="{{ l.rows }}" as="r" hint-placeholder-count="4">
+                      <div style="display:flex;gap:12px;align-items:baseline;padding:5px 0;border-top:1px solid color-mix(in srgb, var(--color-text) 8%, transparent)">
+                        <span style="flex:1;font-size:12.5px">{{ r.n }}</span>
+                        <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;font-weight:600;color:var(--color-accent-800);white-space:nowrap">{{ r.label }}</span>
+                      </div>
+                    </sc-for>
+                    <sc-if value="{{ l.hasCov }}" hint-placeholder-val="{{ false }}">
+                      <div style="padding-top:8px;font-size:12px;line-height:1.5;color:var(--color-neutral-700)">{{ l.cov }}</div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>

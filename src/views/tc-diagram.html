@@ -9,7 +9,7 @@
           <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
             <a class="tag tag-outline" href="https://ccsds.org/Pubs/232x0b4e1c1.pdf" target="_blank" rel="noopener" style="text-decoration:none;cursor:pointer;white-space:nowrap" style-hover="background:var(--color-accent);color:var(--color-bg)">CCSDS 232.0-B-4 ↗</a>
             <span class="tag tag-neutral">PDU · TC TRANSFER FRAME</span>
-            <span class="tag tag-neutral">VARIABLE LENGTH · MAX 1024 OCTETS</span>
+            <span class="tag tag-neutral">{{ lay.tcTag }}</span>
           </div>
           <div style="border-top:1px solid var(--color-divider);margin:24px 0 30px"></div>
 
@@ -31,14 +31,14 @@
                   <span style="position:absolute;top:7px;right:9px;font-size:11px;color:var(--color-accent-700)">{{ tcPhBadge }}</span>
                   <span style="position:relative">TRANSFER FRAME PRIMARY HEADER</span>
                 </div>
-                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">5 OCTETS</div>
+                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">{{ lay.tcPh }}</div>
               </div>
               <div style="flex:2.6;min-width:0;display:flex;flex-direction:column;margin-left:-1px">
                 <div role="button" tabindex="0" data-field="tcdf" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="position:relative;border:1px solid var(--color-text);min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px 14px;cursor:pointer;background:{{ tcDfBg }};font-family:var(--font-heading);font-weight:600;font-size:17px;letter-spacing:.07em;line-height:1.35;transition:transform .13s ease,background .13s ease,box-shadow .13s ease" style-hover="transform:scale(1.03);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:6">
                   <span style="position:absolute;top:7px;right:9px;font-size:11px;color:var(--color-accent-700)">{{ tcDfBadge }}</span>
                   <span style="position:relative">TRANSFER FRAME DATA FIELD</span>
                 </div>
-                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">UP TO 1019 OCTETS · VARIES</div>
+                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">{{ lay.tcDf }}</div>
               </div>
               <div style="flex:1;min-width:0;display:flex;flex-direction:column;margin-left:-1px">
                 <div role="button" tabindex="0" data-field="tcfecf" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="position:relative;border:1px solid var(--color-text);min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px 10px;cursor:pointer;background:var(--color-bg);font-family:var(--font-heading);font-weight:600;font-size:15px;letter-spacing:.06em;line-height:1.35;transition:transform .13s ease,background .13s ease,box-shadow .13s ease" style-hover="transform:scale(1.04);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:6">
@@ -46,7 +46,7 @@
                   <span style="position:absolute;top:7px;right:9px;font-size:11px;color:var(--color-neutral-500)">§</span>
                   <span style="position:relative">FRAME ERROR CONTROL FIELD<em style="display:block;font-family:var(--font-body);font-style:normal;font-weight:400;font-size:11px;letter-spacing:.08em;color:var(--color-neutral-700);margin-top:6px">(OPTIONAL)</em></span>
                 </div>
-                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">2 OCTETS</div>
+                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">{{ lay.tcFecf }}</div>
               </div>
             </div>
             <div style="text-align:center;font-size:12px;letter-spacing:.12em;color:var(--color-neutral-600);margin-top:18px">FIGURE 4-1 · TC TRANSFER FRAME STRUCTURAL COMPONENTS</div>

@@ -1,5 +1,5 @@
 class Component extends DCLogic {
-  state = { proto: 'spp', view: 'diagram', fid: null, phOpen: null, shOpen: null, dfsOpen: null, tcPhOpen: null, tcDfOpen: null, spPhOpen: null, spShOpen: null, sdShOpen: null, sdTrOpen: null, dfsModal: false, epOpen: false, epId: null, epHdrOpen: null, epDataOpen: null, tip: null, bProto: 'spp', bVals: {}, sdCov: 'tm', dProto: 'spp', dHex: {}, dSet: {}, retView: null, qOpen: false, qText: '', qIdx: 0 };
+  state = { proto: 'spp', view: 'diagram', fid: null, phOpen: null, shOpen: null, dfsOpen: null, tcPhOpen: null, tcDfOpen: null, spPhOpen: null, spShOpen: null, sdShOpen: null, sdTrOpen: null, dfsModal: false, epOpen: false, epId: null, epHdrOpen: null, epDataOpen: null, tip: null, bProto: 'spp', bVals: {}, sdCov: 'tm', dProto: 'spp', dHex: {}, dSet: {}, retView: null, qOpen: false, qText: '', qIdx: 0, profile: null, profileOn: false, pDraft: {}, pMsg: '', pErrors: [], pStoreFailed: false };
 
   // Which part of each base frame SDLS authenticates and encrypts — see protocols/sdls.js.
   SDLS_COV_ORDER = SDLS_COVERAGE_ORDER;
@@ -17,6 +17,7 @@ class Component extends DCLogic {
   BUILD_SPECS = { tm: TM_BUILD, tc: TC_BUILD, spp: SPP_BUILD };
 
   BUILD_ORDER = ['tm', 'tc', 'spp'];
+  BUILD_WIRE_MAX = 256;
 
   // Frame Error Control Field of the TM and TC builders. The frame does not signal its presence, and its value is the CRC of
   // everything before it, which only exists once the rest is assembled. It can be overridden, to build a frame with a bad CRC.
@@ -147,7 +148,7 @@ class Component extends DCLogic {
     if (bSdls) bSections.push(bSection('SECURITY HEADER', 'SPACE DATA LINK SECURITY · CCSDS 355.0-B-2 § 4.1.1', bSdlsOn,
       bSvc !== SDLS_NONE && !bSdlsOn ? bSdls.blocked : sdlsBuildNote(bSvc), [SDLS_BUILD_SERVICE], bSdlsFields.hdr));
     const bPayList = [];
-    if (bSpec.pay) bPayList.push(bAdd({ id: 'payload', n: bSpec.pay.field, bits: 0, def: 0, abbr: bSpec.pay.abbr, kind: 'hex', varOct: true, octNum: true, defOct: 0, minOct: 0, maxOct: 128, defHex: '' }));
+    if (bSpec.pay) bPayList.push(bAdd({ id: 'payload', n: bSpec.pay.field, bits: 0, def: 0, abbr: bSpec.pay.abbr, kind: 'hex', varOct: true, octNum: true, defOct: 0, minOct: 0, maxOct: this.state.profileOn && this.state.profile ? 2048 : 128, defHex: '' }));
     const bPayBits = bPayList.length ? bPayList[0].nb : 0;
     if (bSdlsFields.trl.length) bAfter.push(bSection('SECURITY TRAILER', 'SPACE DATA LINK SECURITY · CCSDS 355.0-B-2 § 4.1.2', true, SDLS_BUILD_TRAILER_NOTE, [], bSdlsFields.trl));
     if (bSpec.trail) {
@@ -159,8 +160,11 @@ class Component extends DCLogic {
     return { bFieldList, bRibbon, allBits, bSections, bAfter, bPayList, bPayBits, bSvc, bSdlsOn, bFecfOn };
   }
 
+  // With the profile on, the Builder keeps its own entered values: they start from the profile, and manual ones are left alone.
+  bValsKey(st) { return st.profileOn && st.profile ? st.bProto + '@profile' : st.bProto; }
+
   bSetVal(id, raw) {
-    const p = this.state.bProto;
+    const p = this.bValsKey(this.state);
     this.setState(s => ({ bVals: { ...s.bVals, [p]: { ...(s.bVals[p] || {}), [id]: raw } } }));
   }
 
@@ -177,6 +181,7 @@ class Component extends DCLogic {
   };
 
   dSettings(proto) {
+    if (this.state.profileOn && this.state.profile) return profileSettings(this.state.profile, proto);
     const spec = this.DECODE_SPECS[proto], raw = this.state.dSet[proto] || {}, out = {};
     (spec.settings || []).forEach(s => {
       const v = Number(raw[s.id] === undefined || raw[s.id] === '' ? s.def : raw[s.id]);
@@ -235,15 +240,115 @@ class Component extends DCLogic {
     }
   };
 
+  // ---- mission profile ----
+  // Octet labels of the diagrams: what the Standard says in general, or with a profile on, where each field really is.
+  diagramLabels(pr, sdCov) {
+    const label = (proto, key) => profileFieldLabel(profileLayout(pr, proto).fields.find(f => f.key === key));
+    const base = { tmPh: '6 OCTETS', tmSh: 'UP TO 64 OCTETS', tmDf: 'VARIES', tmOcf: '4 OCTETS', tmFecf: '2 OCTETS', tmShdf: '1–63 OCTETS',
+      sppTag: '7 TO 65542 OCTETS', sppPh: '6 OCTETS', sppDf: 'PACKET DATA FIELD (1 TO 65536 OCTETS)', sppSh: 'VARIABLE', sppShHead: 'VARIABLE', sppUd: 'VARIABLE', sppTcf: 'VARIABLE', sppAdf: 'VARIABLE',
+      tcTag: 'VARIABLE LENGTH · MAX 1024 OCTETS', tcPh: '5 OCTETS', tcDf: 'UP TO 1019 OCTETS · VARIES', tcFecf: '2 OCTETS',
+      sdHdr: '≤ 64 OCTETS', sdHdrHead: '≤ 64 OCTETS', sdData: 'VARIES', sdTrl: 'MANAGED', sdTrlHead: 'MANAGED LENGTH', sdEcf: '2 OCT', sdIv: 'MANAGED · OPTIONAL', sdSn: 'MANAGED · OPTIONAL', sdPl: 'MANAGED · OPTIONAL', sdMac: 'MANAGED · OPTIONAL' };
+    if (!pr) return base;
+    const sppSh = pr.spp.timeCodeLen + pr.spp.ancillaryLen, tcLay = profileLayout(pr, 'tc'), tcFecf = pr.tc.fecf ? 2 : 0;
+    const out = { ...base, tmPh: label('tm', 'ph'), tmSh: label('tm', 'sh'), tmDf: label('tm', 'data'), tmOcf: label('tm', 'ocf'), tmFecf: label('tm', 'fecf'),
+      tmShdf: pr.tm.secondaryHeaderLen ? oct(pr.tm.secondaryHeaderLen - 1).toUpperCase() : 'ABSENT',
+      sppTag: '7 TO ' + pr.spp.maxPacketLen + ' OCTETS', sppPh: label('spp', 'ph'), sppDf: 'PACKET DATA FIELD (1 TO ' + (pr.spp.maxPacketLen - 6) + ' OCTETS)', sppSh: sppSh ? oct(sppSh).toUpperCase() + ' · 6–' + (5 + sppSh) : 'ABSENT', sppShHead: sppSh ? oct(sppSh).toUpperCase() : 'ABSENT',
+      sppUd: label('spp', 'data'), sppTcf: label('spp', 'tcf'), sppAdf: label('spp', 'adf'),
+      tcTag: 'VARIABLE LENGTH · MAX ' + pr.tc.maxFrameLen + ' OCTETS', tcPh: label('tc', 'ph'), tcFecf: label('tc', 'fecf'),
+      tcDf: 'UP TO ' + oct(Math.max(pr.tc.maxFrameLen - 5 - tcFecf, 0)).toUpperCase() + ' · FROM 5' };
+    if (tcLay.tooSmall) out.tcDf = 'NO ROOM';
+    if (!['tm', 'tc'].includes(sdCov)) return out;
+    // The SDLS page is not about one link: it shows the one selected in its coverage view.
+    const lay = profileLayout(pr, sdCov), s = lay.sdls, find = (k) => profileFieldLabel(lay.fields.find(f => f.key === k));
+    const size = (n) => (s.on && n ? oct(n).toUpperCase() : 'ABSENT');
+    return { ...out, sdHdr: find('sech'), sdHdrHead: size(s.hdr), sdData: find('data'), sdTrl: find('sect'), sdTrlHead: size(s.trl), sdEcf: find('fecf'), sdIv: size(s.iv), sdSn: size(s.sn), sdPl: size(s.pl), sdMac: size(s.trl) };
+  }
+
+  profileSave(next, extra) {
+    const stored = profileStore(next);
+    this.setState({ profile: next, pStoreFailed: !stored, ...(next ? {} : { profileOn: false }), ...extra });
+  }
+
+  // A value that is not acceptable yet stays as a draft in its input, with the reason, and the profile keeps its last good value.
+  profileEdit(f, raw) {
+    const value = f.type === 'int' ? (/^\d+$/.test(raw) ? Number(raw) : NaN) : f.type === 'bool' ? raw === 'true' : raw;
+    const draft = { ...this.state.pDraft };
+    if (profileFieldError(f, value)) {
+      draft[f.path] = raw;
+      this.setState({ pDraft: draft });
+    } else {
+      delete draft[f.path];
+      this.profileSave(profileSet(this.state.profile, f.path, value), { pDraft: draft });
+    }
+  }
+
+  // An import that fails leaves the current profile as it is.
+  profileImportText(text, fileName) {
+    const { profile, errors } = profileParse(text);
+    if (errors.length) this.setState({ pErrors: errors, pMsg: '' });
+    else this.profileSave(profile, { pErrors: [], pDraft: {}, pMsg: 'Imported ‘' + profile.name + '’ from ' + fileName + '.' });
+  }
+
+  profileExport() {
+    const url = URL.createObjectURL(new Blob([profileToJson(this.state.profile)], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = profileFileName(this.state.profile);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  profileVals(st, pr, showProfile) {
+    const p = st.profile;
+    const barStyle = (on, enabled) => ({ padding: '6px 12px', fontSize: '11.5px', letterSpacing: '.06em', fontFamily: 'var(--font-heading)', fontWeight: '600', whiteSpace: 'nowrap',
+      border: '1px solid ' + (on ? 'var(--color-accent)' : 'var(--color-divider)'), marginLeft: '-1px', cursor: enabled ? 'pointer' : 'not-allowed', opacity: enabled ? '1' : '.5',
+      background: on ? 'color-mix(in srgb, var(--color-accent) 12%, var(--color-bg))' : 'var(--color-bg)', color: on ? 'var(--color-accent-900)' : 'var(--color-text)' });
+    const fieldRow = (f) => {
+      const draft = st.pDraft[f.path], value = p ? profileGet(p, f.path) : '';
+      const reason = draft !== undefined ? profileFieldError(f, f.type === 'int' ? (/^\d+$/.test(draft) ? Number(draft) : NaN) : draft) : '';
+      return { path: f.path, n: f.n, ref: f.ref || '', note: f.note || '', hasNote: !!f.note, unit: f.unit || '',
+        isInt: f.type === 'int', isText: f.type === 'text', isSelect: f.type === 'enum' || f.type === 'bool',
+        opts: f.type === 'bool' ? [{ v: 'true', l: 'Present' }, { v: 'false', l: 'Absent' }] : (f.opts || []),
+        value: draft !== undefined ? draft : String(value), min: String(f.min), max: String(f.max),
+        hasErr: !!reason, err: 'This value ' + reason + ', so the profile keeps ' + value + '.',
+        onInput: (e) => this.profileEdit(f, e.target.value) };
+    };
+    const layoutRows = (proto) => profileLayout(p, proto).fields.filter(f => f.len !== 0).map(f => ({ n: f.n, label: profileFieldLabel(f) }));
+    return {
+      showProfile, pHas: !!p, pNone: !p, pOn: !!pr,
+      pName: p ? p.name : '', pSubtitle: p ? p.name : 'Not defined',
+      pBarShow: ['diagram', 'build', 'decode'].includes(st.view),
+      pManualStyle: barStyle(!pr, true), pProfileStyle: barStyle(!!pr, !!p),
+      pBarLabel: p ? p.name : 'Mission profile',
+      pBarNote: !pr ? '' : st.view === 'diagram' && st.proto === 'sdls' ? (['tm', 'tc'].includes(st.sdCov || 'tm') ? 'Offsets are for the ' + (st.sdCov || 'tm').toUpperCase() + ' link, chosen in the coverage view below.' : 'The profile covers TM and TC: choose one in the coverage view below for offsets.') : st.view === 'diagram' ? 'Octet offsets come from the profile.' : st.view === 'decode' ? 'Settings come from the profile.' : 'Values start from the profile.',
+      pBarManual: () => this.setState({ profileOn: false }),
+      pBarProfile: () => { if (this.state.profile) this.setState({ profileOn: true }); },
+      pOpen: () => { this.setState({ view: 'profile', fid: null, tip: null, retView: null, pMsg: '', pErrors: [] }); if (this.mainEl) this.mainEl.scrollTop = 0; },
+      pCreate: () => this.profileSave(profileNew(), { pMsg: '', pErrors: [], pDraft: {} }),
+      pDelete: () => { if (typeof confirm !== 'function' || confirm('Delete the mission profile ‘' + this.state.profile.name + '’? Export it first to keep a copy.')) this.profileSave(null, { pMsg: '', pErrors: [], pDraft: {} }); },
+      pExport: () => this.profileExport(),
+      pImport: (e) => { const input = e.target, file = input.files && input.files[0]; if (!file) return; file.text().then(text => { this.profileImportText(text, file.name); input.value = ''; }); },
+      pMsg: st.pMsg, pHasMsg: !!st.pMsg,
+      pErrors: st.pErrors.map(t => ({ t })), pHasErrors: st.pErrors.length > 0,
+      pStoreFailed: st.pStoreFailed,
+      pSections: showProfile && p ? PROFILE_SCHEMA.map(sec => ({ title: sec.title, ref: sec.ref || '', rows: sec.fields.filter(f => !f.showIf || f.showIf(p)).map(fieldRow) })) : [],
+      pWarnings: showProfile && p ? profileWarnings(p) : [], pHasWarnings: showProfile && !!p && profileWarnings(p).length > 0,
+      pLayouts: showProfile && p ? [['tm', 'TM TRANSFER FRAME'], ['tc', 'TC TRANSFER FRAME'], ['spp', 'SPACE PACKET']].map(([id, name]) => ({ name, rows: layoutRows(id), hasCov: id !== 'spp', cov: id !== 'spp' ? profileCoverage(p, id).text : '' })) : []
+    };
+  }
+
   // ---- refresh ----
   // What survives a refresh: where you are and what you entered. Tooltips, dialogs and the search are not worth reopening.
   SESSION_STATE = ['proto', 'view', 'fid', 'retView', 'phOpen', 'shOpen', 'dfsOpen', 'tcPhOpen', 'tcDfOpen', 'spPhOpen', 'spShOpen', 'sdShOpen', 'sdTrOpen',
-    'epOpen', 'epId', 'epHdrOpen', 'epDataOpen', 'bProto', 'bVals', 'sdCov', 'dProto', 'dHex', 'dSet'];
+    'epOpen', 'epId', 'epHdrOpen', 'epDataOpen', 'bProto', 'bVals', 'sdCov', 'dProto', 'dHex', 'dSet', 'profileOn'];
 
   constructor(props) {
     super(props);
     const saved = sessionRead();
-    this.state = { ...this.state, ...this.sessionRestore(saved) };
+    this.state = { ...this.state, ...this.sessionRestore(saved), profile: profileLoad() };
+    if (!this.state.profile) this.state.profileOn = false;
     this.scrollToRestore = Number(saved.scroll) || 0;
   }
 
@@ -255,7 +360,8 @@ class Component extends DCLogic {
     const isMap = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
     const has = (table, v) => typeof v === 'string' && Object.prototype.hasOwnProperty.call(table, v);
     known('proto', v => ['tm', 'tc', 'spp', 'sdls'].includes(v));
-    known('view', v => ['diagram', 'field', 'ep', 'build', 'decode'].includes(v));
+    known('view', v => ['diagram', 'field', 'ep', 'build', 'decode', 'profile'].includes(v));
+    known('profileOn', v => typeof v === 'boolean');
     known('retView', v => v === null || v === 'decode' || v === 'build');
     known('fid', v => v === null || has(this.F, v));
     known('epId', v => v === null || has(this.EP_DEF, v));
@@ -346,21 +452,32 @@ class Component extends DCLogic {
     const showSpDiagram = proto === 'spp' && st.view === 'diagram';
     const showSdlsDiagram = proto === 'sdls' && st.view === 'diagram';
     const cov = this.SDLS_COV[st.sdCov || 'tm'];
+    const pr = st.profileOn && st.profile ? st.profile : null;
+    const covLay = pr && ['tm', 'tc'].includes(st.sdCov || 'tm') ? profileLayout(pr, st.sdCov || 'tm') : null;
+    const lay = this.diagramLabels(pr, st.sdCov || 'tm');
+    // In general the view shows what SDLS can cover; with a profile, what this link's service does cover.
+    const covAuth = !covLay || covLay.sdls.authenticated, covEnc = !covLay || covLay.sdls.encrypted, covAad = covAuth && covEnc;
     const ep = st.epId ? this.EP_DEF[st.epId] : null;
     const showEpDiagram = st.view === 'ep' && !!ep;
     const f = st.fid ? F[st.fid] : null;
     const showField = st.view === 'field' && !!f;
     const showBuilder = st.view === 'build';
+    const showProfile = st.view === 'profile';
 
     // ---- frame builder ----
     const bSpec = this.BUILD_SPECS[st.bProto] || this.BUILD_SPECS.tm;
-    const bVals = st.bVals[st.bProto] || {};
+    const bVals = { ...(pr ? profileBuildValues(pr, st.bProto) : {}), ...(st.bVals[this.bValsKey(st)] || {}) };
     const bBuilt = this.bAssembleDerived(bSpec, bVals);
     const { bFieldList, bRibbon, allBits, bSections, bAfter, bPayList, bPayBits, bSvc, bSdlsOn } = bBuilt;
     const bOctets = [];
+    const bHexList = [], bBinList = [];
     for (let i = 0; i < allBits.length; i += 8) {
       const chunk = allBits.slice(i, i + 8);
       const binStr = chunk.map(x => x.b).join('');
+      bHexList.push(chunk.length === 8 ? parseInt(binStr, 2).toString(16).toUpperCase().padStart(2, '0') : '—');
+      bBinList.push(binStr);
+      // A whole frame of bit cells would slow every keystroke; the hex and binary above stay complete.
+      if (i / 8 >= this.BUILD_WIRE_MAX) continue;
       bOctets.push({
         label: 'OCTET ' + (i / 8),
         bitRange: i + '–' + (i + chunk.length - 1),
@@ -371,8 +488,9 @@ class Component extends DCLogic {
         }))
       });
     }
-    const bHexStr = bOctets.map(o => o.hex.replace('0x', '')).join(' ');
-    const bBinStr = bOctets.map(o => o.cells.map(c => c.b).join('')).join(' ');
+    const bHexStr = bHexList.join(' ');
+    const bBinStr = bBinList.join(' ');
+    const bProfileNote = pr ? profileFrameNote(pr, st.bProto, allBits.length / 8) : '';
 
     // ---- frame decoder ----
     const showDecoder = st.view === 'decode';
@@ -580,7 +698,7 @@ class Component extends DCLogic {
 
     return {
       // nav
-      isSpp: proto === 'spp' && !showBuilder && !showDecoder, isTm: proto === 'tm' && !showBuilder && !showDecoder, isTc: proto === 'tc' && !showBuilder && !showDecoder, isSdls: proto === 'sdls' && !showBuilder && !showDecoder,
+      isSpp: proto === 'spp' && !showBuilder && !showDecoder && !showProfile, isTm: proto === 'tm' && !showBuilder && !showDecoder && !showProfile, isTc: proto === 'tc' && !showBuilder && !showDecoder && !showProfile, isSdls: proto === 'sdls' && !showBuilder && !showDecoder && !showProfile,
       pickProto: (e) => this.setState({ proto: e.currentTarget.dataset.proto, view: 'diagram', tip: null, retView: null }),
       toggleEp: () => this.setState(s => ({ epOpen: !s.epOpen })),
       epOpen: st.epOpen,
@@ -591,6 +709,7 @@ class Component extends DCLogic {
 
       // views
       showDiagram, showTcDiagram, showSpDiagram, showSdlsDiagram, showField,
+      lay, ...this.profileVals(st, pr, showProfile),
       showBuilder,
       qOpen: st.qOpen, qText: st.qText, qResults: qRows, qHasResults: qRows.length > 0,
       qShowMessage: qRows.length === 0,
@@ -628,7 +747,9 @@ class Component extends DCLogic {
       bFieldList, bRibbon, bOctets, bHex: bHexStr, bBin: bBinStr,
       bTotalLabel: allBits.length + ' BITS · ' + (allBits.length / 8) + ' OCTETS',
       openBuilder: () => { this.setState({ view: 'build', fid: null, tip: null, retView: null }); if (this.mainEl) this.mainEl.scrollTop = 0; },
-      bReset: () => this.setState(s => ({ bVals: { ...s.bVals, [s.bProto]: {} } })),
+      bReset: () => this.setState(s => ({ bVals: { ...s.bVals, [this.bValsKey(s)]: {} } })),
+      bProfileNote, bHasProfileNote: !!bProfileNote,
+      bWireNote: 'Transmission order — most significant bit of octet 0 first.' + (allBits.length / 8 > this.BUILD_WIRE_MAX ? ' First ' + this.BUILD_WIRE_MAX + ' of ' + allBits.length / 8 + ' octets.' : ''),
       showDecoder,
       openDecoder: () => { this.setState({ view: 'decode', fid: null, tip: null, retView: null }); if (this.mainEl) this.mainEl.scrollTop = 0; },
       dProtoTabs: this.DECODE_ORDER.map(id => {
@@ -637,12 +758,19 @@ class Component extends DCLogic {
           onClick: (e) => this.setState({ dProto: e.currentTarget.dataset.dproto, tip: null }),
           style: { padding: '8px 15px', border: '1px solid ' + (on ? 'var(--color-accent)' : 'var(--color-divider)'), background: on ? 'color-mix(in srgb, var(--color-accent) 12%, var(--color-bg))' : 'var(--color-bg)', cursor: 'pointer', fontSize: '12.5px', letterSpacing: '.06em', fontFamily: 'var(--font-heading)', fontWeight: '600', whiteSpace: 'nowrap', color: on ? 'var(--color-accent-900)' : 'var(--color-text)' } };
       }),
-      dSpecName: dSpec.name, dSpecNote: dSpec.note, dSetNote: dSpec.setNote,
+      dSpecName: dSpec.name, dSpecNote: dSpec.note,
+      dSetNote: pr ? 'From the mission profile ‘' + pr.name + '’. Edit them on the Mission Profile page, or switch to Manual above.' + (st.dProto === 'spp' ? '' : ' Each frame is also compared with what the profile says about its Spacecraft Identifier' + (st.dProto === 'tm' ? ', OCF and Secondary Header.' : '.')) : dSpec.setNote,
+      dResetShow: !pr, dExampleNote: pr ? 'Loading an example switches to Manual: examples come with their own settings.' : '', dHasExampleNote: !!pr,
       dSettingsList: dSpec.settings.filter(sd => !sd.showIf || sd.showIf(dSetNum)).map(sd => {
+        if (pr) {
+          const fixed = dSetNum[sd.id];
+          return { id: sd.id, n: sd.n, ref: sd.ref, note: sd.note, isEnum: false, isNum: false, isFixed: true, unit: '', opts: [], min: '', max: '', value: '', over: false, overMsg: '', onInput: () => {},
+            fixedLabel: sd.opts ? sd.opts.find(o => o.v === fixed).l : fixed + (sd.unit ? ' ' + sd.unit : '') };
+        }
         const raw = dSetRaw[sd.id], v = raw === undefined ? String(sd.def) : raw;
         const clamped = !sd.opts && raw !== undefined && raw !== '' && String(dSetNum[sd.id]) !== String(Number(raw));
         return { id: sd.id, n: sd.n, ref: sd.ref, unit: sd.unit, note: sd.note, min: String(sd.min), max: String(sd.max), value: v,
-          isEnum: !!sd.opts, isNum: !sd.opts, opts: (sd.opts || []).map(o => ({ v: String(o.v), l: o.l })),
+          isEnum: !!sd.opts, isNum: !sd.opts, isFixed: false, fixedLabel: '', opts: (sd.opts || []).map(o => ({ v: String(o.v), l: o.l })),
           over: clamped, overMsg: 'Allowed range is ' + sd.min + '–' + sd.max + ' — using ' + dSetNum[sd.id] + '.',
           onInput: (e) => { const val = e.target.value, p2 = this.state.dProto; this.setState(s2 => ({ dSet: { ...s2.dSet, [p2]: { ...(s2.dSet[p2] || {}), [sd.id]: val } } })); } };
       }),
@@ -652,7 +780,7 @@ class Component extends DCLogic {
       dResetSettings: () => this.setState(s2 => ({ dSet: { ...s2.dSet, [s2.dProto]: {} } })),
       dExamples: dSpec.examples.map(x => ({ l: x.l, hex: x.hex, onClick: () => this.setState(s2 => {
         const apply = Object.entries({ ...dSpec.exampleSet, ...x.set }).map(([k, v]) => [k, String(v)]);
-        return { dHex: { ...s2.dHex, [s2.dProto]: x.hex }, dSet: { ...s2.dSet, [s2.dProto]: { ...(s2.dSet[s2.dProto] || {}), ...Object.fromEntries(apply) } } };
+        return { profileOn: false, dHex: { ...s2.dHex, [s2.dProto]: x.hex }, dSet: { ...s2.dSet, [s2.dProto]: { ...(s2.dSet[s2.dProto] || {}), ...Object.fromEntries(apply) } } };
       }) })),
       dParseBad: !!dParsed.err, dParseErr: dParsed.err,
       dParseLabel: dParsed.err ? 'INVALID' : dBytes.length + (dBytes.length === 1 ? ' OCTET' : ' OCTETS'),
@@ -683,9 +811,10 @@ class Component extends DCLogic {
       }),
       sdCovGrid: '152px ' + cov.cells.map(c => 'minmax(0,' + c.w + 'fr)').join(' '),
       sdCovName: cov.name, sdCovFig: cov.fig, sdCovBase: cov.base, sdCovNote: cov.note,
+      sdCovHasRanges: !!covLay, sdCovRanges: covLay ? profileCoverage(pr, st.sdCov || 'tm').text : '',
       sdCovCells: cov.cells.map((c, i) => ({
-        n: c.n, sub: c.sub || '', hasSub: !!c.sub, len: c.len,
-        style: 'min-width:0;border:1px solid var(--color-text);' + (i ? 'margin-left:-1px;' : '') + 'min-height:108px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;padding:8px 4px;background:' + (c.enc ? 'var(--color-accent-100)' : 'var(--color-bg)')
+        n: c.n, sub: c.sub || '', hasSub: !!c.sub, len: covLay && c.k ? profileFieldLabel(covLay.fields.find(x => x.key === c.k)) : c.len,
+        style: 'min-width:0;border:1px solid var(--color-text);' + (i ? 'margin-left:-1px;' : '') + 'min-height:108px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;padding:8px 4px;background:' + (c.enc && covEnc ? 'var(--color-accent-100)' : 'var(--color-bg)')
       })),
       sdCovPay: cov.cells.map((c, i) => {
         const first = cov.cells.findIndex(x => x.pay), lastPay = cov.cells.map(x => x.pay).lastIndexOf(true);
@@ -693,9 +822,9 @@ class Component extends DCLogic {
         if (!c.pay) return { style: base };
         return { style: base + 'border-top:1px solid var(--color-neutral-600);' + (i === first ? 'border-left-color:var(--color-neutral-600);' : '') + (i === lastPay ? 'border-right-color:var(--color-neutral-600);' : '') };
       }),
-      sdCovMac: cov.cells.map((c, i) => this.covSeg(c, i, cov.cells.length - 1, c.mac === 'in' ? 'fill' : (c.mac === 'mask' ? 'mask' : 'none'), c.mac === 'mask' ? 'MASKED OUT' : '')),
-      sdCovAad: cov.cells.map((c, i) => this.covSeg(c, i, cov.cells.length - 1, c.enc ? 'none' : (c.mac === 'in' ? 'fill' : (c.mac === 'mask' ? 'mask' : 'none')), c.enc ? '' : '')),
-      sdCovEnc: cov.cells.map((c, i) => this.covSeg(c, i, cov.cells.length - 1, c.enc ? 'deep' : 'none', c.enc ? 'ENCRYPTED' : '')),
+      sdCovMac: cov.cells.map((c, i) => this.covSeg(c, i, cov.cells.length - 1, !covAuth ? 'none' : c.mac === 'in' ? 'fill' : (c.mac === 'mask' ? 'mask' : 'none'), covAuth && c.mac === 'mask' ? 'MASKED OUT' : '')),
+      sdCovAad: cov.cells.map((c, i) => this.covSeg(c, i, cov.cells.length - 1, !covAad || c.enc ? 'none' : (c.mac === 'in' ? 'fill' : (c.mac === 'mask' ? 'mask' : 'none')), '')),
+      sdCovEnc: cov.cells.map((c, i) => this.covSeg(c, i, cov.cells.length - 1, c.enc && covEnc ? 'deep' : 'none', c.enc && covEnc ? 'ENCRYPTED' : '')),
       showEpDiagram,
       epTitle: ep ? ep.name : '', epTitleUpper: ep ? ep.name.toUpperCase() : '',
       epServiceLabel: ep ? ep.service : '', epFig: ep ? ep.fig : '', epIntro: ep ? ep.intro : '',

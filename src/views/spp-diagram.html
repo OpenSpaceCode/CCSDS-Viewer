@@ -9,7 +9,7 @@
           <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
             <a class="tag tag-outline" href="https://ccsds.org/Pubs/133x0b2e2.pdf" target="_blank" rel="noopener" style="text-decoration:none;cursor:pointer;white-space:nowrap" style-hover="background:var(--color-accent);color:var(--color-bg)">CCSDS 133.0-B-2 ↗</a>
             <span class="tag tag-neutral">PDU · SPACE PACKET</span>
-            <span class="tag tag-neutral">7 TO 65542 OCTETS</span>
+            <span class="tag tag-neutral">{{ lay.sppTag }}</span>
           </div>
           <div style="border-top:1px solid var(--color-divider);margin:24px 0 30px"></div>
 
@@ -31,10 +31,10 @@
                   <span style="position:absolute;top:7px;right:9px;font-size:11px;color:var(--color-accent-700)">{{ spPhBadge }}</span>
                   <span style="position:relative">PACKET PRIMARY HEADER</span>
                 </div>
-                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">6 OCTETS</div>
+                <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">{{ lay.sppPh }}</div>
               </div>
               <div style="flex:2.8;min-width:0;display:flex;flex-direction:column;margin-left:-1px">
-                <div role="button" tabindex="0" data-field="spdf" sc-camel-on-click="{{ openRef }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="position:relative;border:1px solid var(--color-text);height:40px;display:flex;align-items:center;justify-content:center;text-align:center;font-family:var(--font-heading);font-weight:600;font-size:12px;letter-spacing:.1em;padding:0 8px;cursor:pointer;background:var(--color-bg)" style-hover="background:var(--color-accent-100)">PACKET DATA FIELD (1 TO 65536 OCTETS) <span style="position:absolute;top:4px;right:9px;font-size:11px;color:var(--color-neutral-500)">§</span></div>
+                <div role="button" tabindex="0" data-field="spdf" sc-camel-on-click="{{ openRef }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="position:relative;border:1px solid var(--color-text);height:40px;display:flex;align-items:center;justify-content:center;text-align:center;font-family:var(--font-heading);font-weight:600;font-size:12px;letter-spacing:.1em;padding:0 8px;cursor:pointer;background:var(--color-bg)" style-hover="background:var(--color-accent-100)">{{ lay.sppDf }} <span style="position:absolute;top:4px;right:9px;font-size:11px;color:var(--color-neutral-500)">§</span></div>
                 <div style="display:flex;margin-top:-1px">
                   <div style="flex:1;min-width:0;display:flex;flex-direction:column">
                     <div role="button" tabindex="0" data-field="spsh" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="position:relative;border:1px solid var(--color-text);min-height:111px;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px 8px;cursor:pointer;background:{{ spShBg }};font-family:var(--font-heading);font-weight:600;font-size:14px;letter-spacing:.06em;line-height:1.35;transition:transform .13s ease,background .13s ease,box-shadow .13s ease" style-hover="transform:scale(1.04);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:6">
@@ -42,14 +42,14 @@
                       <span style="position:absolute;top:5px;right:7px;font-size:11px;color:var(--color-accent-700)">{{ spShBadge }}</span>
                       <span style="position:relative">PACKET SECONDARY HEADER<em style="display:block;font-family:var(--font-body);font-style:normal;font-weight:400;font-size:10.5px;letter-spacing:.06em;color:var(--color-neutral-700);margin-top:4px">(OPTIONAL)</em></span>
                     </div>
-                    <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">VARIABLE</div>
+                    <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">{{ lay.sppSh }}</div>
                   </div>
                   <div style="flex:1.6;min-width:0;display:flex;flex-direction:column;margin-left:-1px">
                     <div role="button" tabindex="0" data-field="spud" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="position:relative;border:1px solid var(--color-text);min-height:111px;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px 8px;cursor:pointer;background:var(--color-bg);font-family:var(--font-heading);font-weight:600;font-size:14px;letter-spacing:.06em;line-height:1.35;transition:transform .13s ease,background .13s ease,box-shadow .13s ease" style-hover="transform:scale(1.04);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:6">
                       <span style="position:absolute;top:5px;right:7px;font-size:11px;color:var(--color-neutral-500)">§</span>
                       <span style="position:relative">USER DATA FIELD</span>
                     </div>
-                    <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">VARIABLE</div>
+                    <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">{{ lay.sppUd }}</div>
                   </div>
                 </div>
               </div>
@@ -104,17 +104,17 @@
             <sc-if value="{{ spShOpen }}" hint-placeholder-val="{{ false }}">
               <div style="margin-top:22px">
                 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px">
-                  <span style="font-family:var(--font-heading);font-weight:600;font-size:14px;letter-spacing:.14em"><span style="color:var(--color-accent-700)">▾</span> PACKET SECONDARY HEADER — VARIABLE · OPTIONAL</span>
+                  <span style="font-family:var(--font-heading);font-weight:600;font-size:14px;letter-spacing:.14em"><span style="color:var(--color-accent-700)">▾</span> PACKET SECONDARY HEADER — {{ lay.sppShHead }} · OPTIONAL</span>
                   <span role="button" tabindex="0" data-field="spsh" sc-camel-on-click="{{ openRef }}" style="font-size:11px;letter-spacing:.12em;font-weight:600;color:var(--color-accent-700);cursor:pointer;display:inline-flex;align-items:center;gap:4px" style-hover="color:var(--color-accent-900)">OPEN REFERENCE § 4.1.4.2 <svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span>
                 </div>
                 <div style="display:flex;align-items:stretch">
                   <div role="button" tabindex="0" data-field="sptc" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:1;min-width:0;position:relative;border:1px solid var(--color-text);height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
                     <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.05em;line-height:1.25">TIME CODE FIELD (OPTIONAL)</span>
-                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">VARIABLE</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">{{ lay.sppTcf }}</span>
                   </div>
                   <div role="button" tabindex="0" data-field="spad" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="flex:1;min-width:0;position:relative;border:1px solid var(--color-text);height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:6px 3px;cursor:pointer;background:var(--color-bg);margin-left:-1px;transition:transform .12s ease,background .12s ease,box-shadow .12s ease" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
                     <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.05em;line-height:1.25">ANCILLARY DATA FIELD (OPTIONAL)</span>
-                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">VARIABLE</span>
+                    <span style="font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600)">{{ lay.sppAdf }}</span>
                   </div>
                 </div>
               </div>

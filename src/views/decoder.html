@@ -23,7 +23,9 @@
                 <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.18em;flex:1">MISSION SETTINGS</span>
                 <span style="font-size:9.5px;letter-spacing:.14em;font-weight:600;padding:3px 7px;border:1px solid var(--color-divider);color:var(--color-neutral-600);white-space:nowrap">MANAGED PARAMETERS</span>
               </div>
-              <div role="button" tabindex="0" sc-camel-on-click="{{ dResetSettings }}" style="margin-top:10px;align-self:flex-start;padding:8px 15px;border:1px solid var(--color-divider);cursor:pointer;font-size:11.5px;letter-spacing:.13em;font-family:var(--font-heading);font-weight:600" style-hover="border-color:var(--color-accent);color:var(--color-accent-700)">RESET SETTINGS</div>
+              <sc-if value="{{ dResetShow }}" hint-placeholder-val="{{ true }}">
+                <div role="button" tabindex="0" sc-camel-on-click="{{ dResetSettings }}" style="margin-top:10px;align-self:flex-start;padding:8px 15px;border:1px solid var(--color-divider);cursor:pointer;font-size:11.5px;letter-spacing:.13em;font-family:var(--font-heading);font-weight:600" style-hover="border-color:var(--color-accent);color:var(--color-accent-700)">RESET SETTINGS</div>
+              </sc-if>
               <p style="margin:9px 0 0;font-size:11.5px;line-height:1.6;color:var(--color-neutral-600);text-wrap:pretty">{{ dSetNote }}</p>
               <sc-for list="{{ dSettingsList }}" as="s" hint-placeholder-count="3">
                 <div style="display:flex;flex-direction:column;gap:5px;padding:11px 0;border-top:1px solid var(--color-divider);margin-top:11px">
@@ -38,6 +40,9 @@
                           <option value="{{ o.v }}">{{ o.l }}</option>
                         </sc-for>
                       </sc-raw-select>
+                    </sc-if>
+                    <sc-if value="{{ s.isFixed }}" hint-placeholder-val="{{ false }}">
+                      <span data-dfixed="{{ s.id }}" style="flex:1;min-width:0;font-size:12.5px;padding:6px 8px;border:1px dashed var(--color-neutral-500);color:var(--color-neutral-700);background:var(--color-surface)">{{ s.fixedLabel }}</span>
                     </sc-if>
                     <sc-if value="{{ s.isNum }}" hint-placeholder-val="{{ true }}">
                       <input type="number" min="{{ s.min }}" max="{{ s.max }}" data-dset="{{ s.id }}" value="{{ s.value }}" sc-camel-on-change="{{ s.onInput }}" sc-camel-on-input="{{ s.onInput }}" style="width:104px;flex:none;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;padding:6px 8px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
@@ -61,6 +66,9 @@
                 <div style="font-size:11px;color:var(--color-accent-900);padding-top:6px">{{ dParseErr }}</div>
               </sc-if>
               <div style="font-size:10px;letter-spacing:.18em;color:var(--color-neutral-600);padding:16px 0 7px">EXAMPLES</div>
+              <sc-if value="{{ dHasExampleNote }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:11px;line-height:1.5;color:var(--color-neutral-600);padding-bottom:7px">{{ dExampleNote }}</div>
+              </sc-if>
               <div style="display:flex;flex-wrap:wrap;gap:6px">
                 <sc-for list="{{ dExamples }}" as="x" hint-placeholder-count="4">
                   <div role="button" tabindex="0" sc-camel-on-click="{{ x.onClick }}" title="{{ x.hex }}" style="padding:5px 10px;border:1px solid var(--color-divider);cursor:pointer;font-size:11.5px;letter-spacing:.04em" style-hover="border-color:var(--color-accent);color:var(--color-accent-700)">{{ x.l }}</div>

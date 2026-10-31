@@ -27,6 +27,8 @@ a:hover{color:var(--color-accent-900)}
   <div ref="{{ mainRef }}" sc-camel-on-scroll="{{ clearTip }}" style="flex:1;min-width:0;overflow:auto;position:relative">
     <div style="max-width:1220px;margin:0 auto;padding:40px 46px 72px">
 
+      <!--#include views/profile-bar.html -->
+
       <!--#include views/tm-diagram.html -->
 
       <!--#include views/spp-diagram.html -->
@@ -42,6 +44,8 @@ a:hover{color:var(--color-accent-900)}
       <!--#include views/ep-diagram.html -->
 
       <!--#include views/field-page.html -->
+
+      <!--#include views/profile.html -->
     </div>
 
     <!--#include views/tooltip.html -->
@@ -60,6 +64,7 @@ a:hover{color:var(--color-accent-900)}
 <!--#include lib/search.js -->
 <!--#include lib/session.js -->
 <!--#include protocols/sdls.js -->
+<!--#include lib/profile.js -->
 <!--#include protocols/tm.js -->
 <!--#include protocols/tc.js -->
 <!--#include protocols/spp.js -->

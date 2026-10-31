@@ -22,6 +22,7 @@ src/
   lib/bits.js         octet/bit helpers for the decoder
   lib/search.js       field search (Ctrl+K): indexing, value matching, ranking
   lib/session.js      keeps the page across a refresh (sessionStorage)
+  lib/profile.js      mission profile: schema, validation, JSON, layout (localStorage)
   component.js        state, navigation and renderVals() — the glue
 vendor/               React, dc-runtime, fonts and the self-unpacking bundle shell (not edited)
 tests/                node:test suites
