@@ -229,7 +229,7 @@ const TM_BUILD = { name: 'TM TRANSFER FRAME PRIMARY HEADER', tab: 'TM SDLP',
     { id: 'tfvn', n: 'Transfer Frame Version Number', bits: 2, def: 0, abbr: 'TFVN', kind: 'enum', opts: [{ v: 0, l: '00 · This version' }, { v: 1, l: '01 · Reserved' }, { v: 2, l: '10 · Reserved' }, { v: 3, l: '11 · Reserved' }] },
     { id: 'scid', n: 'Spacecraft Identifier', bits: 10, def: 42, abbr: 'SCID' },
     { id: 'vcid', n: 'Virtual Channel Identifier', bits: 3, def: 1, abbr: 'VCID' },
-    { id: 'ocff', n: 'Operational Control Field Flag', bits: 1, def: 0, abbr: 'OCF', kind: 'enum', opts: [{ v: 0, l: '0 · OCF absent' }, { v: 1, l: '1 · OCF present' }] },
+    { id: 'ocff', n: 'Operational Control Field Flag', bits: 1, def: 0, abbr: 'OCFF', kind: 'enum', opts: [{ v: 0, l: '0 · OCF absent' }, { v: 1, l: '1 · OCF present' }] },
     { id: 'mcfc', n: 'Master Channel Frame Count', bits: 8, def: 17, abbr: 'MCFC' },
     { id: 'vcfc', n: 'Virtual Channel Frame Count', bits: 8, def: 5, abbr: 'VCFC' },
     { id: 'shf', n: 'Secondary Header Flag', bits: 1, def: 0, abbr: 'SHF', kind: 'enum', opts: [{ v: 0, l: '0 · Absent' }, { v: 1, l: '1 · Present' }] },
@@ -240,6 +240,11 @@ const TM_BUILD = { name: 'TM TRANSFER FRAME PRIMARY HEADER', tab: 'TM SDLP',
   // An OID frame identifies a Virtual Channel that does not use SDLS (§ 6.4.6.2). Lengths are the annex E1 baseline of 355.0.
   sdls: { baseline: { iv: 12, sn: 0, pl: 0, mac: 16 }, applies: (get) => get('syncf') !== 0 || get('fhp') !== 2046,
     blocked: 'First Header Pointer 2046 makes this an Only Idle Data frame, which identifies a Virtual Channel that does not use SDLS (CCSDS 132.0-B-3 § 6.4.6.2), so no Security Header or Trailer is transmitted.' },
+  // Follows the Data Field, or the Security Trailer with SDLS (§ 4.1.5.1, § 6.3.7.2). Its content can be project-specific, so it is entered, never computed.
+  trail: { flag: 'ocff', name: 'OPERATIONAL CONTROL FIELD', form: 'TRANSFER FRAME TRAILER · CCSDS 132.0-B-3 § 4.1.5',
+    note: (vals) => 'Four octets, entered as raw hex — nothing is computed here. The first bits declare the report: ' + tmOcfReport(parseInt(String(vals.ocf === undefined ? '00' : vals.ocf).slice(0, 2).padEnd(2, '0'), 16) || 0) + '.',
+    off: 'The Operational Control Field Flag is ‘0’, so no Operational Control Field is transmitted. Set the flag to ‘1’ above to build one.',
+    fields: [{ id: 'ocf', n: 'Operational Control Field', bits: 32, def: 0, abbr: 'OCF', kind: 'hex', defHex: '00000000' }] },
   sec: { flag: 'shf', name: 'TRANSFER FRAME SECONDARY HEADER', form: 'DEFINED FORM · CCSDS 132.0-B-3 § 4.1.3',
     note: 'One Identification octet — Version Number and Length — followed by the Secondary Header Data Field. The Data Field content is mission-specific, so it is entered as raw hex. The Length carries a count of one less than the total number of octets in the Secondary Header, so it follows the Data Field length.',
     off: 'The Secondary Header Flag is ‘0’, so no Transfer Frame Secondary Header is transmitted. Set the flag to ‘1’ above to build one.',
@@ -271,6 +276,12 @@ const TM_DECODE = { name: 'TM TRANSFER FRAME', tab: 'TM SDLP',
     { l: 'SDLS · baseline', set: { secSvc: SDLS_AE, secIv: 12, secSn: 0, secPl: 0, secMac: 16 },
       hex: '02 A3 11 05 18 00 00 01 0A B3 06 82 30 35 66 1B B8 DB A2 1C F8 DC B3 43 08 E5 C6 9F 46 A3 3C AF A6 2B D9 22 47 6B 34 8A 62 9F 5C EE D0 32 C3 E8 70 6E C4 7D 9B FA 01 00 00 05 FB 83' } ],
   decode: decodeTm };
+
+// The report held by an OCF, from its first octet: bit 0 is the Type Flag, and in a Type-2 Report bit 1 tells what it is (§ 4.1.5.4, § 4.1.5.5).
+function tmOcfReport(first) {
+  const type = first >> 6;
+  return type < 2 ? 'Type-1 Report — CLCW' : type === 2 ? 'Type-2 Report — project-specific' : 'Type-2 Report — SDLS Frame Security Report';
+}
 
 // OID data is a 32-cell LFSR sequence (D0 + D1 + D2 + D22 + D32, § 4.1.4.6.2) that is never restarted, so a frame holds
 // an arbitrary window of it: from bit 32 of the window on, every bit must follow from the bits before it.
@@ -377,8 +388,7 @@ function decodeTm(b, set) {
 
     if (sec.trl) { sdlsTrailerField(h, pos, set); pos += sec.trl; }
     if (ocff) {
-      const type = b.length > pos ? b[pos] >> 6 : -1;
-      octField('ocf', 'Operational Control Field', 'OCF', pos, 4, type < 0 ? 'Report type unknown' : type < 2 ? 'Type-1 Report — CLCW' : type === 2 ? 'Type-2 Report — project-specific' : 'Type-2 Report — SDLS Frame Security Report');
+      octField('ocf', 'Operational Control Field', 'OCF', pos, 4, b.length > pos ? tmOcfReport(b[pos]) : 'Report type unknown');
       pos += 4;
     }
     if (set.fecf) fecfField('fecf', pos, '§ 4.1.6.3');

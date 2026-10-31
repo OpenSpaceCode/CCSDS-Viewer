@@ -269,6 +269,10 @@ class Component extends DCLogic {
     if (bSpec.pay) bPayList.push(bAdd({ id: 'payload', n: bSpec.pay.field, bits: 0, def: 0, abbr: bSpec.pay.abbr, kind: 'hex', varOct: true, octNum: true, defOct: 0, minOct: 0, maxOct: 128, defHex: '' }));
     const bPayBits = bPayList.length ? bPayList[0].nb : 0;
     if (bSdlsFields.trl.length) bAfter.push(bSection('SECURITY TRAILER', 'SPACE DATA LINK SECURITY · CCSDS 355.0-B-2 § 4.1.2', true, SDLS_BUILD_TRAILER_NOTE, [], bSdlsFields.trl));
+    if (bSpec.trail) {
+      const on = bGet(bSpec.trail.flag) === 1;
+      bAfter.push(bSection(bSpec.trail.name, bSpec.trail.form, on, on ? bSpec.trail.note(bVals) : bSpec.trail.off, [], bSpec.trail.fields));
+    }
     const bOctets = [];
     for (let i = 0; i < allBits.length; i += 8) {
       const chunk = allBits.slice(i, i + 8);

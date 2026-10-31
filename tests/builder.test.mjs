@@ -183,6 +183,78 @@ test('round trip for every service and length combination the builder offers', (
   }
 });
 
+test('TM OCF: built only when the flag is set, as four octets of entered hex (132.0 § 4.1.5)', () => {
+  const off = build('tm', { payload__oct: '2', payload: 'AABB' });
+  assert.equal(section(off, 'OPERATIONAL CONTROL FIELD').off, true);
+  assert.equal(fieldIn(off, 'ocf'), undefined);
+  assert.equal(off.bHex, '02 A2 11 05 18 00 AA BB', 'nothing is added without the flag');
+
+  const on = build('tm', { ocff: '1', payload__oct: '2', payload: 'AABB', ocf: '01000005' });
+  assert.equal(on.bHex, '02 A3 11 05 18 00 AA BB 01 00 00 05');
+  assert.equal(fieldIn(on, 'ocf').nb, 32);
+  assert.equal(fieldIn(on, 'ocf').bitsLabel, '32 BITS');
+  assert.equal(fieldIn(on, 'ocf').isHex, true);
+  assert.deepEqual(fieldIn(on, 'ocf').octOpts, [], 'the length is fixed');
+  assert.equal(on.bRibbon.at(-1).abbr, 'OCF');
+  assert.equal(on.bRibbon.filter(r => r.abbr === 'OCF').length, 1, 'the flag has its own label, OCFF');
+});
+
+test('TM OCF: nothing is computed, and the default is all zeros', () => {
+  assert.equal(build('tm', { ocff: '1' }).bHex, '02 A3 11 05 18 00 00 00 00 00');
+  assert.equal(build('tm', { ocff: '1', ocf: 'DEADBEEF' }).bHex, '02 A3 11 05 18 00 DE AD BE EF', 'whatever is entered goes on the wire as it is');
+});
+
+test('TM OCF: wrong-length input is padded or cut, and says so', () => {
+  const short = build('tm', { ocff: '1', ocf: 'AB' });
+  assert.equal(short.bHex, '02 A3 11 05 18 00 AB 00 00 00');
+  assert.match(fieldIn(short, 'ocf').overMsg, /Zero-padded to 4 octets/);
+  const long = build('tm', { ocff: '1', ocf: '0102030405' });
+  assert.equal(long.bHex, '02 A3 11 05 18 00 01 02 03 04');
+  assert.match(fieldIn(long, 'ocf').overMsg, /Extra digits ignored/);
+});
+
+test('TM OCF: the note states the report the first bits declare, as the decoder does', () => {
+  const note = (ocf) => section(build('tm', { ocff: '1', ocf }), 'OPERATIONAL CONTROL FIELD').note;
+  for (const [ocf, type] of [['01000005', 'Type-1 Report — CLCW'], ['41000000', 'Type-1 Report — CLCW'], ['81000000', 'Type-2 Report — project-specific'], ['C1000000', 'Type-2 Report — SDLS Frame Security Report']]) {
+    assert.match(note(ocf), new RegExp(type), ocf);
+    assert.equal(row(decode('tm', '02 A3 11 05 18 00 AA BB ' + ocf.match(/../g).join(' '), { fecf: '0' }), 'ocf').meaning, type, ocf);
+  }
+  assert.match(section(build('tm', { ocff: '1' }), 'OPERATIONAL CONTROL FIELD').note, /Type-1 Report/, 'before anything is typed');
+  assert.match(note(''), /Type-1 Report/);
+  assert.match(note('8'), /Type-2 Report — project-specific/, 'half an octet still sets the type bits');
+});
+
+test('TM OCF comes after the Security Trailer, outside what SDLS protects (132.0 § 6.3.7.2)', () => {
+  const v = build('tm', { ocff: '1', secSvc: AE, payload__oct: '2' });
+  assert.deepEqual(abbrs(v).slice(-3), ['DATA', 'MAC', 'OCF']);
+  assert.deepEqual(v.bAfter.map(s => s.name), ['SECURITY TRAILER', 'OPERATIONAL CONTROL FIELD']);
+});
+
+test('round trip TM with an OCF, with and without SDLS', () => {
+  const plain = decode('tm', build('tm', { ocff: '1', payload__oct: '4', payload: 'CAFEF00D', ocf: '81ABCDEF' }).bHex, { fecf: '0' });
+  assert.deepEqual(errors(plain), []);
+  assert.equal(row(plain, 'df').raw, 'CAFEF00D');
+  assert.equal(row(plain, 'ocf').raw, '81ABCDEF');
+  assert.equal(row(plain, 'ocf').meaning, 'Type-2 Report — project-specific');
+
+  const secure = decode('tm', build('tm', { ocff: '1', secSvc: AE, payload__oct: '4', payload: 'CAFEF00D', ocf: '01000005' }).bHex, { fecf: '0', secSvc: AE });
+  assert.deepEqual(errors(secure), []);
+  assert.equal(row(secure, 'df').raw, 'CAFEF00D');
+  assert.equal(row(secure, 'ocf').raw, '01000005');
+  assert.ok(secure.dFields.findIndex(f => f.fid === 'mac') < secure.dFields.findIndex(f => f.fid === 'ocf'));
+});
+
+test('an Only Idle Data frame can still carry an OCF (132.0 § 4.1.4.6.3, note 1)', () => {
+  const v = build('tm', { ocff: '1', fhp: '2046', secSvc: AE, ocf: '01000005' });
+  assert.equal(section(v, 'SECURITY HEADER').off, true);
+  assert.equal(section(v, 'OPERATIONAL CONTROL FIELD').on, true);
+  assert.equal(v.bHex, '02 A3 11 05 1F FE 01 00 00 05');
+});
+
+test('only TM has an OCF section', () => {
+  for (const p of ['tc', 'spp']) assert.equal(section(build(p), 'OPERATIONAL CONTROL FIELD'), undefined, p);
+});
+
 test('RESET clears the SDLS settings too', () => {
   const c = new Component({});
   c.state = { ...c.state, view: 'build', bProto: 'tm', bVals: { tm: { secSvc: AE } } };
