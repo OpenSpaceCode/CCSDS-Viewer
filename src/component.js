@@ -122,12 +122,6 @@ class Component extends DCLogic {
   EP_DEF = SDLS_EP_PROCEDURES;
   EP_FIELD_IDS = SDLS_EP_FIELD_IDS;
 
-  PROTOS = {
-    spp:  { title: 'SPACE PACKET PROTOCOL', code: 'CCSDS 133.0-B-2', url: 'https://ccsds.org/Pubs/133x0b2e2.pdf' },
-    tc:   { title: 'TC SPACE DATA LINK PROTOCOL', code: 'CCSDS 232.0-B-4', url: 'https://ccsds.org/Pubs/232x0b4e1c1.pdf' },
-    sdls: { title: 'SPACE DATA LINK SECURITY PROTOCOL', code: 'CCSDS 355.0-B-2', url: 'https://ccsds.org/Pubs/355x0b2.pdf' }
-  };
-
   // Per-protocol tables are defined in src/protocols/*.js; order matters only for iteration.
   MAPS = { ...TM_MAPS, ...TC_MAPS, ...SPP_MAPS, ...SDLS_MAPS, ...SDLS_EP_MAPS };
   F = { ...TM_FIELDS, ...TC_FIELDS, ...SPP_FIELDS, ...SDLS_FIELDS, ...SDLS_EP_FIELDS };
@@ -241,7 +235,6 @@ class Component extends DCLogic {
     const showEpDiagram = st.view === 'ep' && !!ep;
     const f = st.fid ? F[st.fid] : null;
     const showField = st.view === 'field' && !!f;
-    const showPlaceholder = false;
     const showBuilder = st.view === 'build';
 
     // ---- frame builder ----
@@ -383,7 +376,6 @@ class Component extends DCLogic {
         : fromSd
           ? 'SOURCE · CCSDS 355.0-B-2 · SPACE DATA LINK SECURITY PROTOCOL · BLUE BOOK ISSUE 2 · JULY 2022'
           : 'SOURCE · CCSDS 132.0-B-3 · TM SPACE DATA LINK PROTOCOL · BLUE BOOK ISSUE 3 · OCTOBER 2021';
-    const pr = this.PROTOS[proto] || {};
 
     // tooltip
     const t = st.tip;
@@ -502,7 +494,6 @@ class Component extends DCLogic {
       // nav
       isSpp: proto === 'spp' && !showBuilder && !showDecoder, isTm: proto === 'tm' && !showBuilder && !showDecoder, isTc: proto === 'tc' && !showBuilder && !showDecoder, isSdls: proto === 'sdls' && !showBuilder && !showDecoder,
       pickProto: (e) => this.setState({ proto: e.currentTarget.dataset.proto, view: 'diagram', tip: null, retView: null }),
-      goTm: () => this.setState({ proto: 'tm', view: 'diagram', tip: null }),
       toggleEp: () => this.setState(s => ({ epOpen: !s.epOpen })),
       epOpen: st.epOpen,
       epBadge: st.epOpen ? '▾' : '▸',
@@ -511,7 +502,7 @@ class Component extends DCLogic {
       mainRef: (el) => { this.mainEl = el; },
 
       // views
-      showDiagram, showTcDiagram, showSpDiagram, showSdlsDiagram, showField, showPlaceholder,
+      showDiagram, showTcDiagram, showSpDiagram, showSdlsDiagram, showField,
       showBuilder,
       qOpen: st.qOpen, qText: st.qText, qResults: qRows, qHasResults: qRows.length > 0,
       qShowMessage: qRows.length === 0,
@@ -581,8 +572,6 @@ class Component extends DCLogic {
       dChecks, dHasFields: dRes.fields.length > 0, dRibbon, dFields, dDump, dOctets,
       dDumpMore: dBytes.length > D_DUMP_MAX, dDumpMoreLabel: '… ' + (dBytes.length - D_DUMP_MAX) + ' more octets not shown.',
       dWireNote: 'Transmission order — most significant bit of octet 0 first.' + (dBytes.length > D_WIRE_MAX ? ' First ' + D_WIRE_MAX + ' of ' + dBytes.length + ' octets.' : ''),
-      protoTitle: pr.title || '', protoCode: pr.code || '',
-      protoCodeLabel: pr.code ? pr.code + ' ↗' : '', protoCodeUrl: pr.url || '#',
 
       // diagram
       phOpen: open.ph, shOpen: open.sh, dfsOpen: open.ph && open.dfs,
