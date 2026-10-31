@@ -231,7 +231,7 @@ class Component extends DCLogic {
     // ---- frame decoder ----
     const showDecoder = st.view === 'decode';
     const dSpec = this.DECODE_SPECS[st.dProto];
-    const dText = st.dHex[st.dProto] !== undefined ? st.dHex[st.dProto] : dSpec.examples[0].hex;
+    const dText = st.dHex[st.dProto] || '';
     const dParsed = parseHex(dText);
     const dBytes = dParsed.bytes;
     const dRes = showDecoder && !dParsed.err ? dSpec.decode(dBytes, this.dSettings(st.dProto)) : { fields: [], checks: [] };

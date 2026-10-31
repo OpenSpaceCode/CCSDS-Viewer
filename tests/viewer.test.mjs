@@ -66,8 +66,18 @@ test('clicking an example applies its mission settings, and a plain one switches
   assert.ok(!plain.dFields.some(f => f.fid === 'spi'));
 });
 
+test('the decoder starts empty on every protocol, with no example loaded', () => {
+  for (const id of proto.DECODE_ORDER) {
+    const { v } = render({ view: 'decode', dProto: id });
+    assert.equal(v.dHexText, '', id);
+    assert.equal(v.dSummary, 'NO INPUT', id);
+    assert.equal(v.dHasFields, false, id);
+    assert.deepEqual(v.dChecks, [], id);
+  }
+});
+
 test('BACK from a field page opened in the decoder returns to the decoder', () => {
-  const { c, v } = render({ view: 'decode' });
+  const { c, v } = render(exampleState('spp', proto.DECODE_SPECS.spp.examples[0]));
   v.dFields[0].onClick({ currentTarget: { dataset: { dfield: v.dFields[0].fid } } });
   assert.equal(c.state.view, 'field');
   assert.equal(c.renderVals().backLabel, 'FRAME DECODER');
