@@ -184,6 +184,7 @@ const TC_BUILD = { name: 'TC TRANSFER FRAME PRIMARY HEADER', tab: 'TC SDLP',
       derive: (vals) => Math.max((vals.__frameOct || 1) - 1, 0),
       overrideNote: (want) => 'Differs from the frame as built: ' + oct(want + 1) + ', so the derived value is ' + want + '.' },
     { id: 'tcfsn', n: 'Frame Sequence Number', bits: 8, def: 0, abbr: 'FSN' } ],
+  fecfForm: 'CCSDS 232.0-B-4 § 4.1.4',
   // Type-C frames have neither a Segment Header (§ 4.1.3.2.2.1.3) nor SDLS fields (§ 6.3.4.1). Lengths are the annex E2 baseline of 355.0.
   sdls: { baseline: { iv: 0, sn: 4, pl: 0, mac: 16 }, applies: (get) => get('ccf') === 0,
     blocked: 'SDLS is not used for frames carrying control information (CCSDS 232.0-B-4 § 6.3.4.1), so a Type-C frame has no Security Header or Trailer.' },

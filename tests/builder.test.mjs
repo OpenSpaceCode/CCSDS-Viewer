@@ -7,11 +7,13 @@ import { loadComponent } from './load.mjs';
 const Component = loadComponent();
 const AUTH = '1', ENC = '2', AE = '3';
 
-const build = (bProto, vals = {}) => {
+const buildWithDefaults = (bProto, vals = {}) => {
   const c = new Component({});
   c.state = { ...c.state, view: 'build', bProto, bVals: { [bProto]: vals } };
   return c.renderVals();
 };
+// Most tests look at one part of a frame, and state it exactly: without an FECF unless they ask for one.
+const build = (bProto, vals = {}) => buildWithDefaults(bProto, { fecfOn: '0', ...vals });
 const decode = (dProto, hex, set) => {
   const c = new Component({});
   c.state = { ...c.state, view: 'decode', dProto, dHex: { [dProto]: hex }, dSet: { [dProto]: set } };
@@ -227,7 +229,7 @@ test('TM OCF: the note states the report the first bits declare, as the decoder 
 test('TM OCF comes after the Security Trailer, outside what SDLS protects (132.0 § 6.3.7.2)', () => {
   const v = build('tm', { ocff: '1', secSvc: AE, payload__oct: '2' });
   assert.deepEqual(abbrs(v).slice(-3), ['DATA', 'MAC', 'OCF']);
-  assert.deepEqual(v.bAfter.map(s => s.name), ['SECURITY TRAILER', 'OPERATIONAL CONTROL FIELD']);
+  assert.deepEqual(v.bAfter.map(s => s.name), ['SECURITY TRAILER', 'OPERATIONAL CONTROL FIELD', 'FRAME ERROR CONTROL FIELD']);
 });
 
 test('round trip TM with an OCF, with and without SDLS', () => {
@@ -288,7 +290,7 @@ test('a derived Frame Length shows as derived, with no input', () => {
 
 test('override: starts from the derived value, then holds whatever is entered', () => {
   const c = new Component({});
-  c.state = { ...c.state, view: 'build', bProto: 'tc', bVals: { tc: { payload__oct: '10' } } };
+  c.state = { ...c.state, view: 'build', bProto: 'tc', bVals: { tc: { payload__oct: '10', fecfOn: '0' } } };
   const row = () => c.renderVals().bFieldList.find(f => f.id === 'tcflen');
   row().onOverride();
   assert.equal(row().isOverridden, true);
@@ -422,6 +424,118 @@ test('RESET returns Packet Data Length to derived', () => {
 test('the User Data note no longer says the length is not derived', () => {
   assert.doesNotMatch(build('spp').bPayNote, /not derived/);
   assert.match(build('spp').bPayNote, /Packet Data Length above follows it/);
+});
+
+test('FECF: on by default in TM and TC, as in the decoder; packets have none', () => {
+  assert.equal(section(buildWithDefaults('tm'), 'FRAME ERROR CONTROL FIELD').on, true);
+  assert.equal(section(buildWithDefaults('tc'), 'FRAME ERROR CONTROL FIELD').on, true);
+  assert.equal(section(buildWithDefaults('spp'), 'FRAME ERROR CONTROL FIELD'), undefined);
+  assert.equal(buildWithDefaults('tm').bTotalLabel, '64 BITS · 8 OCTETS');
+  const absent = buildWithDefaults('tm', { fecfOn: '0' });
+  assert.equal(section(absent, 'FRAME ERROR CONTROL FIELD').off, true);
+  assert.deepEqual(section(absent, 'FRAME ERROR CONTROL FIELD').list.map(f => f.id), ['fecfOn'], 'the setting stays to turn it back on');
+  assert.equal(absent.bTotalLabel, '48 BITS · 6 OCTETS');
+});
+
+test('FECF matches frames generated independently (the decoder examples, from Python’s binascii.crc_hqx)', () => {
+  assert.equal(buildWithDefaults('tc', { byp: '1', tcscid: '42', tcvcid: '1', tcfsn: '0', segf: '3', segmap: '5', payload__oct: '12', payload: '11A2C02A0005A1B2C3D4E5F6' }).bHex,
+    '20 2A 04 13 00 C5 11 A2 C0 2A 00 05 A1 B2 C3 D4 E5 F6 87 4D');
+  assert.equal(buildWithDefaults('tc', { byp: '1', ccf: '1', tcfsn: '0', payload__oct: '1', payload: '00' }).bHex, '30 2A 04 07 00 00 20 E7');
+  assert.equal(buildWithDefaults('tc', { byp: '0', tcvcid: '2', tcfsn: '7', segf: '1', segmap: '3', payload__oct: '4', payload: 'DEADBEEF' }).bHex, '00 2A 08 0B 07 43 DE AD BE EF 0F 04');
+  assert.equal(buildWithDefaults('tm', { ocff: '1', mcfc: '17', vcfc: '5', payload__oct: '18', payload: '0864C001000B3A5C01000102030405060708', ocf: '01000005' }).bHex,
+    '02 A3 11 05 18 00 08 64 C0 01 00 0B 3A 5C 01 00 01 02 03 04 05 06 07 08 01 00 00 05 A8 4C');
+});
+
+test('FECF is displayed as hex, and goes last on the wire', () => {
+  const v = buildWithDefaults('tm', { ocff: '1', secSvc: AE, payload__oct: '2' });
+  const f = fieldIn(v, 'fecf');
+  assert.equal(f.isDerived, true);
+  assert.equal(f.isHex, false, 'no input while derived');
+  assert.match(f.derivedLabel, /^0x[0-9A-F]{4}$/);
+  assert.equal(f.nb, 16);
+  assert.deepEqual(abbrs(v).slice(-4), ['DATA', 'MAC', 'OCF', 'FECF']);
+  assert.equal(v.bRibbon.at(-1).value, f.derivedLabel.slice(2));
+  assert.deepEqual(v.bHex.split(' ').slice(-2), [f.derivedLabel.slice(2, 4), f.derivedLabel.slice(4, 6)]);
+});
+
+test('the TC Frame Length counts the FECF, and the CRC covers that length', () => {
+  const on = buildWithDefaults('tc', { payload__oct: '2', payload: 'AABB' });
+  assert.equal(on.bFieldList.find(f => f.id === 'tcflen').derivedLabel, '9', '5 + 1 + 2 + 2 = 10 octets');
+  const off = buildWithDefaults('tc', { payload__oct: '2', payload: 'AABB', fecfOn: '0' });
+  assert.equal(off.bFieldList.find(f => f.id === 'tcflen').derivedLabel, '7');
+  // Turning off the FECF changes the length, so a CRC taken before the length was in place would differ from one taken after.
+  assert.equal(decode('tc', on.bHex, {}).dSummary, 'VALID TC TRANSFER FRAME');
+});
+
+test('the CRC follows every field it covers, whichever comes first', () => {
+  const crc = (vals) => fieldIn(buildWithDefaults('tm', vals), 'fecf').derivedLabel;
+  const base = crc({});
+  for (const vals of [{ scid: '43' }, { mcfc: '18' }, { shf: '1' }, { secSvc: AE }, { payload__oct: '1' }, { ocff: '1', ocf: '12345678' }])
+    assert.notEqual(crc(vals), base, JSON.stringify(vals));
+  assert.equal(crc({}), base, 'the same frame gives the same CRC');
+});
+
+test('FECF override: starts from the CRC, holds a bad value, and says so; the decoder catches it', () => {
+  const c = new Component({});
+  c.state = { ...c.state, view: 'build', bProto: 'tm', bVals: { tm: { payload__oct: '2', payload: 'AABB' } } };
+  const row = () => fieldIn(c.renderVals(), 'fecf');
+  const good = row().derivedLabel.slice(2);
+  assert.equal(row().canOverride, true);
+  row().onOverride();
+  assert.equal(row().isOverridden, true);
+  assert.equal(row().isHex, true, 'an input while overridden');
+  assert.equal(row().value, good, 'nothing jumps when taking over');
+  assert.equal(row().over, false);
+  row().onChange({ target: { value: 'dead' } });
+  assert.equal(row().value, 'DEAD');
+  assert.deepEqual(c.renderVals().bHex.split(' ').slice(-2), ['DE', 'AD']);
+  assert.equal(row().overMsg, 'Differs from the computed CRC, 0x' + good + ': a receiver will reject this frame.');
+  assert.ok(decode('tm', c.renderVals().bHex, {}).dChecks.some(x => /Frame Error Control Field mismatch/.test(x.msg)));
+  c.bSetVal('mcfc', '200');
+  assert.equal(row().value, 'DEAD', 'not moved by later changes');
+  assert.match(row().overMsg, /computed CRC/);
+  row().onDerive();
+  assert.equal(row().isDerived, true);
+  assert.equal(decode('tm', c.renderVals().bHex, {}).dSummary, 'VALID TM TRANSFER FRAME');
+});
+
+test('an override of the right value raises no note, and a short one is padded', () => {
+  const good = fieldIn(buildWithDefaults('tm'), 'fecf').derivedLabel.slice(2);
+  assert.equal(fieldIn(buildWithDefaults('tm', { fecf__manual: '1', fecf: good }), 'fecf').over, false);
+  assert.match(fieldIn(buildWithDefaults('tm', { fecf__manual: '1', fecf: 'AB' }), 'fecf').overMsg, /Zero-padded/);
+});
+
+test('round trip with default settings everywhere: what the Builder makes, the Decoder accepts', () => {
+  const tm = decode('tm', buildWithDefaults('tm', { payload__oct: '4', payload: 'CAFEF00D' }).bHex, {});
+  assert.deepEqual(errors(tm), []);
+  assert.equal(tm.dSummary, 'VALID TM TRANSFER FRAME');
+  const tc = decode('tc', buildWithDefaults('tc', { payload__oct: '4', payload: 'CAFEF00D' }).bHex, {});
+  assert.deepEqual(errors(tc), []);
+  assert.equal(tc.dSummary, 'VALID TC TRANSFER FRAME');
+  assert.ok(tc.dChecks.some(x => /Frame Error Control Field is correct/.test(x.msg)));
+});
+
+test('round trip with an FECF for every service and length combination', () => {
+  for (const proto of ['tm', 'tc']) for (const svc of [AUTH, ENC, AE]) {
+    const probe = buildWithDefaults(proto, { secSvc: svc, secIv__oct: '32' });
+    const pick = (id) => fieldIn(probe, id) ? [lengths(probe, id)[0], lengths(probe, id).at(-1)] : [0];
+    for (const iv of pick('secIv')) for (const sn of pick('secSn')) for (const mac of pick('secMac')) {
+      if (svc === AE && iv === 0 && sn === 0) continue;
+      const vals = { secSvc: svc, secIv__oct: String(iv), secSn__oct: String(sn), secMac__oct: String(mac), payload__oct: '3', payload: '112233' };
+      const d = decode(proto, buildWithDefaults(proto, vals).bHex, { secSvc: svc, secIv: String(iv), secSn: String(sn), secPl: '0', secMac: String(mac) });
+      assert.deepEqual(errors(d), [], [proto, svc, iv, sn, mac].join('/'));
+      assert.ok(d.dChecks.some(x => /Frame Error Control Field is correct/.test(x.msg)), [proto, svc, iv, sn, mac].join('/'));
+    }
+  }
+});
+
+test('RESET returns the FECF to present and computed', () => {
+  const c = new Component({});
+  c.state = { ...c.state, view: 'build', bProto: 'tm', bVals: { tm: { fecf__manual: '1', fecf: 'DEAD', fecfOn: '0' } } };
+  c.renderVals().bReset();
+  const f = fieldIn(c.renderVals(), 'fecf');
+  assert.equal(f.isDerived, true);
+  assert.equal(section(c.renderVals(), 'FRAME ERROR CONTROL FIELD').on, true);
 });
 
 test('RESET clears the SDLS settings too', () => {

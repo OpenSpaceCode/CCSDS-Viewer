@@ -48,8 +48,14 @@
                         <input type="text" spellcheck="false" autocomplete="off" data-bfield="{{ f.id }}" value="{{ f.value }}" sc-camel-on-change="{{ f.onChange }}" sc-camel-on-input="{{ f.onChange }}" placeholder="{{ f.hexPlaceholder }}" style="flex:1;min-width:0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;letter-spacing:.08em;padding:6px 8px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
                       </sc-if>
                       <sc-if value="{{ f.isDerived }}" hint-placeholder-val="{{ false }}">
-                        <span style="width:104px;flex:none;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;padding:6px 8px;border:1px dashed var(--color-neutral-500);color:var(--color-neutral-700);background:var(--color-surface)">{{ f.derivedLabel }}</span>
+                        <span data-bderived="{{ f.id }}" style="width:104px;flex:none;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;padding:6px 8px;border:1px dashed var(--color-neutral-500);color:var(--color-neutral-700);background:var(--color-surface)">{{ f.derivedLabel }}</span>
                         <span style="font-size:10.5px;letter-spacing:.06em;color:var(--color-neutral-600)">derived · {{ f.derivedNote }}</span>
+                      </sc-if>
+                      <sc-if value="{{ f.canOverride }}" hint-placeholder-val="{{ false }}">
+                        <span role="button" tabindex="0" sc-camel-on-click="{{ f.onOverride }}" style="margin-left:auto;font-size:10.5px;letter-spacing:.1em;font-weight:600;color:var(--color-accent-700);cursor:pointer;white-space:nowrap" style-hover="color:var(--color-accent-900)">OVERRIDE</span>
+                      </sc-if>
+                      <sc-if value="{{ f.isOverridden }}" hint-placeholder-val="{{ false }}">
+                        <span role="button" tabindex="0" sc-camel-on-click="{{ f.onDerive }}" style="margin-left:auto;font-size:10.5px;letter-spacing:.1em;font-weight:600;color:var(--color-accent-700);cursor:pointer;white-space:nowrap" style-hover="color:var(--color-accent-900)">USE DERIVED</span>
                       </sc-if>
                     </div>
                     <sc-if value="{{ f.over }}" hint-placeholder-val="{{ false }}">

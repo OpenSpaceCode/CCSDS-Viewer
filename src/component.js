@@ -18,6 +18,15 @@ class Component extends DCLogic {
 
   BUILD_ORDER = ['tm', 'tc', 'spp'];
 
+  // Frame Error Control Field of the TM and TC builders. The frame does not signal its presence, and its value is the CRC of
+  // everything before it, which only exists once the rest is assembled. It can be overridden, to build a frame with a bad CRC.
+  BUILD_FECF_SETTING = { id: 'fecfOn', n: 'Presence of Frame Error Control', abbr: 'FEC', bits: 0, def: 1, setting: true, opts: [{ v: 1, l: 'Present' }, { v: 0, l: 'Absent' }] };
+  BUILD_FECF_FIELD = { id: 'fecf', n: 'Frame Error Control Field', bits: 16, def: 0, abbr: 'FECF', kind: 'hex', overridable: true, deriveNote: 'CRC of the frame',
+    derive: (vals) => (vals.__crc || 0).toString(16).toUpperCase().padStart(4, '0'),
+    overrideNote: (want) => 'Differs from the computed CRC, 0x' + want + ': a receiver will reject this frame.' };
+  BUILD_FECF_NOTE = 'CRC-16 with G(X) = X¹⁶ + X¹² + X⁵ + 1, the register preset to all ones, computed over every octet before it. It updates as the frame changes.';
+  BUILD_FECF_OFF = 'Management has established no Frame Error Control on this Physical Channel, so no FECF is transmitted.';
+
   bTint(i) {
     const t = ['46%', '20%', '68%', '32%'];
     return 'color-mix(in srgb, var(--color-accent) ' + t[i % 4] + ', var(--color-bg))';
@@ -48,12 +57,13 @@ class Component extends DCLogic {
     const max = nb > 0 ? Math.pow(2, nb) - 1 : 0;
     let bin = '', over = false, vc = 0, hexVal = '', note = '';
     if (isHex) {
-      const rawH = vals[fd.id];
+      const rawH = derived ? fd.derive(vals) : vals[fd.id];
       hexVal = this.bHexClean(rawH === undefined ? (fd.defHex || '') : rawH);
       const want = nOct * 2;
       const h = hexVal.slice(0, want).padEnd(want, '0');
       if (hexVal.length > want) note = nOct === 0 ? 'Length is 0 — this field is not transmitted.' : 'Extra digits ignored — field is ' + nOct + ' octet' + (nOct === 1 ? '' : 's') + '.';
       else if (hexVal.length < want) note = 'Zero-padded to ' + nOct + ' octet' + (nOct === 1 ? '' : 's') + '.';
+      else if (overridden && h !== fd.derive(vals)) note = fd.overrideNote(fd.derive(vals));
       bin = h.split('').map(c => parseInt(c, 16).toString(2).padStart(4, '0')).join('');
     } else {
       const raw = derived ? fd.derive(vals) : vals[fd.id];
@@ -81,12 +91,12 @@ class Component extends DCLogic {
       id: fd.id, n: fd.n, nb, swatch: nb > 0 ? tint : 'transparent',
       bitsLabel: fd.setting ? 'MANAGED' : nb > 0 ? nb + ' BIT' + (nb === 1 ? '' : 'S') : 'ABSENT',
       isEnum: !!fd.opts && !derived, isNum: !fd.opts && !isHex && !derived && nb > 0,
-      isHex, isDerived: derived,
+      isHex: isHex && !derived, isDerived: derived,
       opts: (fd.opts || []).map(o => ({ v: String(o.v), l: o.l })),
       value: isHex ? hexVal : String(derived ? vc : (vals[fd.id] === undefined || vals[fd.id] === '' ? fd.def : vals[fd.id])),
-      derivedLabel: derived ? String(vc) : '', derivedNote: fd.deriveNote || '',
+      derivedLabel: !derived ? '' : isHex ? '0x' + hexVal : String(vc), derivedNote: fd.deriveNote || '',
       canOverride: !!fd.overridable && derived, isOverridden: overridden,
-      onOverride: () => { this.bSetVal(fd.id, String(vc)); this.bSetVal(fd.id + '__manual', '1'); },
+      onOverride: () => { this.bSetVal(fd.id, isHex ? hexVal : String(vc)); this.bSetVal(fd.id + '__manual', '1'); },
       onDerive: () => this.bSetVal(fd.id + '__manual', ''),
       hexPlaceholder: nOct > 0 ? '00'.repeat(Math.min(nOct, 12)) : 'field absent',
       max: String(max), binLabel: nb > 0 && !isHex ? bin : '',
@@ -95,6 +105,18 @@ class Component extends DCLogic {
       onChange: (e) => this.bSetVal(fd.id, isHex ? this.bHexClean(e.target.value) : e.target.value),
       onOct: (e) => this.bSetVal(fd.id + '__oct', e.target.value)
     };
+  }
+
+  // Fields that depend on the finished frame have fixed widths, so the frame can be assembled in passes: first to measure it,
+  // then with its length in place, then with the CRC of those bytes, which include the length.
+  bAssembleDerived(bSpec, bVals) {
+    const measured = this.bAssemble(bSpec, bVals);
+    const sized = { ...bVals, __frameOct: measured.allBits.length / 8 };
+    const withLength = this.bAssemble(bSpec, sized);
+    if (!withLength.bFecfOn) return withLength;
+    const bytes = [];
+    for (let i = 0; i + 16 < withLength.allBits.length; i += 8) bytes.push(parseInt(withLength.allBits.slice(i, i + 8).map(x => x.b).join(''), 2));
+    return this.bAssemble(bSpec, { ...sized, __crc: crc16(bytes, 0, bytes.length) });
   }
 
   // Builds one protocol's frame from the entered values: the field rows, field map and bits in wire order.
@@ -106,7 +128,7 @@ class Component extends DCLogic {
     bSpec.fields.forEach(fd => bFieldList.push(bAdd(fd)));
     const bSec = bSpec.sec || null, bSdls = bSpec.sdls || null;
     // Current value of a header field or managed setting, for the rules that decide which sections exist.
-    const bDefs = Object.fromEntries([...bSpec.fields, ...(bSec && bSec.setting ? [bSec.setting] : []), SDLS_BUILD_SERVICE].map(fd => [fd.id, fd.def]));
+    const bDefs = Object.fromEntries([...bSpec.fields, ...(bSec && bSec.setting ? [bSec.setting] : []), SDLS_BUILD_SERVICE, this.BUILD_FECF_SETTING].map(fd => [fd.id, fd.def]));
     const bGet = (id) => Number(bVals[id] === undefined || bVals[id] === '' ? bDefs[id] : bVals[id]);
     // Sections are added in wire order, so their bits land in the frame in that order. head is always shown; fields only when on.
     const bSection = (name, form, on, note, head, fields) => {
@@ -132,7 +154,9 @@ class Component extends DCLogic {
       const on = bGet(bSpec.trail.flag) === 1;
       bAfter.push(bSection(bSpec.trail.name, bSpec.trail.form, on, on ? bSpec.trail.note(bVals) : bSpec.trail.off, [], bSpec.trail.fields));
     }
-    return { bFieldList, bRibbon, allBits, bSections, bAfter, bPayList, bPayBits, bSvc, bSdlsOn };
+    const bFecfOn = !!bSpec.fecfForm && bGet('fecfOn') === 1;
+    if (bSpec.fecfForm) bAfter.push(bSection('FRAME ERROR CONTROL FIELD', bSpec.fecfForm, bFecfOn, bFecfOn ? this.BUILD_FECF_NOTE : this.BUILD_FECF_OFF, [this.BUILD_FECF_SETTING], [this.BUILD_FECF_FIELD]));
+    return { bFieldList, bRibbon, allBits, bSections, bAfter, bPayList, bPayBits, bSvc, bSdlsOn, bFecfOn };
   }
 
   bSetVal(id, raw) {
@@ -331,9 +355,7 @@ class Component extends DCLogic {
     // ---- frame builder ----
     const bSpec = this.BUILD_SPECS[st.bProto] || this.BUILD_SPECS.tm;
     const bVals = st.bVals[st.bProto] || {};
-    // A field sized by the frame sits ahead of what it measures, but its width is fixed: assemble once to measure, once with the value.
-    const bFirst = this.bAssemble(bSpec, bVals);
-    const bBuilt = bSpec.fields.some(fd => fd.overridable) ? this.bAssemble(bSpec, { ...bVals, __frameOct: bFirst.allBits.length / 8 }) : bFirst;
+    const bBuilt = this.bAssembleDerived(bSpec, bVals);
     const { bFieldList, bRibbon, allBits, bSections, bAfter, bPayList, bPayBits, bSvc, bSdlsOn } = bBuilt;
     const bOctets = [];
     for (let i = 0; i < allBits.length; i += 8) {

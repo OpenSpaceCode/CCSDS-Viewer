@@ -240,6 +240,7 @@ const TM_BUILD = { name: 'TM TRANSFER FRAME PRIMARY HEADER', tab: 'TM SDLP',
   // An OID frame identifies a Virtual Channel that does not use SDLS (§ 6.4.6.2). Lengths are the annex E1 baseline of 355.0.
   sdls: { baseline: { iv: 12, sn: 0, pl: 0, mac: 16 }, applies: (get) => get('syncf') !== 0 || get('fhp') !== 2046,
     blocked: 'First Header Pointer 2046 makes this an Only Idle Data frame, which identifies a Virtual Channel that does not use SDLS (CCSDS 132.0-B-3 § 6.4.6.2), so no Security Header or Trailer is transmitted.' },
+  fecfForm: 'TRANSFER FRAME TRAILER · CCSDS 132.0-B-3 § 4.1.6',
   // Follows the Data Field, or the Security Trailer with SDLS (§ 4.1.5.1, § 6.3.7.2). Its content can be project-specific, so it is entered, never computed.
   trail: { flag: 'ocff', name: 'OPERATIONAL CONTROL FIELD', form: 'TRANSFER FRAME TRAILER · CCSDS 132.0-B-3 § 4.1.5',
     note: (vals) => 'Four octets, entered as raw hex — nothing is computed here. The first bits declare the report: ' + tmOcfReport(parseInt(String(vals.ocf === undefined ? '00' : vals.ocf).slice(0, 2).padEnd(2, '0'), 16) || 0) + '.',

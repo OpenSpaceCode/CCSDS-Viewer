@@ -36,7 +36,7 @@ test('the Builder comes back with its protocol and every entered value', () => {
   assert.deepEqual(c.state.bVals, bVals);
   const v = c.renderVals();
   assert.equal(v.showBuilder, true);
-  assert.ok(v.bHex.includes('CA FE F0 0D') && v.bHex.endsWith('81 AB CD EF'));
+  assert.ok(v.bHex.includes('CA FE F0 0D') && v.bHex.includes('81 AB CD EF'));
 });
 
 test('the Decoder comes back with its input and mission settings', () => {
