@@ -422,10 +422,10 @@ class Component extends DCLogic {
     return {
       showProfile, pHas: !!p, pNone: !p, pOn: !!pr,
       pName: p ? p.name : '', pSubtitle: p ? p.name : 'Not defined',
-      pBarShow: ['diagram', 'build', 'decode', 'cheat'].includes(st.view),
+      pBarShow: ['build', 'decode'].includes(st.view),
       pManualStyle: barStyle(!pr, true), pProfileStyle: barStyle(!!pr, !!p),
       pBarLabel: p ? p.name : 'Mission profile',
-      pBarNote: !pr ? '' : st.view === 'diagram' && st.proto === 'sdls' ? (['tm', 'tc'].includes(st.sdCov || 'tm') ? 'Offsets are for the ' + (st.sdCov || 'tm').toUpperCase() + ' link, chosen in the coverage view below.' : 'The profile covers TM and TC: choose one in the coverage view below for offsets.') : st.view === 'diagram' ? 'Octet offsets come from the profile.' : st.view === 'decode' ? 'Settings come from the profile.' : st.view === 'cheat' ? 'Offsets and values come from the profile.' : 'Values start from the profile.',
+      pBarNote: !pr ? '' : st.view === 'decode' ? 'Settings come from the profile.' : 'Values start from the profile.',
       pBarManual: () => this.setState({ profileOn: false }),
       pBarProfile: () => { if (this.state.profile) this.setState({ profileOn: true }); },
       pOpen: () => { this.setState({ view: 'profile', fid: null, tip: null, retView: null, pMsg: '', pErrors: [] }); if (this.mainEl) this.mainEl.scrollTop = 0; },

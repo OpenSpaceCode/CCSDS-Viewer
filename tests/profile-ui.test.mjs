@@ -156,10 +156,10 @@ test('import also clears drafts typed before it', () => {
   assert.equal(rowOf(v(c), 'scid').value, '5');
 });
 
-test('the switch is offered on the diagrams, Builder and Decoder', () => {
+test('the switch is offered on the Builder and Decoder only', () => {
   const show = (view) => v(page(mission(), { view })).pBarShow;
-  for (const view of ['diagram', 'build', 'decode']) assert.equal(show(view), true, view);
-  for (const view of ['field', 'ep', 'profile']) assert.equal(show(view), false, view);
+  for (const view of ['build', 'decode']) assert.equal(show(view), true, view);
+  for (const view of ['diagram', 'cheat', 'field', 'ep', 'profile']) assert.equal(show(view), false, view);
 });
 
 // ---- decoder
@@ -331,13 +331,11 @@ test('the SDLS diagram follows the link chosen in its coverage view', () => {
   assert.equal(tm.lay.sdIv, '12 OCTETS');
   assert.equal(tm.lay.sdSn, 'ABSENT');
   assert.equal(tm.lay.sdMac, '16 OCTETS');
-  assert.match(tm.pBarNote, /for the TM link/);
   const tc = v(on(mission(SECURED), { proto: 'sdls', sdCov: 'tc' }));
   assert.equal(tc.lay.sdIv, 'ABSENT');
   assert.equal(tc.lay.sdSn, '4 OCTETS');
   const aos = v(on(mission(SECURED), { proto: 'sdls', sdCov: 'aos' }));
   assert.equal(aos.lay.sdIv, 'MANAGED · OPTIONAL', 'the profile has no AOS link');
-  assert.match(aos.pBarNote, /covers TM and TC/);
 });
 
 test('the coverage view gives concrete ranges for TM and TC', () => {
