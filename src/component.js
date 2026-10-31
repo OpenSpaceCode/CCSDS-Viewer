@@ -14,21 +14,26 @@ class Component extends DCLogic {
     return { style: base + 'background:transparent;color:var(--color-neutral-500)', label: '', title: '' };
   }
 
-  BUILD_SPECS = { tm: TM_BUILD, tc: TC_BUILD, spp: SPP_BUILD, sdls: SDLS_BUILD };
+  BUILD_SPECS = { tm: TM_BUILD, tc: TC_BUILD, spp: SPP_BUILD };
 
-  BUILD_ORDER = ['tm', 'tc', 'spp', 'sdls'];
+  BUILD_ORDER = ['tm', 'tc', 'spp'];
 
   bTint(i) {
     const t = ['46%', '20%', '68%', '32%'];
     return 'color-mix(in srgb, var(--color-accent) ' + t[i % 4] + ', var(--color-bg))';
   }
 
-  bFieldBits(f, vals) {
-    if (!f.varOct) return f.bits;
+  // Length in octets of a variable field. With octValues, only those lengths exist: others move up to the next allowed one.
+  bFieldOct(f, vals) {
     const raw = vals[f.id + '__oct'];
-    const o = raw === undefined || raw === '' ? f.defOct : Number(raw);
-    return (isFinite(o) && o >= 0 ? Math.min(o, f.maxOct) : f.defOct) * 8;
+    const n = Number(raw === undefined || raw === '' ? f.defOct : raw);
+    const o = isFinite(n) && n >= 0 ? n : f.defOct;
+    if (!f.octValues) return Math.min(o, f.maxOct);
+    const up = f.octValues.find(v => v >= o);
+    return up === undefined ? f.maxOct : up;
   }
+
+  bFieldBits(f, vals) { return f.varOct ? this.bFieldOct(f, vals) * 8 : f.bits; }
 
   bHexClean(s) { return String(s == null ? '' : s).replace(/[^0-9a-fA-F]/g, '').toUpperCase(); }
 
@@ -56,21 +61,23 @@ class Component extends DCLogic {
       over = v > max;
       vc = over ? max : v;
       bin = nb > 0 ? vc.toString(2).padStart(nb, '0') : '';
-      if (over) note = 'Maximum for ' + nb + ' bits is ' + max + ' — clamped.';
+      if (over && nb > 0) note = 'Maximum for ' + nb + ' bits is ' + max + ' — clamped.';
+      else if (fd.warn) note = fd.warn(vc);
     }
     for (let i = 0; i < nb; i++) allBits.push({ b: bin[i], fi, tint, fname: fd.n });
     const octRaw = vals[fd.id + '__oct'];
-    const octVal = fd.varOct ? String(octRaw === undefined || octRaw === '' ? fd.defOct : octRaw) : '';
+    const octVal = !fd.varOct ? '' : fd.octValues ? String(this.bFieldOct(fd, vals)) : String(octRaw === undefined || octRaw === '' ? fd.defOct : octRaw);
     const octOpts = [];
-    if (fd.varOct && !fd.octNum) for (let o = (fd.minOct || 0); o <= fd.maxOct; o++) octOpts.push({ v: String(o), l: o === 0 ? '0 · field absent' : o + (o === 1 ? ' octet' : ' octets') });
+    const octChoices = fd.octValues || Array.from({ length: fd.varOct ? fd.maxOct - (fd.minOct || 0) + 1 : 0 }, (_, i) => (fd.minOct || 0) + i);
+    if (fd.varOct && !fd.octNum) octChoices.forEach(o => octOpts.push({ v: String(o), l: o === 0 ? '0 · field absent' : o + (o === 1 ? ' octet' : ' octets') }));
     if (nb > 0) ribbon.push({
       abbr: fd.abbr, bits: String(nb),
       value: isHex ? (nOct <= 2 ? hexVal.slice(0, nOct * 2).padEnd(nOct * 2, '0') : nOct + ' OCT') : String(vc),
       style: { flex: String(Math.min(nb, 24)) + ' 1 auto', minWidth: '40px', border: '1px solid var(--color-text)', marginLeft: ribbon.length ? '-1px' : '0', background: tint, padding: '9px 3px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px', textAlign: 'center', overflow: 'hidden' }
     });
     return {
-      id: fd.id, n: fd.n, swatch: nb > 0 ? tint : 'transparent',
-      bitsLabel: nb > 0 ? nb + ' BIT' + (nb === 1 ? '' : 'S') : 'ABSENT',
+      id: fd.id, n: fd.n, nb, swatch: nb > 0 ? tint : 'transparent',
+      bitsLabel: fd.setting ? 'MANAGED' : nb > 0 ? nb + ' BIT' + (nb === 1 ? '' : 'S') : 'ABSENT',
       isEnum: !!fd.opts && !derived, isNum: !fd.opts && !isHex && !derived && nb > 0,
       isHex, isDerived: derived,
       opts: (fd.opts || []).map(o => ({ v: String(o.v), l: o.l })),
@@ -175,21 +182,35 @@ class Component extends DCLogic {
     // ---- frame builder ----
     const bSpec = this.BUILD_SPECS[st.bProto] || this.BUILD_SPECS.tm;
     const bVals = st.bVals[st.bProto] || {};
-    const bFieldList = [], bSecList = [], bRibbon = [], allBits = [];
+    const bFieldList = [], bRibbon = [], allBits = [];
     let bIdx = 0;
-    bSpec.fields.forEach(fd => { bFieldList.push(this.bMakeField(fd, bIdx++, bVals, allBits, bRibbon)); });
-    const bSec = bSpec.sec || null;
-    let bSecOn = false;
+    // A managed setting puts no bits on the wire, so it takes no place in the field colour order.
+    const bAdd = (fd) => this.bMakeField(fd, fd.setting ? bIdx : bIdx++, bVals, allBits, bRibbon);
+    bSpec.fields.forEach(fd => bFieldList.push(bAdd(fd)));
+    const bSec = bSpec.sec || null, bSdls = bSpec.sdls || null;
+    // Current value of a header field or managed setting, for the rules that decide which sections exist.
+    const bDefs = Object.fromEntries([...bSpec.fields, ...(bSec && bSec.setting ? [bSec.setting] : []), SDLS_BUILD_SERVICE].map(fd => [fd.id, fd.def]));
+    const bGet = (id) => Number(bVals[id] === undefined || bVals[id] === '' ? bDefs[id] : bVals[id]);
+    // Sections are added in wire order, so their bits land in the frame in that order. head is always shown; fields only when on.
+    const bSection = (name, form, on, note, head, fields) => {
+      const list = [...head, ...(on ? fields : [])].map(bAdd);
+      const bits = list.reduce((n, f) => n + f.nb, 0);
+      return { name, form, on, off: !on, note, list, len: on ? bits + ' BITS · ' + (bits / 8) + ' OCTETS' : '' };
+    };
+    const bSections = [], bAfter = [];
     if (bSec) {
-      const flagDef = (bSpec.fields.find(f => f.id === bSec.flag) || {}).def;
-      const flagRaw = bVals[bSec.flag];
-      bSecOn = Number(flagRaw === undefined || flagRaw === '' ? flagDef : flagRaw) === 1;
-      if (bSecOn) bSec.fields.forEach(fd => { bSecList.push(this.bMakeField(fd, bIdx++, bVals, allBits, bRibbon)); });
+      const allowed = !bSec.applies || bSec.applies(bGet), on = allowed && bGet(bSec.flag) === 1;
+      bSections.push(bSection(bSec.name, bSec.form, on, on ? bSec.note : allowed ? bSec.off : bSec.blocked, bSec.setting ? [bSec.setting] : [], bSec.fields));
     }
-    const bSecBits = bSecList.reduce((n, f) => n + (f.bitsLabel === 'ABSENT' ? 0 : parseInt(f.bitsLabel, 10)), 0);
+    const bSvc = bSdls ? bGet('secSvc') : SDLS_NONE;
+    const bSdlsOn = !!bSdls && bSvc !== SDLS_NONE && bSdls.applies(bGet);
+    const bSdlsFields = bSdlsOn ? sdlsBuildFields(bSvc, bSdls.baseline, (fd) => this.bFieldOct(fd, bVals)) : { hdr: [], trl: [] };
+    if (bSdls) bSections.push(bSection('SECURITY HEADER', 'SPACE DATA LINK SECURITY · CCSDS 355.0-B-2 § 4.1.1', bSdlsOn,
+      bSvc !== SDLS_NONE && !bSdlsOn ? bSdls.blocked : sdlsBuildNote(bSvc), [SDLS_BUILD_SERVICE], bSdlsFields.hdr));
     const bPayList = [];
-    if (bSpec.pay) bPayList.push(this.bMakeField({ id: 'payload', n: bSpec.pay.field, bits: 0, def: 0, abbr: bSpec.pay.abbr, kind: 'hex', varOct: true, octNum: true, defOct: 0, minOct: 0, maxOct: 128, defHex: '' }, bIdx++, bVals, allBits, bRibbon));
-    const bPayBits = bPayList.length && bPayList[0].bitsLabel !== 'ABSENT' ? parseInt(bPayList[0].bitsLabel, 10) : 0;
+    if (bSpec.pay) bPayList.push(bAdd({ id: 'payload', n: bSpec.pay.field, bits: 0, def: 0, abbr: bSpec.pay.abbr, kind: 'hex', varOct: true, octNum: true, defOct: 0, minOct: 0, maxOct: 128, defHex: '' }));
+    const bPayBits = bPayList.length ? bPayList[0].nb : 0;
+    if (bSdlsFields.trl.length) bAfter.push(bSection('SECURITY TRAILER', 'SPACE DATA LINK SECURITY · CCSDS 355.0-B-2 § 4.1.2', true, SDLS_BUILD_TRAILER_NOTE, [], bSdlsFields.trl));
     const bOctets = [];
     for (let i = 0; i < allBits.length; i += 8) {
       const chunk = allBits.slice(i, i + 8);
@@ -419,11 +440,8 @@ class Component extends DCLogic {
         style: { padding: '8px 15px', border: '1px solid ' + (id === st.bProto ? 'var(--color-accent)' : 'var(--color-divider)'), background: id === st.bProto ? 'color-mix(in srgb, var(--color-accent) 12%, var(--color-bg))' : 'var(--color-bg)', cursor: 'pointer', fontSize: '12.5px', letterSpacing: '.06em', fontFamily: 'var(--font-heading)', fontWeight: '600', whiteSpace: 'nowrap', color: id === st.bProto ? 'var(--color-accent-900)' : 'var(--color-text)' }
       })),
       bSpecName: bSpec.name, bSpecNote: bSpec.note,
-      bSecShow: !!bSec, bSecOn, bSecOff: !!bSec && !bSecOn, bSecList,
-      bSecName: bSec ? bSec.name : '', bSecForm: bSec ? bSec.form : '',
-      bSecNote: bSec ? (bSecOn ? bSec.note : bSec.off) : '',
-      bSecLen: bSecOn ? bSecBits + ' BITS · ' + (bSecBits / 8) + ' OCTETS' : '',
-      bPayShow: !!bSpec.pay, bPayList, bPayName: bSpec.pay ? bSpec.pay.name : '', bPayNote: bSpec.pay ? bSpec.pay.note : '',
+      bSections, bAfter,
+      bPayShow: !!bSpec.pay, bPayList, bPayName: bSpec.pay ? bSpec.pay.name : '', bPayNote: bSpec.pay ? bSpec.pay.note + (bSdlsOn ? sdlsBuildPayloadNote(bSvc) : '') : '',
       bPayLen: bPayBits ? bPayBits + ' BITS · ' + (bPayBits / 8) + ' OCTETS' : 'NOT INCLUDED',
       bFieldList, bRibbon, bOctets, bHex: bHexStr, bBin: bBinStr,
       bTotalLabel: allBits.length + ' BITS · ' + (allBits.length / 8) + ' OCTETS',

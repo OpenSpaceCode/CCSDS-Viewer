@@ -178,6 +178,17 @@ const TC_BUILD = { name: 'TC TRANSFER FRAME PRIMARY HEADER', tab: 'TC SDLP',
     { id: 'tcvcid', n: 'Virtual Channel Identifier', bits: 6, def: 1, abbr: 'VCID' },
     { id: 'tcflen', n: 'Frame Length', bits: 10, def: 63, abbr: 'LEN' },
     { id: 'tcfsn', n: 'Frame Sequence Number', bits: 8, def: 7, abbr: 'FSN' } ],
+  // Type-C frames have neither a Segment Header (§ 4.1.3.2.2.1.3) nor SDLS fields (§ 6.3.4.1). Lengths are the annex E2 baseline of 355.0.
+  sdls: { baseline: { iv: 0, sn: 4, pl: 0, mac: 16 }, applies: (get) => get('ccf') === 0,
+    blocked: 'SDLS is not used for frames carrying control information (CCSDS 232.0-B-4 § 6.3.4.1), so a Type-C frame has no Security Header or Trailer.' },
+  sec: { flag: 'seg', name: 'SEGMENT HEADER', form: 'MANAGED PER VIRTUAL CHANNEL · CCSDS 232.0-B-4 § 4.1.3.2.2', applies: (get) => get('ccf') === 0,
+    setting: { id: 'seg', n: 'Presence of Segment Header', abbr: 'SEG', bits: 0, def: 1, setting: true, opts: [{ v: 1, l: 'Present' }, { v: 0, l: 'Absent' }] },
+    note: 'One octet at the start of the Frame Data Unit. The frame does not signal its presence; management establishes it for each Virtual Channel.',
+    off: 'Management has established no Segment Header on this Virtual Channel, so the Frame Data Unit is User Data only.',
+    blocked: 'The Segment Header must not be present in Transfer Frames carrying Control Commands (CCSDS 232.0-B-4 § 4.1.3.2.2.1.3).',
+    fields: [
+      { id: 'segf', n: 'Sequence Flags', bits: 2, def: 3, abbr: 'SEQF', kind: 'enum', opts: [{ v: 0, l: '00 · Continuing portion' }, { v: 1, l: '01 · First portion' }, { v: 2, l: '10 · Last portion' }, { v: 3, l: '11 · No segmentation' }] },
+      { id: 'segmap', n: 'Multiplexer Access Point Identifier', bits: 6, def: 0, abbr: 'MAP' } ] },
   pay: { name: 'TRANSFER FRAME DATA FIELD', field: 'Data Field', abbr: 'DATA', note: 'Optional. The Data Field carries the payload — one or more Packets, a Segment or a VCA_SDU. Give its length in octets and its content as raw hex; leave the length at 0 to build the header only.' } };
 
 // Frame Decoder spec — see DECODE_SPECS in component.js for the decode() contract.

@@ -1,6 +1,6 @@
 // Space Data Link Security Protocol — CCSDS 355.0-B-2.
-// Field reference pages, structure maps, breadcrumb names, Frame Builder spec, the SDLS coverage view,
-// and the Frame Decoder extension used by the Transfer Frame decoders.
+// Field reference pages, structure maps, breadcrumb names, the SDLS coverage view, and the extension
+// used by the Frame Decoder and Frame Builder of each Transfer Frame protocol.
 
 const SDLS_FIELDS = {
   sdhdr: { n: 'Transfer Frame Header(s)', parent: 'sdframe', bits: null, len: 'PER BASE PROTOCOL', pres: 'FROM BASE FRAME', ref: '§ 3.3.2',
@@ -102,15 +102,6 @@ const SDLS_CRUMBS = {
   sdtr: 'SECURITY TRAILER'
 };
 
-const SDLS_BUILD = { name: 'SDLS SECURITY HEADER', tab: 'SDLS',
-  note: 'CCSDS 355.0-B-2 § 4.1 — the SDLS Security Header carries a 16-bit SPI followed by three fields whose lengths are Managed Parameters, set per Security Association. Set a length to zero octets to omit that field entirely.',
-  fields: [
-    { id: 'spi', n: 'Security Parameter Index', bits: 16, def: 1, abbr: 'SPI' },
-    { id: 'sdiv', n: 'Initialization Vector', bits: 0, def: 0, abbr: 'IV', varOct: true, defOct: 2, maxOct: 8 },
-    { id: 'sdsn', n: 'Sequence Number', bits: 0, def: 0, abbr: 'SN', varOct: true, defOct: 2, maxOct: 8 },
-    { id: 'sdpl', n: 'Pad Length', bits: 0, def: 0, abbr: 'PL', varOct: true, defOct: 1, maxOct: 2 } ],
-  pay: { name: 'SECURED DATA FIELD', field: 'Secured Data Field', abbr: 'DATA', note: 'Optional. The data protected by the Security Association — plaintext or ciphertext, depending on the service. Give its length in octets and its content as raw hex; leave the length at 0 to build the Security Header only.' } };
-
 // Which part of each base frame SDLS authenticates and which part it encrypts (CCSDS 355.0-B-2, figures 5-1..5-4).
 // mac: 'in' = inside the Authentication Payload · 'mask' = inside it but zeroed by the SA authentication bit mask · 'out' = outside.
 const SDLS_COVERAGE_ORDER = ['tm', 'tc', 'aos', 'uslp'];
@@ -156,10 +147,15 @@ const SDLS_COVERAGE = {
       { n: 'FECF', sub: 'opt.', len: '2/4 OCT', w: 0.8, mac: 'out', enc: false, pay: false } ] }
 };
 
-// Frame Decoder extension. SDLS has no frame of its own: the TM or TC protocol calls it, and it only adds a Security
-// Header and Trailer inside that frame (§ 3.1, § 4.1). Their field lengths are not in the frame either; the SPI selects
-// a Security Association that holds them. So these settings describe one SA, and each frame decoder embeds the fields.
+// SDLS has no frame of its own: the TM or TC protocol calls it, and it only adds a Security Header and Trailer inside
+// that frame (§ 3.1, § 4.1). Their field lengths are not in the frame either; the SPI selects a Security Association
+// that holds them. So one SA is configured as a setting, and each frame's decoder and builder embeds the fields.
 const SDLS_NONE = 0, SDLS_AUTH = 1, SDLS_ENC = 2, SDLS_AE = 3;
+const SDLS_SERVICES = [{ v: SDLS_NONE, l: 'Not in use' }, { v: SDLS_AUTH, l: 'Authentication' }, { v: SDLS_ENC, l: 'Encryption' }, { v: SDLS_AE, l: 'Authenticated Encryption' }];
+const SDLS_SA_NOTE = 'SA service type. The lengths below describe that one Security Association';
+
+// Allowed lengths in octets when the field is used (table 6-1).
+const SDLS_LEN = { iv: [1, 32], sn: [2, 8], pl: [1, 2], mac: [8, 64] };
 
 // Applied when loading an example that does not use SDLS, so settings left over from one that does cannot misplace its fields.
 const SDLS_OFF = { secSvc: SDLS_NONE };
@@ -170,12 +166,12 @@ function sdlsSettings(baseline) {
   const length = (id, n, ref, max, note, def) => ({ id, n, ref, unit: 'octets', def, min: 0, max, note, showIf: on });
   return [
     { id: 'secSvc', n: 'Space Data Link Security', ref: '355.0 TABLE 6-1', def: SDLS_NONE,
-      opts: [{ v: SDLS_NONE, l: 'Not in use' }, { v: SDLS_AUTH, l: 'Authentication' }, { v: SDLS_ENC, l: 'Encryption' }, { v: SDLS_AE, l: 'Authenticated Encryption' }],
-      note: 'SA service type. The lengths below describe that one Security Association, and apply to every frame decoded here.' },
-    length('secIv', 'Initialization Vector length', '355.0 TABLE 6-1', 32, 'SA_length_IV: 1–32 octets, 0 = not used.', baseline.iv),
-    length('secSn', 'Sequence Number length', '355.0 TABLE 6-1', 8, 'SA_length_SN: 2–8 octets, 0 = not used.', baseline.sn),
-    length('secPl', 'Pad Length field length', '355.0 TABLE 6-1', 2, 'SA_length_PL: 1–2 octets, 0 = not used.', baseline.pl),
-    length('secMac', 'MAC length', '355.0 TABLE 6-1', 64, 'SA_length_MAC: 8–64 octets, 0 = no Security Trailer.', baseline.mac)
+      opts: SDLS_SERVICES,
+      note: SDLS_SA_NOTE + ', and apply to every frame decoded here.' },
+    length('secIv', 'Initialization Vector length', '355.0 TABLE 6-1', SDLS_LEN.iv[1], 'SA_length_IV: 1–32 octets, 0 = not used.', baseline.iv),
+    length('secSn', 'Sequence Number length', '355.0 TABLE 6-1', SDLS_LEN.sn[1], 'SA_length_SN: 2–8 octets, 0 = not used.', baseline.sn),
+    length('secPl', 'Pad Length field length', '355.0 TABLE 6-1', SDLS_LEN.pl[1], 'SA_length_PL: 1–2 octets, 0 = not used.', baseline.pl),
+    length('secMac', 'MAC length', '355.0 TABLE 6-1', SDLS_LEN.mac[1], 'SA_length_MAC: 8–64 octets, 0 = no Security Trailer.', baseline.mac)
   ];
 }
 
@@ -191,8 +187,8 @@ function sdlsLayout(set, applies) {
 // Is this a Security Association the Standard allows?
 function sdlsCheckSettings(check, set) {
   const auth = set.secSvc !== SDLS_ENC;
-  if (set.secSn === 1) check('warn', 'Sequence Number length of 1 octet is outside the allowed 2–8 octets.', '355.0 TABLE 6-1');
-  if (set.secMac > 0 && set.secMac < 8) check('warn', 'MAC length of ' + oct(set.secMac) + ' is outside the allowed 8–64 octets.', '355.0 TABLE 6-1');
+  if (set.secSn > 0 && set.secSn < SDLS_LEN.sn[0]) check('warn', 'Sequence Number length of 1 octet is outside the allowed 2–8 octets.', '355.0 TABLE 6-1');
+  if (set.secMac > 0 && set.secMac < SDLS_LEN.mac[0]) check('warn', 'MAC length of ' + oct(set.secMac) + ' is outside the allowed 8–64 octets.', '355.0 TABLE 6-1');
   if (!auth && set.secSn > 0) check('err', 'Encryption without authentication has no anti-replay check, so the Sequence Number field shall be zero octets.', '355.0 § 4.1.1.4.4');
   if (!auth && set.secMac > 0) check('warn', 'Encryption without authentication produces no MAC, yet a MAC length is set.', '355.0 § 4.2.3.3');
   if (auth && set.secMac === 0) check('err', 'A Security Trailer shall be present whenever authentication or authenticated encryption is applied, but the MAC length is 0.', '355.0 § 4.1.2.2');
@@ -235,3 +231,34 @@ function sdlsCoverage(check, set, dataStart, dataEnd, ref) {
     : set.secSvc === SDLS_ENC ? 'Encryption — ' + cipher
     : 'Authenticated Encryption — ' + cipher + ' ' + mac, ref);
 }
+
+// Frame Builder extension. Where the decoder reports an inconsistent SA, the builder only offers the lengths that the
+// chosen service allows. It performs no cryptography: the IV, the MAC and any ciphertext are entered as raw hex.
+const SDLS_BUILD_SERVICE = { id: 'secSvc', n: 'Space Data Link Security', abbr: 'SEC', bits: 0, def: SDLS_NONE, setting: true, opts: SDLS_SERVICES };
+
+// octOf resolves a field's current length.
+function sdlsBuildFields(svc, baseline, octOf) {
+  const range = ([lo, hi], withZero) => [...(withZero ? [0] : []), ...Array.from({ length: hi - lo + 1 }, (_, i) => lo + i)];
+  const field = (id, n, abbr, values, defOct, defHex) => ({ id, n, abbr, bits: 0, def: 0, kind: 'hex', varOct: true, octValues: values, defOct, maxOct: values[values.length - 1], defHex });
+  const spi = { id: 'spi', n: 'Security Parameter Index', bits: 16, def: 1, abbr: 'SPI',
+    warn: (v) => v === 0 || v === 0xFFFF ? 'Reserved by CCSDS for future use — valid values are 1–65534.' : '' };
+  const iv = field('secIv', 'Initialization Vector', 'IV', range(SDLS_LEN.iv, true), baseline.iv, baseline.iv ? 'A0A1A2A3A4A5A6A7A8A9AAAB' : '');
+  const pl = field('secPl', 'Pad Length', 'PL', range(SDLS_LEN.pl, true), baseline.pl, '');
+  // Encryption alone has neither a Sequence Number (§ 4.1.1.4.4) nor a MAC. Authentication needs both (§ 4.1.1.4.2, § 4.1.2.2),
+  // except that with authenticated encryption an incrementing IV, if there is one, may serve as the Sequence Number.
+  if (svc === SDLS_ENC) return { hdr: [spi, iv, pl], trl: [] };
+  const sn = field('secSn', 'Sequence Number', 'SN', range(SDLS_LEN.sn, svc === SDLS_AE && octOf(iv) > 0), baseline.sn, baseline.sn ? '0000002A' : '');
+  const mac = field('secMac', 'Message Authentication Code', 'MAC', range(SDLS_LEN.mac, false), baseline.mac, 'C0C1C2C3C4C5C6C7C8C9CACBCCCDCECF');
+  return { hdr: [spi, iv, sn, pl], trl: [mac] };
+}
+
+function sdlsBuildNote(svc) {
+  if (svc === SDLS_NONE) return 'SDLS is not in use on this channel, so no Security Header or Trailer is transmitted. Select a service type to build them. The lengths then describe one Security Association.';
+  return 'Set by the Security Association: the SPI selects it, and the lengths of the fields below are fixed for its duration. Nothing is computed here — enter the values as raw hex.';
+}
+
+function sdlsBuildPayloadNote(svc) {
+  return svc === SDLS_AUTH ? ' With Authentication the content stays plaintext.' : ' With this service the content is ciphertext — enter it already encrypted.';
+}
+
+const SDLS_BUILD_TRAILER_NOTE = 'The MAC follows the Frame Data. It covers everything before it, and is entered as raw hex — no authentication is computed here.';
