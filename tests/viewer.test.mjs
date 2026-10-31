@@ -76,6 +76,28 @@ test('the decoder starts empty on every protocol, with no example loaded', () =>
   }
 });
 
+test('RESET SETTINGS restores the current protocol’s defaults, and nothing else', () => {
+  const hex = '02 A3 11 05 18 00 AA BB';
+  const { c, v } = render({ view: 'decode', dProto: 'tm', dHex: { tm: hex, tc: '20 2A' },
+    dSet: { tm: { frameLen: '40', fecf: '0', secSvc: '3', secIv: '8' }, tc: { seg: '0' } } });
+  assert.equal(v.dSettingsList.find(s => s.id === 'secIv').value, '8');
+  v.dResetSettings();
+  const after = c.renderVals();
+  for (const s of proto.DECODE_SPECS.tm.settings.filter(s => !s.showIf))
+    assert.equal(after.dSettingsList.find(x => x.id === s.id).value, String(s.def), s.id);
+  assert.equal(after.dSettingsList.find(s => s.id === 'secIv'), undefined, 'SDLS is back to not in use, so its lengths hide');
+  assert.equal(after.dHexText, hex, 'the input stays, and is decoded again with the defaults');
+  assert.deepEqual(c.state.dSet.tc, { seg: '0' }, 'other protocols keep theirs');
+  assert.equal(c.state.dHex.tc, '20 2A');
+});
+
+test('after RESET SETTINGS, SDLS lengths start from the baseline again', () => {
+  const { c, v } = render({ view: 'decode', dProto: 'tm', dSet: { tm: { secSvc: '3', secIv: '8' } } });
+  v.dResetSettings();
+  c.renderVals().dSettingsList.find(s => s.id === 'secSvc').onInput({ target: { value: '3' } });
+  assert.equal(c.renderVals().dSettingsList.find(s => s.id === 'secIv').value, '12');
+});
+
 test('BACK from a field page opened in the decoder returns to the decoder', () => {
   const { c, v } = render(exampleState('spp', proto.DECODE_SPECS.spp.examples[0]));
   v.dFields[0].onClick({ currentTarget: { dataset: { dfield: v.dFields[0].fid } } });

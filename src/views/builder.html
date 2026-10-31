@@ -20,6 +20,7 @@
             <!-- field inputs -->
             <div style="flex:0 1 340px;min-width:300px;display:flex;flex-direction:column;gap:0">
               <div style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.18em;padding-bottom:12px">{{ bSpecName }}</div>
+              <div role="button" tabindex="0" sc-camel-on-click="{{ bReset }}" style="margin-bottom:12px;align-self:flex-start;padding:8px 15px;border:1px solid var(--color-divider);cursor:pointer;font-size:11.5px;letter-spacing:.13em;font-family:var(--font-heading);font-weight:600" style-hover="border-color:var(--color-accent);color:var(--color-accent-700)">RESET TO DEFAULTS</div>
               <sc-for list="{{ bFieldList }}" as="f" hint-placeholder-count="8">
                 <div style="display:flex;flex-direction:column;gap:5px;padding:11px 0;border-top:1px solid var(--color-divider)">
                   <div style="display:flex;align-items:baseline;gap:8px">
@@ -99,7 +100,6 @@
               <div style="border-top:1px solid var(--color-text);margin-top:4px;padding-top:11px;display:flex;justify-content:space-between;font-family:var(--font-heading);font-weight:600;font-size:12px;letter-spacing:.13em">
                 <span>TOTAL</span><span>{{ bTotalLabel }}</span>
               </div>
-              <div role="button" tabindex="0" sc-camel-on-click="{{ bReset }}" style="margin-top:16px;align-self:flex-start;padding:8px 15px;border:1px solid var(--color-divider);cursor:pointer;font-size:11.5px;letter-spacing:.13em;font-family:var(--font-heading);font-weight:600" style-hover="border-color:var(--color-accent);color:var(--color-accent-700)">RESET TO DEFAULTS</div>
             </div>
 
             <!-- wire output -->

@@ -168,8 +168,56 @@ class Component extends DCLogic {
     }
   };
 
-  componentDidMount() { window.addEventListener('keydown', this.qOnWindowKey); }
-  componentWillUnmount() { window.removeEventListener('keydown', this.qOnWindowKey); }
+  // ---- refresh ----
+  // What survives a refresh: where you are and what you entered. Tooltips, dialogs and the search are not worth reopening.
+  SESSION_STATE = ['proto', 'view', 'fid', 'retView', 'phOpen', 'shOpen', 'dfsOpen', 'tcPhOpen', 'tcDfOpen', 'spPhOpen', 'spShOpen', 'sdShOpen', 'sdTrOpen',
+    'epOpen', 'epId', 'epHdrOpen', 'epDataOpen', 'bProto', 'bVals', 'sdCov', 'dProto', 'dHex', 'dSet'];
+
+  constructor(props) {
+    super(props);
+    const saved = sessionRead();
+    this.state = { ...this.state, ...this.sessionRestore(saved) };
+    this.scrollToRestore = Number(saved.scroll) || 0;
+  }
+
+  // Only what this build still has: a saved tab, field or view that no longer exists must not break the page.
+  sessionRestore(saved) {
+    const out = {};
+    this.SESSION_STATE.forEach(k => { if (saved[k] !== undefined) out[k] = saved[k]; });
+    const known = (k, valid) => { if (k in out && !valid(out[k])) delete out[k]; };
+    const isMap = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+    const has = (table, v) => typeof v === 'string' && Object.prototype.hasOwnProperty.call(table, v);
+    known('proto', v => ['tm', 'tc', 'spp', 'sdls'].includes(v));
+    known('view', v => ['diagram', 'field', 'ep', 'build', 'decode'].includes(v));
+    known('retView', v => v === null || v === 'decode' || v === 'build');
+    known('fid', v => v === null || has(this.F, v));
+    known('epId', v => v === null || has(this.EP_DEF, v));
+    known('bProto', v => has(this.BUILD_SPECS, v));
+    known('dProto', v => has(this.DECODE_SPECS, v));
+    known('sdCov', v => this.SDLS_COV_ORDER.includes(v));
+    ['bVals', 'dHex', 'dSet'].forEach(k => known(k, isMap));
+    if (out.view === 'field' && !out.fid) out.view = 'diagram';
+    if (out.view === 'ep' && !out.epId) out.view = 'diagram';
+    return out;
+  }
+
+  sessionSave = () => {
+    const data = { scroll: this.mainEl ? this.mainEl.scrollTop : 0 };
+    this.SESSION_STATE.forEach(k => { data[k] = this.state[k]; });
+    sessionWrite(data);
+  };
+
+  componentDidMount() {
+    window.addEventListener('keydown', this.qOnWindowKey);
+    window.addEventListener('pagehide', this.sessionSave);
+    if (this.mainEl && this.scrollToRestore) this.mainEl.scrollTop = this.scrollToRestore;
+    this.scrollToRestore = 0;
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this.qOnWindowKey);
+    window.removeEventListener('pagehide', this.sessionSave);
+  }
 
   // The procedure page BACK returns to: the one owning this field, else the one last open.
   qEpOf(id) {
@@ -565,6 +613,7 @@ class Component extends DCLogic {
       dHexText: dText,
       dOnHex: (e) => { const val = e.target.value, p2 = this.state.dProto; this.setState(s2 => ({ dHex: { ...s2.dHex, [p2]: val } })); },
       dClear: () => this.setState(s2 => ({ dHex: { ...s2.dHex, [s2.dProto]: '' } })),
+      dResetSettings: () => this.setState(s2 => ({ dSet: { ...s2.dSet, [s2.dProto]: {} } })),
       dExamples: dSpec.examples.map(x => ({ l: x.l, hex: x.hex, onClick: () => this.setState(s2 => {
         const apply = Object.entries({ ...dSpec.exampleSet, ...x.set }).map(([k, v]) => [k, String(v)]);
         return { dHex: { ...s2.dHex, [s2.dProto]: x.hex }, dSet: { ...s2.dSet, [s2.dProto]: { ...(s2.dSet[s2.dProto] || {}), ...Object.fromEntries(apply) } } };
