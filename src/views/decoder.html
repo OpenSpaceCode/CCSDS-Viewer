@@ -31,7 +31,7 @@
                 <div style="display:flex;flex-direction:column;gap:5px;padding:11px 0;border-top:1px solid var(--color-divider);margin-top:11px">
                   <div style="display:flex;align-items:baseline;gap:8px">
                     <span style="font-size:12.5px;font-weight:500;line-height:1.3;flex:1">{{ s.n }}</span>
-                    <span style="font-size:10px;letter-spacing:.09em;color:var(--color-neutral-600);font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap">{{ s.ref }}</span>
+                    <sc-if value="{{ s.hasLink }}" hint-placeholder-val="{{ false }}"><a data-bb-ref="setting" href="{{ s.href }}" title="{{ s.linkTitle }}" target="_blank" rel="noopener" style="font-size:10px;letter-spacing:.09em;color:var(--color-neutral-600);font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap;text-decoration:none" style-hover="text-decoration:underline;color:var(--color-accent-700)">{{ s.ref }} ↗</a></sc-if><sc-if value="{{ s.noLink }}" hint-placeholder-val="{{ true }}"><span style="font-size:10px;letter-spacing:.09em;color:var(--color-neutral-600);font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap">{{ s.ref }}</span></sc-if>
                   </div>
                   <div style="display:flex;gap:7px;align-items:center">
                     <sc-if value="{{ s.isEnum }}" hint-placeholder-val="{{ false }}">
@@ -89,7 +89,7 @@
                   <div style="display:flex;gap:10px;align-items:baseline;padding:8px 0;border-top:1px solid color-mix(in srgb, var(--color-text) 8%, transparent)">
                     <span style="{{ c.badgeStyle }}">{{ c.label }}</span>
                     <span style="flex:1;font-size:12.5px;line-height:1.5">{{ c.msg }}</span>
-                    <span style="font-size:10px;letter-spacing:.06em;color:var(--color-neutral-600);font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap">{{ c.ref }}</span>
+                    <sc-if value="{{ c.hasLink }}" hint-placeholder-val="{{ false }}"><a data-bb-ref="check" href="{{ c.href }}" title="{{ c.linkTitle }}" target="_blank" rel="noopener" style="font-size:10px;letter-spacing:.06em;color:var(--color-neutral-600);font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap;text-decoration:none" style-hover="text-decoration:underline;color:var(--color-accent-700)">{{ c.ref }} ↗</a></sc-if><sc-if value="{{ c.noLink }}" hint-placeholder-val="{{ true }}"><span style="font-size:10px;letter-spacing:.06em;color:var(--color-neutral-600);font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap">{{ c.ref }}</span></sc-if>
                   </div>
                 </sc-for>
               </div>

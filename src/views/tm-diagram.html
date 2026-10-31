@@ -3,11 +3,11 @@
         <div data-screen-label="TM SDLP frame diagram">
           <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
             <span style="font-size:11px;letter-spacing:.2em;font-weight:600;color:var(--color-accent-700)">CCSDS RECOMMENDED STANDARD · BLUE BOOK</span>
-            <span style="font-size:11px;letter-spacing:.14em;color:var(--color-neutral-600)">ISSUE 3 · OCTOBER 2021</span>
+            <span data-bb-rev="tm" style="font-size:11px;letter-spacing:.14em;color:var(--color-neutral-600);text-align:right" title="{{ bb.tmDetail }}">{{ bb.tmRev }}</span>
           </div>
           <h1 style="margin:8px 0 0;font-size:42px;line-height:1.02;letter-spacing:.01em">TM SPACE DATA LINK PROTOCOL</h1>
           <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-            <a class="tag tag-outline" href="https://ccsds.org/Pubs/132x0b3.pdf" target="_blank" rel="noopener" style="text-decoration:none;cursor:pointer;white-space:nowrap" style-hover="background:var(--color-accent);color:var(--color-bg)">CCSDS 132.0-B-3 ↗</a>
+            <a class="tag tag-outline" href="{{ bb.tmUrl }}" target="_blank" rel="noopener" style="text-decoration:none;cursor:pointer;white-space:nowrap" style-hover="background:var(--color-accent);color:var(--color-bg)">CCSDS 132.0-B-3 ↗</a>
             <span class="tag tag-neutral">PDU · TM TRANSFER FRAME</span>
             <span class="tag tag-neutral">FIXED LENGTH PER PHYSICAL CHANNEL</span>
           </div>
@@ -70,7 +70,7 @@
                 </div>
               </div>
             </div>
-            <div style="text-align:center;font-size:12px;letter-spacing:.12em;color:var(--color-neutral-600);margin-top:18px">FIGURE 4-1 · TM TRANSFER FRAME STRUCTURAL COMPONENTS</div>
+            <div style="text-align:center;font-size:12px;letter-spacing:.12em;color:var(--color-neutral-600);margin-top:18px"><a data-bb-fig="tm" href="{{ bb.tmFig41Href }}" title="{{ bb.tmFig41Title }}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit" style-hover="text-decoration:underline">FIGURE 4-1 · TM TRANSFER FRAME STRUCTURAL COMPONENTS ↗</a></div>
 
             <!-- primary header expansion -->
             <sc-if value="{{ phOpen }}" hint-placeholder-val="{{ true }}">

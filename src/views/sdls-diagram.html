@@ -3,11 +3,11 @@
         <div data-screen-label="SDLS secured frame diagram">
           <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
             <span style="font-size:11px;letter-spacing:.2em;font-weight:600;color:var(--color-accent-700)">CCSDS RECOMMENDED STANDARD · BLUE BOOK</span>
-            <span style="font-size:11px;letter-spacing:.14em;color:var(--color-neutral-600)">ISSUE 2 · JULY 2022</span>
+            <span data-bb-rev="sdls" style="font-size:11px;letter-spacing:.14em;color:var(--color-neutral-600);text-align:right" title="{{ bb.sdlsDetail }}">{{ bb.sdlsRev }}</span>
           </div>
           <h1 style="margin:8px 0 0;font-size:42px;line-height:1.02;letter-spacing:.01em">SPACE DATA LINK SECURITY PROTOCOL</h1>
           <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-            <a class="tag tag-outline" href="https://ccsds.org/Pubs/355x0b2.pdf" target="_blank" rel="noopener" style="text-decoration:none;cursor:pointer;white-space:nowrap" style-hover="background:var(--color-accent);color:var(--color-bg)">CCSDS 355.0-B-2 ↗</a>
+            <a class="tag tag-outline" href="{{ bb.sdlsUrl }}" target="_blank" rel="noopener" style="text-decoration:none;cursor:pointer;white-space:nowrap" style-hover="background:var(--color-accent);color:var(--color-bg)">CCSDS 355.0-B-2 ↗</a>
             <span class="tag tag-neutral">SECURITY HEADER + TRAILER</span>
             <span class="tag tag-neutral">TM · TC · AOS · USLP</span>
           </div>
@@ -62,7 +62,7 @@
                 <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">{{ lay.sdEcf }}</div>
               </div>
             </div>
-            <div style="text-align:center;font-size:12px;letter-spacing:.12em;color:var(--color-neutral-600);margin-top:18px">FIGURES 4-1 / 4-2 · SECURITY HEADER AND TRAILER WITHIN A TRANSFER FRAME</div>
+            <div style="text-align:center;font-size:12px;letter-spacing:.12em;color:var(--color-neutral-600);margin-top:18px"><a data-bb-fig="sdls" href="{{ bb.sdlsFig41Href }}" title="{{ bb.sdlsFig41Title }}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit" style-hover="text-decoration:underline">FIGURES 4-1 / 4-2 · SECURITY HEADER AND TRAILER WITHIN A TRANSFER FRAME ↗</a></div>
 
             <!-- security header expansion -->
             <sc-if value="{{ sdShOpen }}" hint-placeholder-val="{{ false }}">
@@ -124,7 +124,7 @@
               <sc-for list="{{ sdCovTabs }}" as="t" hint-placeholder-count="4">
                 <div role="button" tabindex="0" sc-camel-on-click="{{ t.onClick }}" style="{{ t.style }}" style-hover="border-color:var(--color-accent)">{{ t.name }}</div>
               </sc-for>
-              <span style="margin-left:auto;font-size:11px;letter-spacing:.12em;color:var(--color-neutral-600);white-space:nowrap">{{ sdCovFig }} · BASE {{ sdCovBase }}</span>
+              <span style="margin-left:auto;font-size:11px;letter-spacing:.12em;color:var(--color-neutral-600);white-space:nowrap"><a data-bb-covfig="1" href="{{ sdCovFigHref }}" title="{{ sdCovFigTitle }}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit" style-hover="text-decoration:underline">{{ sdCovFig }} ↗</a> · BASE {{ sdCovBase }}</span>
             </div>
 
             <div style="margin-top:24px;display:grid;grid-template-columns:{{ sdCovGrid }};align-items:stretch;min-height:116px">

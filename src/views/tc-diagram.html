@@ -3,11 +3,11 @@
         <div data-screen-label="TC SDLP frame diagram">
           <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
             <span style="font-size:11px;letter-spacing:.2em;font-weight:600;color:var(--color-accent-700)">CCSDS RECOMMENDED STANDARD · BLUE BOOK</span>
-            <span style="font-size:11px;letter-spacing:.14em;color:var(--color-neutral-600)">ISSUE 4 · OCTOBER 2021</span>
+            <span data-bb-rev="tc" style="font-size:11px;letter-spacing:.14em;color:var(--color-neutral-600);text-align:right" title="{{ bb.tcDetail }}">{{ bb.tcRev }}</span>
           </div>
           <h1 style="margin:8px 0 0;font-size:42px;line-height:1.02;letter-spacing:.01em">TC SPACE DATA LINK PROTOCOL</h1>
           <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-            <a class="tag tag-outline" href="https://ccsds.org/Pubs/232x0b4e1c1.pdf" target="_blank" rel="noopener" style="text-decoration:none;cursor:pointer;white-space:nowrap" style-hover="background:var(--color-accent);color:var(--color-bg)">CCSDS 232.0-B-4 ↗</a>
+            <a class="tag tag-outline" href="{{ bb.tcUrl }}" target="_blank" rel="noopener" style="text-decoration:none;cursor:pointer;white-space:nowrap" style-hover="background:var(--color-accent);color:var(--color-bg)">CCSDS 232.0-B-4 ↗</a>
             <span class="tag tag-neutral">PDU · TC TRANSFER FRAME</span>
             <span class="tag tag-neutral">{{ lay.tcTag }}</span>
           </div>
@@ -49,7 +49,7 @@
                 <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">{{ lay.tcFecf }}</div>
               </div>
             </div>
-            <div style="text-align:center;font-size:12px;letter-spacing:.12em;color:var(--color-neutral-600);margin-top:18px">FIGURE 4-1 · TC TRANSFER FRAME STRUCTURAL COMPONENTS</div>
+            <div style="text-align:center;font-size:12px;letter-spacing:.12em;color:var(--color-neutral-600);margin-top:18px"><a data-bb-fig="tc" href="{{ bb.tcFig41Href }}" title="{{ bb.tcFig41Title }}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit" style-hover="text-decoration:underline">FIGURE 4-1 · TC TRANSFER FRAME STRUCTURAL COMPONENTS ↗</a></div>
 
             <!-- TC primary header expansion -->
             <sc-if value="{{ tcPhOpen }}" hint-placeholder-val="{{ false }}">

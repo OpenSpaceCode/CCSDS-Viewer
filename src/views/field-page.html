@@ -12,7 +12,7 @@
             <h2 style="margin:10px 0 0;font-size:36px;line-height:1.05;letter-spacing:.01em">{{ fieldName }}</h2>
             <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
               <sc-for list="{{ fieldChips }}" as="chip" hint-placeholder-count="3">
-                <span class="tag {{ chip.cls }}" style="letter-spacing:.08em">{{ chip.t }}</span>
+                <sc-if value="{{ chip.isLink }}" hint-placeholder-val="{{ false }}"><a data-bb-ref="chip" class="tag {{ chip.cls }}" href="{{ chip.href }}" title="{{ chip.title }}" target="_blank" rel="noopener" style="letter-spacing:.08em;text-decoration:none;cursor:pointer;white-space:nowrap" style-hover="background:var(--color-accent);color:var(--color-bg)">{{ chip.t }} ↗</a></sc-if><sc-if value="{{ chip.notLink }}" hint-placeholder-val="{{ true }}"><span class="tag {{ chip.cls }}" style="letter-spacing:.08em">{{ chip.t }}</span></sc-if>
               </sc-for>
             </div>
             <p style="font-size:15px;line-height:1.65;max-width:72ch;margin:20px 0 4px">{{ fieldDesc }}</p>
@@ -20,7 +20,7 @@
             <sc-for list="{{ fieldQuotes }}" as="q" hint-placeholder-count="1">
               <blockquote style="margin:16px 0 0;border-left:2px solid var(--color-accent);padding:4px 0 4px 16px">
                 <p style="margin:0;font-size:14.5px;line-height:1.7;font-style:italic;color:var(--color-neutral-800)">“{{ q.t }}”</p>
-                <div style="font-size:11px;letter-spacing:.1em;font-weight:600;color:var(--color-accent-700);margin-top:6px;font-style:normal">{{ srcDoc }} · {{ q.ref }}</div>
+                <div style="font-size:11px;letter-spacing:.1em;font-weight:600;color:var(--color-accent-700);margin-top:6px;font-style:normal"><sc-if value="{{ q.hasLink }}" hint-placeholder-val="{{ false }}"><a data-bb-ref="quote" href="{{ q.href }}" title="{{ q.linkTitle }}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit" style-hover="text-decoration:underline">{{ srcDoc }} · {{ q.ref }} · {{ q.pageLabel }} ↗</a></sc-if><sc-if value="{{ q.noLink }}" hint-placeholder-val="{{ true }}">{{ srcDoc }} · {{ q.ref }}</sc-if></div>
               </blockquote>
             </sc-for>
 
@@ -31,7 +31,7 @@
                   <div style="display:flex;gap:14px;align-items:baseline;padding:9px 0;border-top:1px solid var(--color-divider)">
                     <code style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;border:1px solid var(--color-divider);background:var(--color-surface);padding:3px 8px;white-space:nowrap">{{ s.c }}</code>
                     <span style="font-size:13.5px;line-height:1.5;flex:1">{{ s.d }}</span>
-                    <span style="font-size:11px;letter-spacing:.08em;color:var(--color-neutral-600);white-space:nowrap">{{ s.ref }}</span>
+                    <sc-if value="{{ s.hasLink }}" hint-placeholder-val="{{ false }}"><a data-bb-ref="special" href="{{ s.href }}" title="{{ s.linkTitle }}" target="_blank" rel="noopener" style="font-size:11px;letter-spacing:.08em;color:var(--color-neutral-600);white-space:nowrap;text-decoration:none" style-hover="text-decoration:underline;color:var(--color-accent-700)">{{ s.ref }} ↗</a></sc-if><sc-if value="{{ s.noLink }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px;letter-spacing:.08em;color:var(--color-neutral-600);white-space:nowrap">{{ s.ref }}</span></sc-if>
                   </div>
                 </sc-for>
               </div>

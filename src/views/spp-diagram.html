@@ -3,11 +3,11 @@
         <div data-screen-label="Space Packet diagram">
           <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
             <span style="font-size:11px;letter-spacing:.2em;font-weight:600;color:var(--color-accent-700)">CCSDS RECOMMENDED STANDARD · BLUE BOOK</span>
-            <span style="font-size:11px;letter-spacing:.14em;color:var(--color-neutral-600)">ISSUE 2 · JUNE 2020</span>
+            <span data-bb-rev="spp" style="font-size:11px;letter-spacing:.14em;color:var(--color-neutral-600);text-align:right" title="{{ bb.sppDetail }}">{{ bb.sppRev }}</span>
           </div>
           <h1 style="margin:8px 0 0;font-size:42px;line-height:1.02;letter-spacing:.01em">SPACE PACKET PROTOCOL</h1>
           <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-            <a class="tag tag-outline" href="https://ccsds.org/Pubs/133x0b2e2.pdf" target="_blank" rel="noopener" style="text-decoration:none;cursor:pointer;white-space:nowrap" style-hover="background:var(--color-accent);color:var(--color-bg)">CCSDS 133.0-B-2 ↗</a>
+            <a class="tag tag-outline" href="{{ bb.sppUrl }}" target="_blank" rel="noopener" style="text-decoration:none;cursor:pointer;white-space:nowrap" style-hover="background:var(--color-accent);color:var(--color-bg)">CCSDS 133.0-B-2 ↗</a>
             <span class="tag tag-neutral">PDU · SPACE PACKET</span>
             <span class="tag tag-neutral">{{ lay.sppTag }}</span>
           </div>
@@ -54,7 +54,7 @@
                 </div>
               </div>
             </div>
-            <div style="text-align:center;font-size:12px;letter-spacing:.12em;color:var(--color-neutral-600);margin-top:18px">FIGURE 4-1 · SPACE PACKET STRUCTURAL COMPONENTS</div>
+            <div style="text-align:center;font-size:12px;letter-spacing:.12em;color:var(--color-neutral-600);margin-top:18px"><a data-bb-fig="spp" href="{{ bb.sppFig41Href }}" title="{{ bb.sppFig41Title }}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit" style-hover="text-decoration:underline">FIGURE 4-1 · SPACE PACKET STRUCTURAL COMPONENTS ↗</a></div>
 
             <!-- SPP primary header expansion -->
             <sc-if value="{{ spPhOpen }}" hint-placeholder-val="{{ false }}">

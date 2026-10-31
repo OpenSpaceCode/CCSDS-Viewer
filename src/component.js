@@ -240,6 +240,35 @@ class Component extends DCLogic {
     }
   };
 
+  // ---- Blue Book links ----
+  // Which book a field page quotes.
+  fieldDoc(id) {
+    if (!this.fieldDocs) {
+      this.fieldDocs = {};
+      for (const s of this.Q_SOURCES) for (const k of Object.keys(s.fields)) this.fieldDocs[k] = s.label === 'SDLS EP' ? 'ep' : s.proto;
+    }
+    return this.fieldDocs[id] || 'tm';
+  }
+
+  // Template values for a reference shown as a link when its page is known, and as plain text otherwise.
+  bbRefVals(doc, ref) {
+    const l = blueBookLink(doc, ref);
+    return { hasLink: !!l, noLink: !l, href: l ? l.href : '', linkTitle: l ? l.title : '', pageLabel: l ? 'p. ' + l.printed : '' };
+  }
+
+  bbVals() {
+    const out = {};
+    for (const doc of Object.keys(BLUE_BOOKS)) {
+      out[doc + 'Rev'] = blueBookRevision(doc);
+      out[doc + 'Detail'] = blueBookRevisionDetail(doc);
+      out[doc + 'Url'] = BLUE_BOOKS[doc].url;
+      const fig = blueBookLink(doc, 'FIGURE 4-1');
+      out[doc + 'Fig41Href'] = fig ? fig.href : BLUE_BOOKS[doc].url;
+      out[doc + 'Fig41Title'] = fig ? fig.title : '';
+    }
+    return out;
+  }
+
   // ---- mission profile ----
   // Octet labels of the diagrams: what the Standard says in general, or with a profile on, where each field really is.
   diagramLabels(pr, sdCov) {
@@ -546,7 +575,7 @@ class Component extends DCLogic {
       err: { l: 'ERROR', css: 'border:1px solid #b4483c;color:var(--color-bg);background:#b4483c' }
     };
     const dBadge = 'flex:none;width:52px;text-align:center;font-size:9.5px;letter-spacing:.12em;font-weight:600;padding:3px 0;';
-    const dChecks = dRes.checks.map(c => ({ label: D_LEVEL[c.level].l, msg: c.msg, ref: c.ref || '', badgeStyle: dBadge + D_LEVEL[c.level].css }));
+    const dChecks = dRes.checks.map(c => ({ label: D_LEVEL[c.level].l, msg: c.msg, ref: c.ref || '', ...this.bbRefVals(st.dProto, c.ref), badgeStyle: dBadge + D_LEVEL[c.level].css }));
     const dErrs = dRes.checks.filter(c => c.level === 'err').length, dWarns = dRes.checks.filter(c => c.level === 'warn').length;
     const dSummaryLevel = dParsed.err || dErrs ? 'err' : dWarns ? 'warn' : dBytes.length ? 'ok' : 'info';
     const dSummary = dParsed.err ? 'INPUT ERROR' : !dBytes.length ? 'NO INPUT'
@@ -569,19 +598,9 @@ class Component extends DCLogic {
     const qTyped = st.qText.trim() !== '';
 
     const fromEp = !!(st.fid && this.EP_FIELD_IDS.includes(st.fid));
-    const fromTc = !!(st.fid && st.fid.slice(0, 2) === 'tc');
-    const fromSd = !fromEp && !!(st.fid && (st.fid.slice(0, 2) === 'sd' || ['spi', 'iv', 'sqn', 'pl', 'mac'].includes(st.fid)));
-    const fromSp = !fromEp && !!(st.fid && st.fid.slice(0, 2) === 'sp' && !fromSd);
-    const srcDoc = fromEp ? 'CCSDS 355.1-B-1' : fromTc ? 'CCSDS 232.0-B-4' : fromSp ? 'CCSDS 133.0-B-2' : fromSd ? 'CCSDS 355.0-B-2' : 'CCSDS 132.0-B-3';
-    const srcLine = fromEp
-      ? 'SOURCE · CCSDS 355.1-B-1 · SPACE DATA LINK SECURITY PROTOCOL — EXTENDED PROCEDURES · BLUE BOOK ISSUE 1 · FEBRUARY 2020'
-      : fromTc
-      ? 'SOURCE · CCSDS 232.0-B-4 · TC SPACE DATA LINK PROTOCOL · BLUE BOOK ISSUE 4 · OCTOBER 2021'
-      : fromSp
-        ? 'SOURCE · CCSDS 133.0-B-2 · SPACE PACKET PROTOCOL · BLUE BOOK ISSUE 2 · JUNE 2020'
-        : fromSd
-          ? 'SOURCE · CCSDS 355.0-B-2 · SPACE DATA LINK SECURITY PROTOCOL · BLUE BOOK ISSUE 2 · JULY 2022'
-          : 'SOURCE · CCSDS 132.0-B-3 · TM SPACE DATA LINK PROTOCOL · BLUE BOOK ISSUE 3 · OCTOBER 2021';
+    const fDoc = st.fid ? this.fieldDoc(st.fid) : 'tm', fBook = BLUE_BOOKS[fDoc];
+    const srcDoc = fBook.code;
+    const srcLine = 'SOURCE · ' + fBook.code + ' · ' + fBook.title.toUpperCase() + ' · BLUE BOOK ' + blueBookRevision(fDoc);
 
     // tooltip
     const t = st.tip;
@@ -600,10 +619,10 @@ class Component extends DCLogic {
         f.bits ? { t: f.bits, cls: 'tag-neutral' } : null,
         { t: f.len, cls: 'tag-neutral' },
         { t: f.pres, cls: f.pres === 'OPTIONAL' ? 'tag-outline' : 'tag-accent' },
-        { t: f.ref, cls: 'tag-outline' }
-      ].filter(Boolean);
-      quotes = f.q;
-      special = f.sp;
+        { t: f.ref, cls: 'tag-outline', link: blueBookLink(fDoc, f.ref) }
+      ].filter(Boolean).map(c => ({ ...c, isLink: !!c.link, notLink: !c.link, href: c.link ? c.link.href : '', title: c.link ? c.link.title : '' }));
+      quotes = f.q.map(q => ({ ...q, ...this.bbRefVals(fDoc, q.ref) }));
+      special = f.sp.map(x => ({ ...x, ...this.bbRefVals(fDoc, x.ref) }));
       notes = f.nt;
       kids = f.kids.map(id => ({ id, name: F[id].n, meta: [F[id].bits, F[id].len].filter(Boolean).join(' · ') }));
       const weightOf = (fl) => {
@@ -710,6 +729,7 @@ class Component extends DCLogic {
       // views
       showDiagram, showTcDiagram, showSpDiagram, showSdlsDiagram, showField,
       lay, ...this.profileVals(st, pr, showProfile),
+      bb: this.bbVals(),
       showBuilder,
       qOpen: st.qOpen, qText: st.qText, qResults: qRows, qHasResults: qRows.length > 0,
       qShowMessage: qRows.length === 0,
@@ -764,12 +784,12 @@ class Component extends DCLogic {
       dSettingsList: dSpec.settings.filter(sd => !sd.showIf || sd.showIf(dSetNum)).map(sd => {
         if (pr) {
           const fixed = dSetNum[sd.id];
-          return { id: sd.id, n: sd.n, ref: sd.ref, note: sd.note, isEnum: false, isNum: false, isFixed: true, unit: '', opts: [], min: '', max: '', value: '', over: false, overMsg: '', onInput: () => {},
+          return { ...this.bbRefVals(st.dProto, sd.ref), id: sd.id, n: sd.n, ref: sd.ref, note: sd.note, isEnum: false, isNum: false, isFixed: true, unit: '', opts: [], min: '', max: '', value: '', over: false, overMsg: '', onInput: () => {},
             fixedLabel: sd.opts ? sd.opts.find(o => o.v === fixed).l : fixed + (sd.unit ? ' ' + sd.unit : '') };
         }
         const raw = dSetRaw[sd.id], v = raw === undefined ? String(sd.def) : raw;
         const clamped = !sd.opts && raw !== undefined && raw !== '' && String(dSetNum[sd.id]) !== String(Number(raw));
-        return { id: sd.id, n: sd.n, ref: sd.ref, unit: sd.unit, note: sd.note, min: String(sd.min), max: String(sd.max), value: v,
+        return { ...this.bbRefVals(st.dProto, sd.ref), id: sd.id, n: sd.n, ref: sd.ref, unit: sd.unit, note: sd.note, min: String(sd.min), max: String(sd.max), value: v,
           isEnum: !!sd.opts, isNum: !sd.opts, isFixed: false, fixedLabel: '', opts: (sd.opts || []).map(o => ({ v: String(o.v), l: o.l })),
           over: clamped, overMsg: 'Allowed range is ' + sd.min + '–' + sd.max + ' — using ' + dSetNum[sd.id] + '.',
           onInput: (e) => { const val = e.target.value, p2 = this.state.dProto; this.setState(s2 => ({ dSet: { ...s2.dSet, [p2]: { ...(s2.dSet[p2] || {}), [sd.id]: val } } })); } };
@@ -810,6 +830,7 @@ class Component extends DCLogic {
           onClick: () => this.setState({ sdCov: id, tip: null }) };
       }),
       sdCovGrid: '152px ' + cov.cells.map(c => 'minmax(0,' + c.w + 'fr)').join(' '),
+      sdCovFigHref: (blueBookLink('sdls', cov.fig) || { href: BLUE_BOOKS.sdls.url }).href, sdCovFigTitle: (blueBookLink('sdls', cov.fig) || { title: '' }).title,
       sdCovName: cov.name, sdCovFig: cov.fig, sdCovBase: cov.base, sdCovNote: cov.note,
       sdCovHasRanges: !!covLay, sdCovRanges: covLay ? profileCoverage(pr, st.sdCov || 'tm').text : '',
       sdCovCells: cov.cells.map((c, i) => ({
@@ -827,6 +848,10 @@ class Component extends DCLogic {
       sdCovEnc: cov.cells.map((c, i) => this.covSeg(c, i, cov.cells.length - 1, c.enc && covEnc ? 'deep' : 'none', c.enc && covEnc ? 'ENCRYPTED' : '')),
       showEpDiagram,
       epTitle: ep ? ep.name : '', epTitleUpper: ep ? ep.name.toUpperCase() : '',
+      ...(() => {
+        const fig = ep ? blueBookLink('ep', ep.fig) : null, ref = ep ? blueBookLink('ep', ep.ref) : null;
+        return { epFigHref: fig ? fig.href : BLUE_BOOKS.ep.url, epFigTitle: fig ? fig.title : '', epRefHref: ref ? ref.href : BLUE_BOOKS.ep.url, epRefTitle: ref ? ref.title : '' };
+      })(),
       epServiceLabel: ep ? ep.service : '', epFig: ep ? ep.fig : '', epIntro: ep ? ep.intro : '',
       epRefLabel: ep ? ep.ref : '', epProcCode: ep ? ep.proc : '', epDataNote: ep ? ep.dataNote : '', epTypeBit: ep ? (ep.pt || '0') : '0',
       epHdrOpen: open.epHdr, epDataOpen: open.epData,

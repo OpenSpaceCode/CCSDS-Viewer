@@ -20,6 +20,8 @@ src/
   styles/             design-system CSS
   protocols/          per protocol: field reference pages, maps, builder + decoder specs
   lib/bits.js         octet/bit helpers for the decoder
+  lib/bluebooks.js    revision of each Blue Book, and links to the page of a reference
+  lib/bluebook-pages.js  generated: section → PDF page (tools/bluebook_pages.py)
   lib/search.js       field search (Ctrl+K): indexing, value matching, ranking
   lib/session.js      keeps the page across a refresh (sessionStorage)
   lib/profile.js      mission profile: schema, validation, JSON, layout (localStorage)
