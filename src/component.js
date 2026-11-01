@@ -469,6 +469,7 @@ class Component extends DCLogic {
     } else if (m[1] === 'ep' && m[2] && Object.prototype.hasOwnProperty.call(this.EP_DEF, m[2])) target = { view: 'ep', epId: m[2], proto: 'sdls', epOpen: true, retView: null };
     else if (m[1] === 'sdls-ep' && !m[2]) target = { view: 'diagram', proto: 'sdls', epOpen: true, fid: null, retView: null };
     else if (['tm', 'tc', 'spp', 'sdls'].includes(m[1]) && !m[2]) target = { view: 'diagram', proto: m[1], fid: null, retView: null };
+    if (!Object.keys(target).length) return {};
     try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* the link stays in the address */ }
     return target;
   }
