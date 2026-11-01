@@ -114,6 +114,14 @@ test('the page is titled, both while it unpacks and once it has', () => {
   assert.ok(!html.includes('Bundled Page'));
 });
 
+test('search engines and link previews get a description and the one address of the page', () => {
+  const html = readFileSync(OUTPUT, 'utf8'), shellHead = html.slice(0, html.indexOf('</head>'));
+  const description = shellHead.match(/<meta name="description" content="([^"]+)">/);
+  assert.ok(description, 'in the head of the file as served, without running its script');
+  assert.ok(description[1].length >= 50 && description[1].length <= 160, 'search results cut longer ones: ' + description[1].length);
+  assert.match(shellHead, /<link rel="canonical" href="https:\/\/openspacecode\.github\.io\/CCSDS-Viewer\/">/);
+});
+
 test('CCSDS-protocol-viewer.html is up to date with src/ (run: node build.mjs)', () => {
   assert.equal(readFileSync(OUTPUT, 'utf8') === build(), true);
 });
