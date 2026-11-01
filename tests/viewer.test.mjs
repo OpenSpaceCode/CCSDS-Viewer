@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { loadComponent, loadSrc } from './load.mjs';
-import { build, loadAssets, OUTPUT } from '../build.mjs';
+import { build, buildTemplate, loadAssets, OUTPUT } from '../build.mjs';
 
 const Component = loadComponent();
 const render = (state) => {
@@ -164,6 +164,12 @@ test('the viewer’s own text stays within the bundled fonts: no accented letter
     const hit = [...readFileSync(new URL('../src/' + f, import.meta.url), 'utf8')].find(c => dropped.test(c) && !inLatinSubset.test(c));
     assert.equal(hit, undefined, f);
   }
+});
+
+test('the raw template is hidden from the start: it must never paint while the runtime loads', () => {
+  const template = buildTemplate(), hide = template.indexOf('x-dc{display:none}');
+  assert.ok(hide > 0 && hide < template.indexOf('</head>'), 'in the head, so it applies before the first paint');
+  assert.ok(hide < template.indexOf('<x-dc>'));
 });
 
 test('CCSDS-protocol-viewer.html is up to date with src/ (run: node build.mjs)', () => {
