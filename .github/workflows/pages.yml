@@ -1,4 +1,4 @@
-# Publishes the single-file viewer to GitHub Pages, as index.html, when main changes.
+# Publishes the viewer and its reference pages to GitHub Pages when main changes.
 name: Publish viewer
 on:
   push:
@@ -26,9 +26,7 @@ jobs:
         with:
           node-version: 22
       - run: npm test
-      - run: |
-          mkdir _site
-          cp CCSDS-protocol-viewer.html _site/index.html
+      - run: npm run site
       - uses: actions/upload-pages-artifact@v3
       - uses: actions/deploy-pages@v4
         id: deployment

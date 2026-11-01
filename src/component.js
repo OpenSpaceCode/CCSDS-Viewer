@@ -450,9 +450,27 @@ class Component extends DCLogic {
   constructor(props) {
     super(props);
     const saved = sessionRead();
-    this.state = { ...this.state, ...this.sessionRestore(saved), profile: profileLoad() };
+    const linked = this.linkTarget();
+    this.state = { ...this.state, ...this.sessionRestore(saved), ...linked, profile: profileLoad() };
     if (!this.state.profile) this.state.profileOn = false;
-    this.scrollToRestore = Number(saved.scroll) || 0;
+    this.scrollToRestore = linked.view ? 0 : Number(saved.scroll) || 0;
+  }
+
+  // The state a link from the published reference pages asks for: #/tm, #/sdls-ep, #/field/fhp, #/ep/otar. Read once and then
+  // cleared from the address, so a refresh keeps wherever the user has gone since.
+  linkTarget() {
+    if (typeof location === 'undefined') return {};
+    const m = String(location.hash).match(/^#\/([\w-]+)(?:\/([\w-]+))?$/);
+    if (!m) return {};
+    let target = {};
+    if (m[1] === 'field' && m[2] && Object.prototype.hasOwnProperty.call(this.F, m[2])) {
+      const doc = this.fieldDoc(m[2]);
+      target = { view: 'field', fid: m[2], proto: doc === 'ep' ? 'sdls' : doc, retView: null, ...(doc === 'ep' ? { epOpen: true, epId: this.qEpOf(m[2]) } : {}) };
+    } else if (m[1] === 'ep' && m[2] && Object.prototype.hasOwnProperty.call(this.EP_DEF, m[2])) target = { view: 'ep', epId: m[2], proto: 'sdls', epOpen: true, retView: null };
+    else if (m[1] === 'sdls-ep' && !m[2]) target = { view: 'diagram', proto: 'sdls', epOpen: true, fid: null, retView: null };
+    else if (['tm', 'tc', 'spp', 'sdls'].includes(m[1]) && !m[2]) target = { view: 'diagram', proto: m[1], fid: null, retView: null };
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* the link stays in the address */ }
+    return target;
   }
 
   // Only what this build still has: a saved tab, field or view that no longer exists must not break the page.
