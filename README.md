@@ -13,11 +13,13 @@ The HTML file is generated — edit `src/`, then rebuild. Needs Node ≥ 21, no 
 ```sh
 npm run build    # src/ + vendor/ → CCSDS-protocol-viewer.html
 npm test         # decoder test vectors + smoke tests (also fails if the HTML is stale)
+npm run site     # what GitHub Pages publishes → _site/: the viewer + a reference page per protocol
 ```
 
 ```
 src/
   index.html          page template; pulls files in with <!--#include path -->
+  summary.html        what the page says without JavaScript, for readers and search engines
   views/              markup per view (sidebar, diagrams, builder, decoder, field page, …)
   styles/             design-system CSS
   protocols/          per protocol: field reference pages, maps, builder + decoder specs
@@ -31,6 +33,7 @@ src/
 vendor/               React, dc-runtime, fonts and the self-unpacking bundle shell (not edited)
 tests/                node:test suites
 build.mjs             the bundler
+site.mjs              the published site: generates the reference pages from the viewer's field tables
 ```
 
 Each protocol's cheat sheet (`*_SHEET` in `src/protocols/`) is curated text; `npm test` checks its fields and references, but not that it still fits one page. After changing a sheet or `src/views/cheat.html`, print the fullest case (TM with a mission profile that uses SDLS) and check the page count.

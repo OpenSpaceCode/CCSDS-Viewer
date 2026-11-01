@@ -1,0 +1,24 @@
+<main id="about">
+  <h1>CCSDS Protocol Viewer</h1>
+  <p>A quick reference for engineers working on a layered space link: the key information of the CCSDS protocols in one place, instead of a stack of open PDFs. Frame diagrams, a frame builder and a frame decoder, written from the CCSDS Blue Books.</p>
+  <p><strong>The interactive viewer needs JavaScript.</strong> Turn it on and reload this page to use it. Everything runs in your browser: nothing you enter is uploaded.</p>
+  <h2>Protocols</h2>
+  <ul>
+    <li><a href="spp/">Space Packet Protocol</a> (<a href="https://ccsds.org/Pubs/133x0b2e2.pdf">CCSDS 133.0-B-2</a>)</li>
+    <li><a href="tm/">TM Space Data Link Protocol</a> (<a href="https://ccsds.org/Pubs/132x0b3.pdf">CCSDS 132.0-B-3</a>)</li>
+    <li><a href="tc/">TC Space Data Link Protocol</a> (<a href="https://ccsds.org/Pubs/232x0b4e1c1.pdf">CCSDS 232.0-B-4</a>)</li>
+    <li><a href="sdls/">Space Data Link Security Protocol, SDLS</a> (<a href="https://ccsds.org/Pubs/355x0b2.pdf">CCSDS 355.0-B-2</a>)</li>
+    <li><a href="sdls-ep/">SDLS Extended Procedures</a> (<a href="https://ccsds.org/Pubs/355x1b1.pdf">CCSDS 355.1-B-1</a>)</li>
+  </ul>
+  <h2>Features</h2>
+  <ul>
+    <li>Frame diagrams and a reference page for each field, with links to the Blue Book clause it comes from</li>
+    <li>Frame Builder: fill in the fields of a Space Packet or TM or TC Transfer Frame and get its bits and hex, with lengths and the Frame Error Control Field computed</li>
+    <li>Frame Decoder: paste raw hex to read every field, with consistency checks against the Blue Book, including the CRC</li>
+    <li>SDLS as an option of TM and TC frames: Security Header and Trailer layout, and what each service covers</li>
+    <li>Mission profiles: define managed parameters once, and export or import them as JSON</li>
+    <li>Search across all fields, abbreviations and special values such as 0x7FE</li>
+    <li>A printable one-page cheat sheet per protocol</li>
+  </ul>
+  <p><a href="https://github.com/OpenSpaceCode/CCSDS-Viewer">Source code on GitHub</a>, under the Apache 2.0 license. This is a summary for quick reference: the Blue Books are normative.</p>
+</main>

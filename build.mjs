@@ -4,6 +4,7 @@
 //   asset:<path>       reference to a file in vendor/ — replaced by its bundle uuid
 //   vendor/assets.json the bundled assets (uuid, file, mime, gzip or not), in manifest order
 //   vendor/bundler/shell.html  self-unpacking loader; receives the manifest and the template
+//   src/summary.html   what the page says before and without its script, for readers and search engines
 //
 // Usage: node build.mjs [--check]   (--check: fail if the committed output is out of date)
 
@@ -66,14 +67,28 @@ function buildManifest(assets) {
   return manifest;
 }
 
+const NO_SCRIPT_CSS = '#__bundler_loading,#__bundler_thumbnail{display:none}'
+  + 'body{display:block;background:#fff;color:#1c2733;font-size:16px;line-height:1.55}'
+  + '#about{max-width:70ch;margin:0 auto;padding:32px 20px}'
+  + '#about h1{font-size:30px;line-height:1.2;margin-bottom:12px}'
+  + '#about h2{font-size:19px;margin:24px 0 8px}'
+  + '#about p{margin-bottom:12px}'
+  + '#about ul{margin:0 0 12px 22px}'
+  + '#about li{margin-bottom:5px}'
+  + '#about a{color:#1f4e79}';
+
 export function build() {
   const assets = loadAssets();
   const page = buildTemplate();
-  // The shell shows its own title while it unpacks, and to anything that does not run its script.
-  const title = page.match(/<title>.*?<\/title>/)[0];
+  // The shell's head is what shows while it unpacks, and all that is read by anything that does not run its script.
+  const head = page.match(/<title>.*?<\/title>\s*<meta name="description"[^>]*>\s*<link rel="canonical"[^>]*>\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/)[0];
   const template = JSON.stringify(page).replaceAll('</', '<\\u002F');
   const shell = read(join(VENDOR, 'bundler', 'shell.html'));
-  const out = shell.replace(/<title>.*?<\/title>/, () => title).replace('__BUNDLE_MANIFEST__', () => JSON.stringify(buildManifest(assets)))
+  // With a script running, the shell's thumbnail covers the summary until the app replaces the page. Without one, only the summary shows.
+  const out = shell.replace(/<title>.*?<\/title>/, () => head)
+    .replace(/<noscript>[\s\S]*?<\/noscript>/, () => '<noscript><style>' + NO_SCRIPT_CSS + '</style></noscript>')
+    .replace('<body>', () => '<body>\n' + read(join(ROOT, 'src', 'summary.html')))
+    .replace('__BUNDLE_MANIFEST__', () => JSON.stringify(buildManifest(assets)))
     .replace('__BUNDLE_TEMPLATE__', () => template);
   if (out === shell) throw new Error('bundle shell has no placeholders');
   return out;
