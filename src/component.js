@@ -11,7 +11,7 @@ class Component extends DCLogic {
     if (kind === 'fill') return { style: base + 'background:var(--color-accent);color:var(--color-bg)', label: label || '', title: '' };
     if (kind === 'deep') return { style: base + 'background:var(--color-accent-900);color:var(--color-bg)', label: label || '', title: '' };
     if (kind === 'mask') return { style: base + 'background:repeating-linear-gradient(45deg,var(--color-accent-200) 0 5px,var(--color-bg) 5px 10px);box-shadow:inset 0 1px 0 var(--color-accent),inset 0 -1px 0 var(--color-accent)', label: '', title: label || '' };
-    return { style: base + 'background:transparent;color:var(--color-neutral-500)', label: '', title: '' };
+    return { style: base + 'background:transparent;color:var(--color-neutral-600)', label: '', title: '' };
   }
 
   BUILD_SPECS = { tm: TM_BUILD, tc: TC_BUILD, spp: SPP_BUILD };
@@ -406,7 +406,7 @@ class Component extends DCLogic {
   profileVals(st, pr, showProfile) {
     const p = st.profile;
     const barStyle = (on, enabled) => ({ padding: '6px 12px', fontSize: '11.5px', letterSpacing: '.06em', fontFamily: 'var(--font-heading)', fontWeight: '600', whiteSpace: 'nowrap',
-      border: '1px solid ' + (on ? 'var(--color-accent)' : 'var(--color-divider)'), marginLeft: '-1px', cursor: enabled ? 'pointer' : 'not-allowed', opacity: enabled ? '1' : '.5',
+      border: '1px solid ' + (on ? 'var(--color-accent)' : 'var(--color-divider)'), marginLeft: '-1px', cursor: enabled ? 'pointer' : 'not-allowed', opacity: enabled ? '1' : '.7',
       background: on ? 'color-mix(in srgb, var(--color-accent) 12%, var(--color-bg))' : 'var(--color-bg)', color: on ? 'var(--color-accent-900)' : 'var(--color-text)' });
     const fieldRow = (f) => {
       const draft = st.pDraft[f.path], value = p ? profileGet(p, f.path) : '';

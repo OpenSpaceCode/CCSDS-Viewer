@@ -28,7 +28,7 @@
             <div style="display:flex;align-items:stretch">
               <div style="flex:2.4;min-width:0;display:flex;flex-direction:column">
                 <div role="button" tabindex="0" data-field="sdhdr" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="position:relative;border:1px solid var(--color-text);min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px 12px;cursor:pointer;background:var(--color-bg);font-family:var(--font-heading);font-weight:600;font-size:15px;letter-spacing:.06em;line-height:1.35;transition:transform .13s ease,background .13s ease,box-shadow .13s ease" style-hover="transform:scale(1.03);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:6">
-                  <span style="position:absolute;top:7px;right:9px;font-size:11px;color:var(--color-neutral-500)">§</span>
+                  <span style="position:absolute;top:7px;right:9px;font-size:11px;color:var(--color-neutral-600)">§</span>
                   <span style="position:relative">TRANSFER FRAME HEADER(S)<em style="display:block;font-family:var(--font-body);font-style:normal;font-weight:400;font-size:11px;letter-spacing:.06em;color:var(--color-neutral-700);margin-top:6px">Primary Header (+ Segment Header, TC)</em></span>
                 </div>
                 <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">PER BASE PROTOCOL</div>
@@ -42,7 +42,7 @@
               </div>
               <div style="flex:2.4;min-width:0;display:flex;flex-direction:column;margin-left:-1px">
                 <div role="button" tabindex="0" data-field="sddata" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="position:relative;border:1px solid var(--color-text);min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px 12px;cursor:pointer;background:var(--color-bg);font-family:var(--font-heading);font-weight:600;font-size:15px;letter-spacing:.06em;line-height:1.35;transition:transform .13s ease,background .13s ease,box-shadow .13s ease" style-hover="transform:scale(1.03);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:6">
-                  <span style="position:absolute;top:7px;right:9px;font-size:11px;color:var(--color-neutral-500)">§</span>
+                  <span style="position:absolute;top:7px;right:9px;font-size:11px;color:var(--color-neutral-600)">§</span>
                   <span style="position:relative">FRAME DATA FIELD<em style="display:block;font-family:var(--font-body);font-style:normal;font-weight:400;font-size:11px;letter-spacing:.06em;color:var(--color-neutral-700);margin-top:6px">encrypted when applicable</em></span>
                 </div>
                 <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">{{ lay.sdData }}</div>
@@ -50,7 +50,7 @@
               <div style="flex:1.8;min-width:0;display:flex;flex-direction:column;margin-left:-1px">
                 <div role="button" tabindex="0" data-field="sdtr" sc-camel-on-click="{{ fieldClick }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="position:relative;border:1px solid var(--color-text);min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px 12px;cursor:pointer;background:{{ sdTrBg }};font-family:var(--font-heading);font-weight:600;font-size:16px;letter-spacing:.06em;line-height:1.35;transition:transform .13s ease,background .13s ease,box-shadow .13s ease" style-hover="transform:scale(1.03);background:var(--color-accent-200);box-shadow:var(--shadow-md);z-index:6">
                   <span style="position:absolute;top:7px;right:9px;font-size:11px;color:var(--color-accent-700)">{{ sdTrBadge }}</span>
-                  <span style="position:relative">SECURITY TRAILER<em style="display:block;font-family:var(--font-body);font-style:normal;font-weight:400;font-size:11px;letter-spacing:.06em;color:var(--color-neutral-700);margin-top:6px">(auth / auth-enc)</em></span>
+                  <span style="position:relative">SECURITY TRAILER<em style="display:block;font-family:var(--font-body);font-style:normal;font-weight:400;font-size:11px;letter-spacing:.06em;color:var(--color-neutral-800);margin-top:6px">(auth / auth-enc)</em></span>
                 </div>
                 <div style="text-align:center;font-size:12px;letter-spacing:.08em;color:var(--color-neutral-600);padding-top:8px">{{ lay.sdTrl }}</div>
               </div>

@@ -166,6 +166,20 @@ test('the viewer’s own text stays within the bundled fonts: no accented letter
   }
 });
 
+test('text colours pass WCAG AA on the page background (4.5:1)', () => {
+  const css = readFileSync(new URL('../src/styles/design-system.css', import.meta.url), 'utf8');
+  const token = (name) => css.match(new RegExp('--color-' + name + ':\\s*(#[0-9a-f]{6})'))[1];
+  const lum = (hex) => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(c => c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4).reduce((n, c, i) => n + c * [0.2126, 0.7152, 0.0722][i], 0);
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  for (const name of ['accent', 'accent-700', 'accent-800', 'neutral-600', 'neutral-700', 'neutral-800', 'text'])
+    assert.ok(ratio(token(name), token('bg')) >= 4.5, name + ' is ' + ratio(token(name), token('bg')).toFixed(2));
+});
+
+test('no text uses the greys too light to read', () => {
+  const sources = [...readdirSync(new URL('../src/views/', import.meta.url)).map(f => 'views/' + f), 'component.js'];
+  for (const f of sources) assert.doesNotMatch(readFileSync(new URL('../src/' + f, import.meta.url), 'utf8'), /(?<![\w-])color:\s*var\(--color-neutral-[1-5]00\)/, f);
+});
+
 test('the raw template is hidden from the start: it must never paint while the runtime loads', () => {
   const template = buildTemplate(), hide = template.indexOf('x-dc{display:none}');
   assert.ok(hide > 0 && hide < template.indexOf('</head>'), 'in the head, so it applies before the first paint');
