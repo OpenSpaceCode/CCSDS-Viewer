@@ -24,32 +24,8 @@
     "compressed": true
   },
   {
-    "uuid": "3f15339f-feb9-41ba-bca0-a1ca2cb38217",
-    "file": "fonts/barlow-400-vietnamese.woff2",
-    "mime": "font/woff2",
-    "compressed": false
-  },
-  {
-    "uuid": "a4619dba-49ed-4210-bf09-1c31e1c9e75e",
-    "file": "fonts/barlow-400-latin-ext.woff2",
-    "mime": "font/woff2",
-    "compressed": false
-  },
-  {
     "uuid": "fe925003-53d3-4fd0-bdc2-1a9bfb166571",
     "file": "fonts/barlow-400-latin.woff2",
-    "mime": "font/woff2",
-    "compressed": false
-  },
-  {
-    "uuid": "56078f5d-1383-4b79-a411-6ffea00c51b7",
-    "file": "fonts/barlow-500-vietnamese.woff2",
-    "mime": "font/woff2",
-    "compressed": false
-  },
-  {
-    "uuid": "b9cedca9-5b91-43b4-94cb-f896e6bc44d9",
-    "file": "fonts/barlow-500-latin-ext.woff2",
     "mime": "font/woff2",
     "compressed": false
   },
@@ -60,50 +36,8 @@
     "compressed": false
   },
   {
-    "uuid": "5922c63e-40b7-416e-aec3-60d5a8028b46",
-    "file": "fonts/barlow-700-vietnamese.woff2",
-    "mime": "font/woff2",
-    "compressed": false
-  },
-  {
-    "uuid": "c9fd4ac5-4070-4ebb-b9eb-480a051630e4",
-    "file": "fonts/barlow-700-latin-ext.woff2",
-    "mime": "font/woff2",
-    "compressed": false
-  },
-  {
     "uuid": "9498e8ed-8cb9-42b1-a2bf-a57ec6f62351",
     "file": "fonts/barlow-700-latin.woff2",
-    "mime": "font/woff2",
-    "compressed": false
-  },
-  {
-    "uuid": "426ab44c-ea89-405d-adcd-c3d651436e01",
-    "file": "fonts/barlow-condensed-400-vietnamese.woff2",
-    "mime": "font/woff2",
-    "compressed": false
-  },
-  {
-    "uuid": "0a235cfa-733e-4d11-a156-9398db99a305",
-    "file": "fonts/barlow-condensed-400-latin-ext.woff2",
-    "mime": "font/woff2",
-    "compressed": false
-  },
-  {
-    "uuid": "a27d6e3b-c80b-49a1-a63c-e3a153bb1d97",
-    "file": "fonts/barlow-condensed-400-latin.woff2",
-    "mime": "font/woff2",
-    "compressed": false
-  },
-  {
-    "uuid": "d12da73f-c8e7-4dd2-ad86-81ff929795c2",
-    "file": "fonts/barlow-condensed-600-vietnamese.woff2",
-    "mime": "font/woff2",
-    "compressed": false
-  },
-  {
-    "uuid": "e5cabc0c-6967-4f2e-81d5-13b2d6db6e7b",
-    "file": "fonts/barlow-condensed-600-latin-ext.woff2",
     "mime": "font/woff2",
     "compressed": false
   },

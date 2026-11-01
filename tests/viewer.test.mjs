@@ -2,9 +2,9 @@
 // and the committed single-file viewer matches src/.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { loadComponent, loadSrc } from './load.mjs';
-import { build, OUTPUT } from '../build.mjs';
+import { build, loadAssets, OUTPUT } from '../build.mjs';
 
 const Component = loadComponent();
 const render = (state) => {
@@ -146,6 +146,24 @@ test('without a script the page still says what it is, with every book it covers
   assert.ok(html.slice(html.indexOf('<noscript>'), html.indexOf('</noscript>')).includes('#__bundler_thumbnail{display:none}'), 'nothing covers it then');
   assert.ok(html.indexOf('<noscript>') < html.indexOf('</head>'), 'the head stays valid: only style in its noscript');
   assert.ok(!html.slice(html.indexOf('<noscript>'), html.indexOf('</noscript>')).includes('<div'), 'a div there would end the head early');
+});
+
+test('only the fonts in use are bundled, as every visitor downloads all of them', () => {
+  const css = readFileSync(new URL('../src/styles/design-system.css', import.meta.url), 'utf8');
+  const fonts = loadAssets().map(a => a.file).filter(f => f.startsWith('fonts/')).sort();
+  assert.deepEqual(fonts, ['fonts/barlow-400-latin.woff2', 'fonts/barlow-500-latin.woff2', 'fonts/barlow-700-latin.woff2', 'fonts/barlow-condensed-600-latin.woff2']);
+  for (const f of fonts) assert.ok(css.includes('asset:' + f), f + ' is used');
+  assert.equal((css.match(/@font-face/g) || []).length, fonts.length);
+});
+
+test('the viewer’s own text stays within the bundled fonts: no accented letters that would fall back', () => {
+  const dropped = /[\u0100-\u024F\u1E00-\u1EFF]/;   // Latin Extended and Vietnamese, apart from the few the Latin subset holds
+  const inLatinSubset = /[\u0131\u0152\u0153]/;
+  const sources = [...readdirSync(new URL('../src/views/', import.meta.url)).map(f => 'views/' + f), ...readdirSync(new URL('../src/protocols/', import.meta.url)).map(f => 'protocols/' + f), 'component.js', 'summary.html'];
+  for (const f of sources) {
+    const hit = [...readFileSync(new URL('../src/' + f, import.meta.url), 'utf8')].find(c => dropped.test(c) && !inLatinSubset.test(c));
+    assert.equal(hit, undefined, f);
+  }
 });
 
 test('CCSDS-protocol-viewer.html is up to date with src/ (run: node build.mjs)', () => {
