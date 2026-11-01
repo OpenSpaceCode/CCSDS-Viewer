@@ -64,7 +64,7 @@ function renderPage(page, v, base) {
   let body;
   if (page.doc === 'ep') {
     // Procedures share many of their fields, so only the header has a section of its own per field.
-    const header = Object.entries(fields).filter(([id, f]) => id === 'ephdr' || f.parent === 'ephdr').map(([id, f]) => field(id, f)).join('');
+    const header = Object.entries(fields).filter(([id, f]) => id === 'ephdr' || f.parent === 'ephdr' || f.parent === 'eptag').map(([id, f]) => field(id, f)).join('');
     const procedures = viewer.EP_GROUPS.map(g => {
       const items = g.items.filter(it => viewer.EP_DEF[it.id]).map(it => {
         const p = viewer.EP_DEF[it.id];
