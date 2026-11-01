@@ -81,7 +81,7 @@ export function build() {
   const assets = loadAssets();
   const page = buildTemplate();
   // The shell's head is what shows while it unpacks, and all that is read by anything that does not run its script.
-  const head = page.match(/<title>.*?<\/title>\s*<meta name="description"[^>]*>\s*<link rel="canonical"[^>]*>/)[0];
+  const head = page.match(/<title>.*?<\/title>\s*<meta name="description"[^>]*>\s*<link rel="canonical"[^>]*>\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/)[0];
   const template = JSON.stringify(page).replaceAll('</', '<\\u002F');
   const shell = read(join(VENDOR, 'bundler', 'shell.html'));
   // With a script running, the shell's thumbnail covers the summary until the app replaces the page. Without one, only the summary shows.

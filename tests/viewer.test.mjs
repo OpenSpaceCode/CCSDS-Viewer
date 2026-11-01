@@ -123,6 +123,18 @@ test('search engines and link previews get a description and the one address of 
   assert.match(shellHead, /<link rel="canonical" href="https:\/\/openspacecode\.github\.io\/CCSDS-Viewer\/">/);
 });
 
+test('structured data says the same as the rest of the head, in the file as served', () => {
+  const html = readFileSync(OUTPUT, 'utf8'), head = html.slice(0, html.indexOf('</head>'));
+  const data = JSON.parse(head.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+  assert.equal(data['@context'], 'https://schema.org');
+  assert.equal(data['@type'], 'SoftwareApplication');
+  assert.equal('<title>' + data.name + '</title>', head.match(/<title>.*?<\/title>/)[0]);
+  assert.equal(data.description, head.match(/<meta name="description" content="([^"]+)">/)[1]);
+  assert.equal(data.url, head.match(/<link rel="canonical" href="([^"]+)">/)[1]);
+  assert.equal(data.aggregateRating, undefined, 'no ratings exist, so none are claimed');
+  assert.equal(data.review, undefined);
+});
+
 test('without a script the page still says what it is, with every book it covers and its features', () => {
   const html = readFileSync(OUTPUT, 'utf8'), body = html.slice(html.indexOf('<body>'), html.indexOf('<script', html.indexOf('<body>')));
   const text = body.replace(/<svg[\s\S]*?<\/svg>/, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
