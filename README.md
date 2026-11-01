@@ -18,6 +18,7 @@ npm test         # decoder test vectors + smoke tests (also fails if the HTML is
 ```
 src/
   index.html          page template; pulls files in with <!--#include path -->
+  summary.html        what the page says without JavaScript, for readers and search engines
   views/              markup per view (sidebar, diagrams, builder, decoder, field page, …)
   styles/             design-system CSS
   protocols/          per protocol: field reference pages, maps, builder + decoder specs

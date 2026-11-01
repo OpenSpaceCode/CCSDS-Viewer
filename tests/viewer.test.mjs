@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { loadComponent } from './load.mjs';
+import { loadComponent, loadSrc } from './load.mjs';
 import { build, OUTPUT } from '../build.mjs';
 
 const Component = loadComponent();
@@ -13,6 +13,7 @@ const render = (state) => {
   return { c, v: c.renderVals() };
 };
 const proto = new Component({});
+const { BLUE_BOOKS } = loadSrc(['lib/bluebook-pages.js', 'lib/bluebooks.js'], ['BLUE_BOOKS']);
 // The state after clicking an example: its frame, with the mission settings the example brings.
 const exampleState = (id, x) => ({ view: 'decode', dProto: id, dHex: { [id]: x.hex }, dSet: { [id]: { ...proto.DECODE_SPECS[id].exampleSet, ...x.set } } });
 
@@ -120,6 +121,19 @@ test('search engines and link previews get a description and the one address of 
   assert.ok(description, 'in the head of the file as served, without running its script');
   assert.ok(description[1].length >= 50 && description[1].length <= 160, 'search results cut longer ones: ' + description[1].length);
   assert.match(shellHead, /<link rel="canonical" href="https:\/\/openspacecode\.github\.io\/CCSDS-Viewer\/">/);
+});
+
+test('without a script the page still says what it is, with every book it covers and its features', () => {
+  const html = readFileSync(OUTPUT, 'utf8'), body = html.slice(html.indexOf('<body>'), html.indexOf('<script', html.indexOf('<body>')));
+  const text = body.replace(/<svg[\s\S]*?<\/svg>/, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  for (const book of Object.values(BLUE_BOOKS)) {
+    assert.ok(text.includes(book.code), book.code + ' is named');
+    assert.ok(body.includes('href="' + book.url + '"'), book.code + ' is linked, at the address the viewer links to');
+  }
+  for (const word of ['Frame Builder', 'Frame Decoder', 'Mission profiles', 'cheat sheet', 'needs JavaScript']) assert.ok(text.includes(word), word);
+  assert.ok(html.slice(html.indexOf('<noscript>'), html.indexOf('</noscript>')).includes('#__bundler_thumbnail{display:none}'), 'nothing covers it then');
+  assert.ok(html.indexOf('<noscript>') < html.indexOf('</head>'), 'the head stays valid: only style in its noscript');
+  assert.ok(!html.slice(html.indexOf('<noscript>'), html.indexOf('</noscript>')).includes('<div'), 'a div there would end the head early');
 });
 
 test('CCSDS-protocol-viewer.html is up to date with src/ (run: node build.mjs)', () => {
