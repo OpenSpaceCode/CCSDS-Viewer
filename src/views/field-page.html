@@ -1,10 +1,10 @@
       <!-- ============ FIELD PAGE ============ -->
       <sc-if value="{{ showField }}" hint-placeholder-val="{{ false }}">
         <div data-screen-label="Field reference page">
-          <button class="btn btn-ghost" sc-camel-on-click="{{ back }}" style="letter-spacing:.12em;font-size:12px;font-weight:600;margin-left:-6px"><svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>{{ backLabel }}</button>
+          <button class="btn btn-ghost" sc-camel-on-click="{{ back }}" style="letter-spacing:.05em;font-size:12px;font-weight:600;margin-left:-6px"><svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>{{ backLabel }}</button>
           <div class="blueprint" style="padding:32px 36px 28px;margin-top:18px">
             <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px;letter-spacing:.1em;color:var(--color-neutral-600)">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px;letter-spacing:.04em;color:var(--color-neutral-600)">
               <sc-for list="{{ crumbs }}" as="c" hint-placeholder-count="2">
                 <span role="button" tabindex="0" data-field="{{ c.id }}" sc-camel-on-click="{{ openRef }}" style="cursor:pointer;display:inline-flex;gap:6px" style-hover="color:var(--color-accent-700)"><span>{{ c.name }}</span><span>{{ c.sep }}</span></span>
               </sc-for>
@@ -20,12 +20,12 @@
             <sc-for list="{{ fieldQuotes }}" as="q" hint-placeholder-count="1">
               <blockquote style="margin:16px 0 0;border-left:2px solid var(--color-accent);padding:4px 0 4px 16px">
                 <p style="margin:0;font-size:14.5px;line-height:1.7;font-style:italic;color:var(--color-neutral-800)">“{{ q.t }}”</p>
-                <div style="font-size:11px;letter-spacing:.1em;font-weight:600;color:var(--color-accent-700);margin-top:6px;font-style:normal"><sc-if value="{{ q.hasLink }}" hint-placeholder-val="{{ false }}"><a data-bb-ref="quote" href="{{ q.href }}" title="{{ q.linkTitle }}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit" style-hover="text-decoration:underline">{{ srcDoc }} · {{ q.ref }} · {{ q.pageLabel }} ↗</a></sc-if><sc-if value="{{ q.noLink }}" hint-placeholder-val="{{ true }}">{{ srcDoc }} · {{ q.ref }}</sc-if></div>
+                <div style="font-size:11px;letter-spacing:.04em;font-weight:600;color:var(--color-accent-700);margin-top:6px;font-style:normal"><sc-if value="{{ q.hasLink }}" hint-placeholder-val="{{ false }}"><a data-bb-ref="quote" href="{{ q.href }}" title="{{ q.linkTitle }}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit" style-hover="text-decoration:underline">{{ srcDoc }} · {{ q.ref }} · {{ q.pageLabel }} ↗</a></sc-if><sc-if value="{{ q.noLink }}" hint-placeholder-val="{{ true }}">{{ srcDoc }} · {{ q.ref }}</sc-if></div>
               </blockquote>
             </sc-for>
 
             <sc-if value="{{ hasSpecial }}" hint-placeholder-val="{{ false }}">
-              <h3 style="font-size:14px;letter-spacing:.18em;margin:30px 0 6px">SPECIAL VALUES</h3>
+              <h3 style="font-size:14px;letter-spacing:.07em;margin:30px 0 6px">SPECIAL VALUES</h3>
               <div style="display:flex;flex-direction:column">
                 <sc-for list="{{ fieldSpecial }}" as="s" hint-placeholder-count="2">
                   <div style="display:flex;gap:14px;align-items:baseline;padding:9px 0;border-top:1px solid var(--color-divider)">
@@ -38,14 +38,14 @@
             </sc-if>
 
             <sc-if value="{{ hasNotes }}" hint-placeholder-val="{{ false }}">
-              <h3 style="font-size:14px;letter-spacing:.18em;margin:30px 0 6px">NOTES</h3>
+              <h3 style="font-size:14px;letter-spacing:.07em;margin:30px 0 6px">NOTES</h3>
               <sc-for list="{{ fieldNotes }}" as="n" hint-placeholder-count="1">
                 <div style="display:flex;gap:10px;margin-top:8px;font-size:13.5px;line-height:1.65;color:var(--color-neutral-800)"><span style="color:var(--color-accent-700)">—</span><span>{{ n }}</span></div>
               </sc-for>
             </sc-if>
 
             <sc-if value="{{ hasMap }}" hint-placeholder-val="{{ false }}">
-              <h3 style="font-size:14px;letter-spacing:.18em;margin:30px 0 10px">POSITION · {{ mapTitle }}</h3>
+              <h3 style="font-size:14px;letter-spacing:.07em;margin:30px 0 10px">POSITION · {{ mapTitle }}</h3>
               <div style="display:flex;align-items:stretch">
                 <sc-for list="{{ mapCells }}" as="m" hint-placeholder-count="5">
                   <div role="button" tabindex="0" data-field="{{ m.id }}" sc-camel-on-click="{{ openRef }}" style="{{ m.style }}" style-hover="background:var(--color-accent-100);color:var(--color-text)">{{ m.label }}</div>
@@ -54,7 +54,7 @@
             </sc-if>
 
             <sc-if value="{{ hasStruct }}" hint-placeholder-val="{{ false }}">
-              <h3 style="font-size:14px;letter-spacing:.18em;margin:30px 0 10px">FRAME VIEW · {{ fieldName }}</h3>
+              <h3 style="font-size:14px;letter-spacing:.07em;margin:30px 0 10px">FRAME VIEW · {{ fieldName }}</h3>
               <div style="display:flex;align-items:stretch">
                 <sc-for list="{{ structCells }}" as="c" hint-placeholder-count="5">
                   <div role="button" tabindex="0" data-field="{{ c.id }}" sc-camel-on-click="{{ openRef }}" sc-camel-on-mouse-enter="{{ tipIn }}" sc-camel-on-mouse-leave="{{ tipOut }}" style="{{ c.style }}" style-hover="transform:scale(1.05);background:var(--color-accent-100);box-shadow:var(--shadow-md);z-index:5">
@@ -66,7 +66,7 @@
             </sc-if>
 
             <sc-if value="{{ hasKids }}" hint-placeholder-val="{{ false }}">
-              <h3 style="font-size:14px;letter-spacing:.18em;margin:30px 0 10px">CONTAINS</h3>
+              <h3 style="font-size:14px;letter-spacing:.07em;margin:30px 0 10px">CONTAINS</h3>
               <div style="display:flex;flex-direction:column">
                 <sc-for list="{{ fieldKids }}" as="k" hint-placeholder-count="3">
                   <div role="button" tabindex="0" data-field="{{ k.id }}" sc-camel-on-click="{{ openRef }}" style="display:flex;align-items:center;gap:14px;padding:11px 14px;border:1px solid var(--color-divider);margin-top:-1px;cursor:pointer;background:var(--color-bg)" style-hover="background:color-mix(in srgb, var(--color-accent) 8%, transparent)">

@@ -2,10 +2,10 @@
       <sc-if value="{{ showBuilder }}" hint-placeholder-val="{{ false }}">
         <div data-screen-label="Frame builder">
           <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
-            <span style="font-size:11px;letter-spacing:.2em;font-weight:600;color:var(--color-accent-700)">INTERACTIVE · ENCODER</span>
-            <span style="font-size:11px;letter-spacing:.14em;color:var(--color-neutral-600)">{{ bTotalLabel }}</span>
+            <span style="font-size:11px;letter-spacing:.08em;font-weight:600;color:var(--color-accent-700)">INTERACTIVE · ENCODER</span>
+            <span style="font-size:11px;letter-spacing:.06em;color:var(--color-neutral-600)">{{ bTotalLabel }}</span>
           </div>
-          <h1 style="margin:8px 0 0;font-size:42px;line-height:1.02;letter-spacing:.01em">FRAME BUILDER</h1>
+          <h1 style="margin:8px 0 0;font-size:36px;line-height:1.12;letter-spacing:-.01em;font-weight:700">FRAME BUILDER</h1>
           <p style="margin:14px 0 0;max-width:74ch;font-size:14.5px;line-height:1.6;color:var(--color-neutral-700);text-wrap:pretty">Choose a protocol, enter a value for each field, and read the encoded frame exactly as it goes on the wire — bit by bit, octet by octet, with each field mapped onto the bits it occupies.</p>
 
           <div style="display:flex;gap:8px;margin-top:20px;flex-wrap:wrap">
@@ -19,41 +19,41 @@
 
             <!-- field inputs -->
             <div style="flex:0 1 340px;min-width:300px;display:flex;flex-direction:column;gap:0">
-              <div style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.18em;padding-bottom:12px">{{ bSpecName }}</div>
-              <div role="button" tabindex="0" sc-camel-on-click="{{ bReset }}" style="margin-bottom:12px;align-self:flex-start;padding:8px 15px;border:1px solid var(--color-divider);cursor:pointer;font-size:11.5px;letter-spacing:.13em;font-family:var(--font-heading);font-weight:600" style-hover="border-color:var(--color-accent);color:var(--color-accent-700)">RESET TO DEFAULTS</div>
+              <div style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.07em;padding-bottom:12px">{{ bSpecName }}</div>
+              <div role="button" tabindex="0" sc-camel-on-click="{{ bReset }}" style="margin-bottom:12px;align-self:flex-start;padding:8px 15px;border-radius:8px;border:1px solid var(--color-divider);cursor:pointer;font-size:11.5px;letter-spacing:.05em;font-family:var(--font-heading);font-weight:600" style-hover="border-color:var(--color-accent);color:var(--color-accent-700)">RESET TO DEFAULTS</div>
               <sc-for list="{{ bFieldList }}" as="f" hint-placeholder-count="8">
                 <div style="display:flex;flex-direction:column;gap:5px;padding:11px 0;border-top:1px solid var(--color-divider)">
                   <div style="display:flex;align-items:baseline;gap:8px">
-                    <span style="width:12px;height:12px;flex:none;border:1px solid var(--color-text);background:{{ f.swatch }}"></span>
+                    <span style="width:12px;height:12px;flex:none;border:1px solid var(--color-line);background:{{ f.swatch }}"></span>
                     <span style="font-size:12.5px;font-weight:500;line-height:1.3;flex:1">{{ f.n }}</span>
                     <span style="font-size:10px;letter-spacing:.09em;color:var(--color-neutral-600);font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap">{{ f.bitsLabel }}</span>
                   </div>
                   <div style="display:flex;gap:7px;align-items:center;padding-left:17px">
                     <sc-if value="{{ f.isEnum }}" hint-placeholder-val="{{ false }}">
-                      <sc-raw-select data-bfield="{{ f.id }}" value="{{ f.value }}" sc-camel-on-change="{{ f.onChange }}" style="flex:1;min-width:0;font-family:var(--font-body);font-size:12.5px;padding:6px 8px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
+                      <sc-raw-select data-bfield="{{ f.id }}" value="{{ f.value }}" sc-camel-on-change="{{ f.onChange }}" style="flex:1;min-width:0;font-family:var(--font-body);font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
                         <sc-for list="{{ f.opts }}" as="o" hint-placeholder-count="2">
                           <option value="{{ o.v }}">{{ o.l }}</option>
                         </sc-for>
                       </sc-raw-select>
                     </sc-if>
                     <sc-if value="{{ f.isNum }}" hint-placeholder-val="{{ true }}">
-                      <input type="number" min="0" max="{{ f.max }}" data-bfield="{{ f.id }}" value="{{ f.value }}" sc-camel-on-change="{{ f.onChange }}" sc-camel-on-input="{{ f.onChange }}" style="width:104px;flex:none;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;padding:6px 8px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
+                      <input type="number" min="0" max="{{ f.max }}" data-bfield="{{ f.id }}" value="{{ f.value }}" sc-camel-on-change="{{ f.onChange }}" sc-camel-on-input="{{ f.onChange }}" style="width:104px;flex:none;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
                       <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.04em;color:var(--color-neutral-600);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ f.binLabel }}</span>
                     </sc-if>
                     <sc-if value="{{ f.isDerived }}" hint-placeholder-val="{{ false }}">
-                      <span data-bderived="{{ f.id }}" style="width:104px;flex:none;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;padding:6px 8px;border:1px dashed var(--color-neutral-500);color:var(--color-neutral-700);background:var(--color-surface)">{{ f.derivedLabel }}</span>
+                      <span data-bderived="{{ f.id }}" style="width:104px;flex:none;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px dashed var(--color-neutral-500);color:var(--color-neutral-700);background:var(--color-surface)">{{ f.derivedLabel }}</span>
                       <span style="font-size:10.5px;letter-spacing:.06em;color:var(--color-neutral-600)">derived · {{ f.derivedNote }}</span>
                     </sc-if>
                     <sc-if value="{{ f.canOverride }}" hint-placeholder-val="{{ false }}">
-                      <span role="button" tabindex="0" sc-camel-on-click="{{ f.onOverride }}" style="margin-left:auto;font-size:10.5px;letter-spacing:.1em;font-weight:600;color:var(--color-accent-700);cursor:pointer;white-space:nowrap" style-hover="color:var(--color-accent-900)">OVERRIDE</span>
+                      <span role="button" tabindex="0" sc-camel-on-click="{{ f.onOverride }}" style="margin-left:auto;font-size:10.5px;letter-spacing:.04em;font-weight:600;color:var(--color-accent-700);cursor:pointer;white-space:nowrap" style-hover="color:var(--color-accent-900)">OVERRIDE</span>
                     </sc-if>
                     <sc-if value="{{ f.isOverridden }}" hint-placeholder-val="{{ false }}">
-                      <span role="button" tabindex="0" sc-camel-on-click="{{ f.onDerive }}" style="margin-left:auto;font-size:10.5px;letter-spacing:.1em;font-weight:600;color:var(--color-accent-700);cursor:pointer;white-space:nowrap" style-hover="color:var(--color-accent-900)">USE DERIVED</span>
+                      <span role="button" tabindex="0" sc-camel-on-click="{{ f.onDerive }}" style="margin-left:auto;font-size:10.5px;letter-spacing:.04em;font-weight:600;color:var(--color-accent-700);cursor:pointer;white-space:nowrap" style-hover="color:var(--color-accent-900)">USE DERIVED</span>
                     </sc-if>
                   </div>
                   <sc-if value="{{ f.hasOct }}" hint-placeholder-val="{{ false }}">
                     <div style="display:flex;gap:7px;align-items:center;padding-left:17px">
-                      <span style="font-size:10.5px;letter-spacing:.1em;color:var(--color-neutral-600)">LENGTH</span>
+                      <span style="font-size:10.5px;letter-spacing:.04em;color:var(--color-neutral-600)">LENGTH</span>
                       <sc-raw-select data-boct="{{ f.id }}" value="{{ f.oct }}" sc-camel-on-change="{{ f.onOct }}" style="font-family:var(--font-body);font-size:12px;padding:5px 7px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
                         <sc-for list="{{ f.octOpts }}" as="o" hint-placeholder-count="3">
                           <option value="{{ o.v }}">{{ o.l }}</option>
@@ -71,32 +71,32 @@
                 <!--#include views/builder-section.html -->
               </sc-for>
               <sc-if value="{{ bPayShow }}" hint-placeholder-val="{{ true }}">
-                <div style="margin-top:22px;border-top:1px solid var(--color-text);padding-top:13px">
+                <div style="margin-top:22px;border-top:1px solid var(--color-line);padding-top:13px">
                   <div style="display:flex;align-items:baseline;gap:10px">
-                    <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.18em;flex:1;line-height:1.25">{{ bPayName }}</span>
-                    <span style="font-size:9.5px;letter-spacing:.14em;font-weight:600;padding:3px 7px;border:1px solid var(--color-divider);color:var(--color-neutral-600);white-space:nowrap">OPTIONAL</span>
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.07em;flex:1;line-height:1.25">{{ bPayName }}</span>
+                    <span style="font-size:9.5px;letter-spacing:.06em;font-weight:600;padding:3px 7px;border-radius:8px;border:1px solid var(--color-divider);color:var(--color-neutral-600);white-space:nowrap">OPTIONAL</span>
                   </div>
                   <div style="display:flex;gap:10px;align-items:baseline;padding-top:6px">
-                    <span style="font-size:10px;letter-spacing:.13em;font-weight:600;color:var(--color-accent-700);line-height:1.3">RAW OCTETS · MISSION-DEFINED</span>
-                    <span style="font-size:10px;letter-spacing:.1em;color:var(--color-neutral-600);margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap">{{ bPayLen }}</span>
+                    <span style="font-size:10px;letter-spacing:.05em;font-weight:600;color:var(--color-accent-700);line-height:1.3">RAW OCTETS · MISSION-DEFINED</span>
+                    <span style="font-size:10px;letter-spacing:.04em;color:var(--color-neutral-600);margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap">{{ bPayLen }}</span>
                   </div>
                   <p style="margin:9px 0 0;font-size:11.5px;line-height:1.6;color:var(--color-neutral-600);text-wrap:pretty">{{ bPayNote }}</p>
                 </div>
                 <sc-for list="{{ bPayList }}" as="f" hint-placeholder-count="1">
                   <div style="display:flex;flex-direction:column;gap:5px;padding:11px 0;border-top:1px solid var(--color-divider);margin-top:11px">
                     <div style="display:flex;align-items:baseline;gap:8px">
-                      <span style="width:12px;height:12px;flex:none;border:1px solid var(--color-text);background:{{ f.swatch }}"></span>
+                      <span style="width:12px;height:12px;flex:none;border:1px solid var(--color-line);background:{{ f.swatch }}"></span>
                       <span style="font-size:12.5px;font-weight:500;line-height:1.3;flex:1">{{ f.n }}</span>
                       <span style="font-size:10px;letter-spacing:.09em;color:var(--color-neutral-600);font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap">{{ f.bitsLabel }}</span>
                     </div>
                     <div style="display:flex;gap:7px;align-items:center;padding-left:17px">
-                      <span style="font-size:10.5px;letter-spacing:.1em;color:var(--color-neutral-600)">LENGTH</span>
-                      <input type="number" min="0" max="{{ f.maxOct }}" data-boct="{{ f.id }}" value="{{ f.oct }}" sc-camel-on-change="{{ f.onOct }}" sc-camel-on-input="{{ f.onOct }}" style="width:80px;flex:none;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;padding:6px 8px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
+                      <span style="font-size:10.5px;letter-spacing:.04em;color:var(--color-neutral-600)">LENGTH</span>
+                      <input type="number" min="0" max="{{ f.maxOct }}" data-boct="{{ f.id }}" value="{{ f.oct }}" sc-camel-on-change="{{ f.onOct }}" sc-camel-on-input="{{ f.onOct }}" style="width:80px;flex:none;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
                       <span style="font-size:10.5px;letter-spacing:.06em;color:var(--color-neutral-600)">octets · max {{ f.maxOct }}</span>
                     </div>
                     <div style="display:flex;gap:7px;align-items:center;padding-left:17px">
                       <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:var(--color-neutral-600)">0x</span>
-                      <input type="text" spellcheck="false" autocomplete="off" data-bfield="{{ f.id }}" value="{{ f.value }}" sc-camel-on-change="{{ f.onChange }}" sc-camel-on-input="{{ f.onChange }}" placeholder="{{ f.hexPlaceholder }}" style="flex:1;min-width:0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;letter-spacing:.08em;padding:6px 8px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
+                      <input type="text" spellcheck="false" autocomplete="off" data-bfield="{{ f.id }}" value="{{ f.value }}" sc-camel-on-change="{{ f.onChange }}" sc-camel-on-input="{{ f.onChange }}" placeholder="{{ f.hexPlaceholder }}" style="flex:1;min-width:0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;letter-spacing:.08em;padding:6px 8px;border-radius:8px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
                     </div>
                     <sc-if value="{{ f.over }}" hint-placeholder-val="{{ false }}">
                       <div style="padding-left:17px;font-size:11px;color:var(--color-accent-900)">{{ f.overMsg }}</div>
@@ -107,7 +107,7 @@
               <sc-for list="{{ bAfter }}" as="sec" hint-placeholder-count="2">
                 <!--#include views/builder-section.html -->
               </sc-for>
-              <div style="border-top:1px solid var(--color-text);margin-top:4px;padding-top:11px;display:flex;justify-content:space-between;font-family:var(--font-heading);font-weight:600;font-size:12px;letter-spacing:.13em">
+              <div style="border-top:1px solid var(--color-line);margin-top:4px;padding-top:11px;display:flex;justify-content:space-between;font-family:var(--font-heading);font-weight:600;font-size:12px;letter-spacing:.05em">
                 <span>TOTAL</span><span>{{ bTotalLabel }}</span>
               </div>
               <sc-if value="{{ bHasProfileNote }}" hint-placeholder-val="{{ false }}">
@@ -122,7 +122,7 @@
                 <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
                   <span style="flex:1;height:1px;background:var(--color-text)"></span>
-                  <span style="font-family:var(--font-heading);font-weight:600;font-size:12.5px;letter-spacing:.2em;white-space:nowrap">FIELD MAP</span>
+                  <span style="font-family:var(--font-heading);font-weight:600;font-size:12.5px;letter-spacing:.08em;white-space:nowrap">FIELD MAP</span>
                   <span style="flex:1;height:1px;background:var(--color-text)"></span>
                 </div>
                 <div style="display:flex;align-items:stretch;min-width:0;flex-wrap:wrap">
@@ -136,20 +136,20 @@
                 </div>
               </div>
 
-              <div style="border:1px solid var(--color-divider);padding:16px 18px;min-width:0">
-                <div style="font-size:10px;letter-spacing:.18em;color:var(--color-neutral-600);padding-bottom:7px">HEX</div>
+              <div style="border:1px solid var(--color-divider);border-radius:12px;padding:16px 18px;min-width:0">
+                <div style="font-size:10px;letter-spacing:.07em;color:var(--color-neutral-600);padding-bottom:7px">HEX</div>
                 <div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;line-height:1.7;word-break:break-all;font-weight:600">{{ bHex }}</div>
-                <div style="font-size:10px;letter-spacing:.18em;color:var(--color-neutral-600);padding:16px 0 7px">BINARY</div>
+                <div style="font-size:10px;letter-spacing:.07em;color:var(--color-neutral-600);padding:16px 0 7px">BINARY</div>
                 <div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.75;word-break:break-all;color:var(--color-neutral-700)">{{ bBin }}</div>
               </div>
 
               <div style="min-width:0">
-                <div style="font-family:var(--font-heading);font-weight:600;font-size:12.5px;letter-spacing:.2em;padding-bottom:4px">ON THE WIRE</div>
+                <div style="font-family:var(--font-heading);font-weight:600;font-size:12.5px;letter-spacing:.08em;padding-bottom:4px">ON THE WIRE</div>
                 <div style="font-size:12px;color:var(--color-neutral-600);padding-bottom:15px">{{ bWireNote }}</div>
                 <div style="display:flex;flex-wrap:wrap;gap:14px 16px">
                   <sc-for list="{{ bOctets }}" as="o" hint-placeholder-count="6">
                     <div style="display:flex;flex-direction:column;gap:5px">
-                      <div style="font-size:9.5px;letter-spacing:.1em;color:var(--color-neutral-600);font-family:ui-monospace,Menlo,Consolas,monospace">{{ o.label }}</div>
+                      <div style="font-size:9.5px;letter-spacing:.04em;color:var(--color-neutral-600);font-family:ui-monospace,Menlo,Consolas,monospace">{{ o.label }}</div>
                       <div style="display:flex">
                         <sc-for list="{{ o.cells }}" as="c" hint-placeholder-count="8">
                           <div style="{{ c.style }}">{{ c.b }}</div>

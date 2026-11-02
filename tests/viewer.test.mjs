@@ -148,22 +148,10 @@ test('without a script the page still says what it is, with every book it covers
   assert.ok(!html.slice(html.indexOf('<noscript>'), html.indexOf('</noscript>')).includes('<div'), 'a div there would end the head early');
 });
 
-test('only the fonts in use are bundled, as every visitor downloads all of them', () => {
+test('no fonts are bundled: the system font costs no download', () => {
   const css = readFileSync(new URL('../src/styles/design-system.css', import.meta.url), 'utf8');
-  const fonts = loadAssets().map(a => a.file).filter(f => f.startsWith('fonts/')).sort();
-  assert.deepEqual(fonts, ['fonts/barlow-400-latin.woff2', 'fonts/barlow-500-latin.woff2', 'fonts/barlow-700-latin.woff2', 'fonts/barlow-condensed-600-latin.woff2']);
-  for (const f of fonts) assert.ok(css.includes('asset:' + f), f + ' is used');
-  assert.equal((css.match(/@font-face/g) || []).length, fonts.length);
-});
-
-test('the viewer’s own text stays within the bundled fonts: no accented letters that would fall back', () => {
-  const dropped = /[\u0100-\u024F\u1E00-\u1EFF]/;   // Latin Extended and Vietnamese, apart from the few the Latin subset holds
-  const inLatinSubset = /[\u0131\u0152\u0153]/;
-  const sources = [...readdirSync(new URL('../src/views/', import.meta.url)).map(f => 'views/' + f), ...readdirSync(new URL('../src/protocols/', import.meta.url)).map(f => 'protocols/' + f), 'component.js', 'summary.html'];
-  for (const f of sources) {
-    const hit = [...readFileSync(new URL('../src/' + f, import.meta.url), 'utf8')].find(c => dropped.test(c) && !inLatinSubset.test(c));
-    assert.equal(hit, undefined, f);
-  }
+  assert.deepEqual(loadAssets().map(a => a.file).filter(f => f.startsWith('fonts/')), []);
+  assert.doesNotMatch(css, /@font-face/);
 });
 
 test('text colours pass WCAG AA on the page background (4.5:1)', () => {

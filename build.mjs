@@ -67,6 +67,9 @@ function buildManifest(assets) {
   return manifest;
 }
 
+// The shell's own loader is dark blue; the page it opens to is white.
+const LOADER_CSS = 'body,#__bundler_thumbnail{background:#fff}#__bundler_thumbnail svg{display:none}';
+
 const NO_SCRIPT_CSS = '#__bundler_loading,#__bundler_thumbnail{display:none}'
   + 'body{display:block;background:#fff;color:#1c2733;font-size:16px;line-height:1.55}'
   + '#about{max-width:70ch;margin:0 auto;padding:32px 20px}'
@@ -86,7 +89,8 @@ export function build() {
   const shell = read(join(VENDOR, 'bundler', 'shell.html'));
   // With a script running, the shell's thumbnail covers the summary until the app replaces the page. Without one, only the summary shows.
   const out = shell.replace(/<title>.*?<\/title>/, () => head)
-    .replace(/<noscript>[\s\S]*?<\/noscript>/, () => '<noscript><style>' + NO_SCRIPT_CSS + '</style></noscript>')
+    .replace(/<noscript>[\s\S]*?<\/noscript>/, () => '<style>' + LOADER_CSS + '</style><noscript><style>' + NO_SCRIPT_CSS + '</style></noscript>')
+    .replace('<html>', '<html lang="en">')
     .replace('<body>', () => '<body>\n' + read(join(ROOT, 'src', 'summary.html')))
     .replace('__BUNDLE_MANIFEST__', () => JSON.stringify(buildManifest(assets)))
     .replace('__BUNDLE_TEMPLATE__', () => template);
