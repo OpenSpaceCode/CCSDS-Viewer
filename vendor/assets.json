@@ -22,29 +22,5 @@
     "file": "react/react-dom-18.3.1.production.min.js",
     "mime": "text/javascript",
     "compressed": true
-  },
-  {
-    "uuid": "fe925003-53d3-4fd0-bdc2-1a9bfb166571",
-    "file": "fonts/barlow-400-latin.woff2",
-    "mime": "font/woff2",
-    "compressed": false
-  },
-  {
-    "uuid": "8f33c1a4-3d8e-456e-8dfc-1205d6bd2c16",
-    "file": "fonts/barlow-500-latin.woff2",
-    "mime": "font/woff2",
-    "compressed": false
-  },
-  {
-    "uuid": "9498e8ed-8cb9-42b1-a2bf-a57ec6f62351",
-    "file": "fonts/barlow-700-latin.woff2",
-    "mime": "font/woff2",
-    "compressed": false
-  },
-  {
-    "uuid": "a2f48bab-3e88-4a1d-86a7-f74f16273c02",
-    "file": "fonts/barlow-condensed-600-latin.woff2",
-    "mime": "font/woff2",
-    "compressed": false
   }
 ]

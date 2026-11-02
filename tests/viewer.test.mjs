@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { loadComponent, loadSrc } from './load.mjs';
-import { build, buildTemplate, loadAssets, OUTPUT } from '../build.mjs';
+import { build, buildTemplate, loadAssets, resolveAssets, OUTPUT } from '../build.mjs';
 
 const Component = loadComponent();
 const render = (state) => {
@@ -148,22 +148,17 @@ test('without a script the page still says what it is, with every book it covers
   assert.ok(!html.slice(html.indexOf('<noscript>'), html.indexOf('</noscript>')).includes('<div'), 'a div there would end the head early');
 });
 
-test('only the fonts in use are bundled, as every visitor downloads all of them', () => {
-  const css = readFileSync(new URL('../src/styles/design-system.css', import.meta.url), 'utf8');
-  const fonts = loadAssets().map(a => a.file).filter(f => f.startsWith('fonts/')).sort();
-  assert.deepEqual(fonts, ['fonts/barlow-400-latin.woff2', 'fonts/barlow-500-latin.woff2', 'fonts/barlow-700-latin.woff2', 'fonts/barlow-condensed-600-latin.woff2']);
-  for (const f of fonts) assert.ok(css.includes('asset:' + f), f + ' is used');
-  assert.equal((css.match(/@font-face/g) || []).length, fonts.length);
+test('every asset the README gives as an example exists, so it can be copied', () => {
+  const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
+  const examples = [...readme.matchAll(/asset:([\w./-]+)/g)].map(m => m[1]);
+  assert.ok(examples.length > 0);
+  for (const file of examples) assert.doesNotThrow(() => resolveAssets('asset:' + file, loadAssets()), file);
 });
 
-test('the viewer’s own text stays within the bundled fonts: no accented letters that would fall back', () => {
-  const dropped = /[\u0100-\u024F\u1E00-\u1EFF]/;   // Latin Extended and Vietnamese, apart from the few the Latin subset holds
-  const inLatinSubset = /[\u0131\u0152\u0153]/;
-  const sources = [...readdirSync(new URL('../src/views/', import.meta.url)).map(f => 'views/' + f), ...readdirSync(new URL('../src/protocols/', import.meta.url)).map(f => 'protocols/' + f), 'component.js', 'summary.html'];
-  for (const f of sources) {
-    const hit = [...readFileSync(new URL('../src/' + f, import.meta.url), 'utf8')].find(c => dropped.test(c) && !inLatinSubset.test(c));
-    assert.equal(hit, undefined, f);
-  }
+test('no fonts are bundled: the system font costs no download', () => {
+  const css = readFileSync(new URL('../src/styles/design-system.css', import.meta.url), 'utf8');
+  assert.deepEqual(loadAssets().map(a => a.file).filter(f => f.startsWith('fonts/')), []);
+  assert.doesNotMatch(css, /@font-face/);
 });
 
 test('text colours pass WCAG AA on the page background (4.5:1)', () => {
@@ -173,6 +168,22 @@ test('text colours pass WCAG AA on the page background (4.5:1)', () => {
   const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
   for (const name of ['accent', 'accent-700', 'accent-800', 'neutral-600', 'neutral-700', 'neutral-800', 'text'])
     assert.ok(ratio(token(name), token('bg')) >= 4.5, name + ' is ' + ratio(token(name), token('bg')).toFixed(2));
+});
+
+test('the edges of clickable diagram fields stand out: 3:1 against the white they sit on (WCAG 1.4.11)', () => {
+  const css = readFileSync(new URL('../src/styles/design-system.css', import.meta.url), 'utf8');
+  const token = (name) => css.match(new RegExp('--color-' + name + ':\\s*(#[0-9a-f]{6})'))[1];
+  const lum = (hex) => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(c => c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4).reduce((n, c, i) => n + c * [0.2126, 0.7152, 0.0722][i], 0);
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  for (const ground of ['bg'])
+    assert.ok(ratio(token('line'), token(ground)) >= 3, ground + ': ' + ratio(token('line'), token(ground)).toFixed(2));
+});
+
+test('the active sidebar row has a marker that stands out, not just a faint tint (WCAG 1.4.11)', () => {
+  const sidebar = readFileSync(new URL('../src/views/sidebar.html', import.meta.url), 'utf8');
+  const markers = [...sidebar.matchAll(/<sc-if value="\{\{ (?:is\w+|show\w+|ep\.active) \}\}"[^>]*><div style="([^"]+)"/g)].map(m => m[1]);
+  assert.ok(markers.length >= 9, String(markers.length));
+  for (const m of markers) assert.match(m, /var\(--color-accent\)/, m);
 });
 
 test('no text uses the greys too light to read', () => {

@@ -30,7 +30,7 @@ src/
   lib/session.js      keeps the page across a refresh (sessionStorage)
   lib/profile.js      mission profile: schema, validation, JSON, layout (localStorage)
   component.js        state, navigation and renderVals() — the glue
-vendor/               React, dc-runtime, fonts and the self-unpacking bundle shell (not edited)
+vendor/               React, dc-runtime and the self-unpacking bundle shell (not edited); assets.json lists what is bundled
 tests/                node:test suites
 build.mjs             the bundler
 site.mjs              the published site: generates the reference pages from the viewer's field tables
@@ -38,4 +38,6 @@ site.mjs              the published site: generates the reference pages from the
 
 Each protocol's cheat sheet (`*_SHEET` in `src/protocols/`) is curated text; `npm test` checks its fields and references, but not that it still fits one page. After changing a sheet or `src/views/cheat.html`, print the fullest case (TM with a mission profile that uses SDLS) and check the page count.
 
-The scripts in `src/` are plain scripts that share one scope (no modules), in the order listed at the bottom of `src/index.html`. Reference vendor files as `asset:<path>`, for example `url("asset:fonts/barlow-400-latin.woff2")`.
+The scripts in `src/` are plain scripts that share one scope (no modules), in the order listed at the bottom of `src/index.html`. Reference vendor files as `asset:<path>`, for example `<script src="asset:runtime/dc-runtime.js"></script>`; the path must be listed in `vendor/assets.json`, or the build stops with `unknown asset`.
+
+The viewer uses the system font, so no font files are bundled. Everything in `vendor/assets.json` is downloaded by every visitor, so add a font there only if the design needs it.

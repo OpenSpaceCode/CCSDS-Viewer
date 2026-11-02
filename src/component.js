@@ -6,7 +6,7 @@ class Component extends DCLogic {
   SDLS_COV = SDLS_COVERAGE;
 
   covSeg(c, i, last, kind, label) {
-    const base = 'min-width:0;height:26px;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;white-space:nowrap;font-family:var(--font-heading);font-weight:600;font-size:8.5px;letter-spacing:.11em;'
+    const base = 'min-width:0;height:26px;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;white-space:nowrap;font-family:var(--font-heading);font-weight:600;font-size:8.5px;letter-spacing:.05em;'
       + 'border-left:1px solid transparent;border-right:1px solid transparent;' + (i ? 'margin-left:-1px;' : '');
     if (kind === 'fill') return { style: base + 'background:var(--color-accent);color:var(--color-bg)', label: label || '', title: '' };
     if (kind === 'deep') return { style: base + 'background:var(--color-accent-900);color:var(--color-bg)', label: label || '', title: '' };
@@ -29,7 +29,7 @@ class Component extends DCLogic {
   BUILD_FECF_OFF = 'Management has established no Frame Error Control on this Physical Channel, so no FECF is transmitted.';
 
   bTint(i) {
-    const t = ['46%', '20%', '68%', '32%'];
+    const t = ['40%', '16%', '56%', '28%'];   // The darkest still carries dark text at 5:1
     return 'color-mix(in srgb, var(--color-accent) ' + t[i % 4] + ', var(--color-bg))';
   }
 
@@ -86,7 +86,7 @@ class Component extends DCLogic {
     if (nb > 0) ribbon.push({
       abbr: fd.abbr, bits: String(nb),
       value: isHex ? (nOct <= 2 ? hexVal.slice(0, nOct * 2).padEnd(nOct * 2, '0') : nOct + ' OCT') : String(vc),
-      style: { flex: String(Math.min(nb, 24)) + ' 1 auto', minWidth: '40px', border: '1px solid var(--color-text)', marginLeft: ribbon.length ? '-1px' : '0', background: tint, padding: '9px 3px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px', textAlign: 'center', overflow: 'hidden' }
+      style: { flex: String(Math.min(nb, 24)) + ' 1 auto', minWidth: '40px', border: '1px solid var(--color-line)', marginLeft: ribbon.length ? '-1px' : '0', background: tint, padding: '9px 3px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px', textAlign: 'center', overflow: 'hidden' }
     });
     return {
       id: fd.id, n: fd.n, nb, swatch: nb > 0 ? tint : 'transparent',
@@ -301,7 +301,7 @@ class Component extends DCLogic {
     const rev = blueBookRevision(doc);
     return { ...open,
       cTabs: this.CHEAT_ORDER.map(id => ({ id, name: this.CHEAT_TABS[id], onClick: () => this.setState({ cProto: id }),
-        style: { padding: '8px 15px', border: '1px solid ' + (id === doc ? 'var(--color-accent)' : 'var(--color-divider)'), background: id === doc ? 'color-mix(in srgb, var(--color-accent) 12%, var(--color-bg))' : 'var(--color-bg)', cursor: 'pointer', fontSize: '12.5px', letterSpacing: '.06em', fontFamily: 'var(--font-heading)', fontWeight: '600', whiteSpace: 'nowrap', color: id === doc ? 'var(--color-accent-900)' : 'var(--color-text)' } })),
+        style: { padding: '8px 15px', borderRadius: '8px', border: '1px solid ' + (id === doc ? 'var(--color-accent)' : 'var(--color-divider)'), background: id === doc ? 'color-mix(in srgb, var(--color-accent) 12%, var(--color-bg))' : 'var(--color-bg)', cursor: 'pointer', fontSize: '12.5px', letterSpacing: '.06em', fontFamily: 'var(--font-heading)', fontWeight: '600', whiteSpace: 'nowrap', color: id === doc ? 'var(--color-accent-900)' : 'var(--color-text)' } })),
       cPrint: () => this.cheatPrint(book.code), cStop: (e) => e.stopPropagation(),
       cTitle: sheet.title, cCode: book.code, cRev: rev, cRevShort: rev.toLowerCase().replace(/^issue/, 'Issue').replace(/ · /g, ', ').replace(/\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/g, m => m[0].toUpperCase() + m.slice(1)).replace(/cor\. 1/, 'Cor. 1').replace(/ec (\d)/g, 'EC $1'), cUrl: book.url,
       cMission: pr ? ' · ' + pr.name.toUpperCase() : '',
@@ -608,7 +608,7 @@ class Component extends DCLogic {
         hex: chunk.length === 8 ? '0x' + parseInt(binStr, 2).toString(16).toUpperCase().padStart(2, '0') : '—',
         cells: chunk.map((c, ci) => ({
           b: c.b,
-          style: { width: '21px', height: '27px', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'ui-monospace,Menlo,Consolas,monospace', fontSize: '12px', fontWeight: '600', background: c.tint, borderTop: '1px solid var(--color-text)', borderBottom: '1px solid var(--color-text)', borderLeft: '1px solid var(--color-text)', borderRight: ci === chunk.length - 1 ? '1px solid var(--color-text)' : '0' }
+          style: { width: '21px', height: '27px', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'ui-monospace,Menlo,Consolas,monospace', fontSize: '12px', fontWeight: '600', background: c.tint, borderTop: '1px solid var(--color-line)', borderBottom: '1px solid var(--color-line)', borderLeft: '1px solid var(--color-line)', borderRight: ci === chunk.length - 1 ? '1px solid var(--color-line)' : '0' }
         }))
       });
     }
@@ -630,7 +630,7 @@ class Component extends DCLogic {
     const dRibbon = dRes.fields.map((fd, i) => ({ fd, i })).filter(x => x.fd.bits > 0).map(({ fd, i }, k) => ({
       abbr: fd.abbr, bits: fd.octets ? fd.bits / 8 + ' OCT' : fd.bits + 'b',
       value: fd.octets ? (fd.bits <= 16 ? fd.raw : fd.raw.slice(0, 4) + '…') : fd.value,
-      style: { flex: String(Math.min(fd.bits, 24)) + ' 1 auto', minWidth: '40px', border: '1px solid var(--color-text)', marginLeft: k ? '-1px' : '0', background: dTint(fd, i), padding: '9px 3px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px', textAlign: 'center', overflow: 'hidden' }
+      style: { flex: String(Math.min(fd.bits, 24)) + ' 1 auto', minWidth: '40px', border: '1px solid var(--color-line)', marginLeft: k ? '-1px' : '0', background: dTint(fd, i), padding: '9px 3px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px', textAlign: 'center', overflow: 'hidden' }
     }));
     const dFields = dRes.fields.map((fd, i) => {
       const o0 = fd.off / 8, o1 = (fd.off + fd.bits) / 8 - 1;
@@ -659,7 +659,7 @@ class Component extends DCLogic {
         label: 'OCTET ' + o, bitRange: o * 8 + '–' + (o * 8 + 7), hex: '0x' + dBytes[o].toString(16).toUpperCase().padStart(2, '0'),
         cells: dBytes[o].toString(2).padStart(8, '0').split('').map((bit, k) => ({
           b: bit,
-          style: { width: '21px', height: '27px', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'ui-monospace,Menlo,Consolas,monospace', fontSize: '12px', fontWeight: '600', background: dTintAt(o * 8 + k), borderTop: '1px solid var(--color-text)', borderBottom: '1px solid var(--color-text)', borderLeft: '1px solid var(--color-text)', borderRight: k === 7 ? '1px solid var(--color-text)' : '0' }
+          style: { width: '21px', height: '27px', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'ui-monospace,Menlo,Consolas,monospace', fontSize: '12px', fontWeight: '600', background: dTintAt(o * 8 + k), borderTop: '1px solid var(--color-line)', borderBottom: '1px solid var(--color-line)', borderLeft: '1px solid var(--color-line)', borderRight: k === 7 ? '1px solid var(--color-line)' : '0' }
         }))
       });
     }
@@ -669,7 +669,7 @@ class Component extends DCLogic {
       warn: { l: 'WARN', css: 'border:1px solid #b07d2a;color:#7a5414;background:color-mix(in srgb, #b07d2a 14%, var(--color-bg))' },
       err: { l: 'ERROR', css: 'border:1px solid #b4483c;color:var(--color-bg);background:#b4483c' }
     };
-    const dBadge = 'flex:none;width:52px;text-align:center;font-size:9.5px;letter-spacing:.12em;font-weight:600;padding:3px 0;';
+    const dBadge = 'flex:none;width:52px;text-align:center;font-size:9.5px;letter-spacing:.05em;font-weight:600;padding:3px 0;';
     const dChecks = dRes.checks.map(c => ({ label: D_LEVEL[c.level].l, msg: c.msg, ref: c.ref || '', ...this.bbRefVals(st.dProto, c.ref), badgeStyle: dBadge + D_LEVEL[c.level].css }));
     const dErrs = dRes.checks.filter(c => c.level === 'err').length, dWarns = dRes.checks.filter(c => c.level === 'warn').length;
     const dSummaryLevel = dParsed.err || dErrs ? 'err' : dWarns ? 'warn' : dBytes.length ? 'ok' : 'info';
@@ -735,7 +735,7 @@ class Component extends DCLogic {
           id, name: k.n, meta: [k.bits, k.len].filter(Boolean).join(' · '),
           style: {
             flex: String(w), minWidth: 0, marginLeft: '-1px', height: '92px', padding: '8px 4px',
-            border: '1px solid var(--color-text)', background: 'var(--color-bg)', cursor: 'pointer',
+            border: '1px solid var(--color-line)', background: 'var(--color-bg)', cursor: 'pointer',
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             gap: '4px', textAlign: 'center', transition: 'transform .12s ease, background .12s ease, box-shadow .12s ease'
           }
@@ -775,7 +775,7 @@ class Component extends DCLogic {
           id: c.id, name: fld ? fld.n : c.l, meta: fld ? fld.pres : '', opt,
           style: {
             flex: String(c.w), minWidth: 0, marginLeft: i ? '-1px' : 0, height: '92px', padding: '8px 4px',
-            border: '1px solid var(--color-text)', background: 'var(--color-bg)', cursor: 'pointer', position: 'relative',
+            border: '1px solid var(--color-line)', background: 'var(--color-bg)', cursor: 'pointer', position: 'relative',
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             gap: '4px', textAlign: 'center', transition: 'transform .12s ease, background .12s ease, box-shadow .12s ease'
           }
@@ -854,7 +854,7 @@ class Component extends DCLogic {
       bProtoTabs: this.BUILD_ORDER.map(id => ({
         id, name: this.BUILD_SPECS[id].tab,
         onClick: (e) => this.setState({ bProto: e.currentTarget.dataset.bproto, tip: null }),
-        style: { padding: '8px 15px', border: '1px solid ' + (id === st.bProto ? 'var(--color-accent)' : 'var(--color-divider)'), background: id === st.bProto ? 'color-mix(in srgb, var(--color-accent) 12%, var(--color-bg))' : 'var(--color-bg)', cursor: 'pointer', fontSize: '12.5px', letterSpacing: '.06em', fontFamily: 'var(--font-heading)', fontWeight: '600', whiteSpace: 'nowrap', color: id === st.bProto ? 'var(--color-accent-900)' : 'var(--color-text)' }
+        style: { padding: '8px 15px', borderRadius: '8px', border: '1px solid ' + (id === st.bProto ? 'var(--color-accent)' : 'var(--color-divider)'), background: id === st.bProto ? 'color-mix(in srgb, var(--color-accent) 12%, var(--color-bg))' : 'var(--color-bg)', cursor: 'pointer', fontSize: '12.5px', letterSpacing: '.06em', fontFamily: 'var(--font-heading)', fontWeight: '600', whiteSpace: 'nowrap', color: id === st.bProto ? 'var(--color-accent-900)' : 'var(--color-text)' }
       })),
       bSpecName: bSpec.name, bSpecNote: bSpec.note,
       bSections, bAfter,
@@ -872,7 +872,7 @@ class Component extends DCLogic {
         const sp = this.DECODE_SPECS[id], on = id === st.dProto;
         return { id, name: sp.tab,
           onClick: (e) => this.setState({ dProto: e.currentTarget.dataset.dproto, tip: null }),
-          style: { padding: '8px 15px', border: '1px solid ' + (on ? 'var(--color-accent)' : 'var(--color-divider)'), background: on ? 'color-mix(in srgb, var(--color-accent) 12%, var(--color-bg))' : 'var(--color-bg)', cursor: 'pointer', fontSize: '12.5px', letterSpacing: '.06em', fontFamily: 'var(--font-heading)', fontWeight: '600', whiteSpace: 'nowrap', color: on ? 'var(--color-accent-900)' : 'var(--color-text)' } };
+          style: { padding: '8px 15px', borderRadius: '8px', border: '1px solid ' + (on ? 'var(--color-accent)' : 'var(--color-divider)'), background: on ? 'color-mix(in srgb, var(--color-accent) 12%, var(--color-bg))' : 'var(--color-bg)', cursor: 'pointer', fontSize: '12.5px', letterSpacing: '.06em', fontFamily: 'var(--font-heading)', fontWeight: '600', whiteSpace: 'nowrap', color: on ? 'var(--color-accent-900)' : 'var(--color-text)' } };
       }),
       dSpecName: dSpec.name, dSpecNote: dSpec.note,
       dSetNote: pr ? 'From the mission profile ‘' + pr.name + '’. Edit them on the Mission Profile page, or switch to Manual above.' + (st.dProto === 'spp' ? '' : ' Each frame is also compared with what the profile says about its Spacecraft Identifier' + (st.dProto === 'tm' ? ', OCF and Secondary Header.' : '.')) : dSpec.setNote,
@@ -901,7 +901,7 @@ class Component extends DCLogic {
       dParseBad: !!dParsed.err, dParseErr: dParsed.err,
       dParseLabel: dParsed.err ? 'INVALID' : dBytes.length + (dBytes.length === 1 ? ' OCTET' : ' OCTETS'),
       dTotalLabel: dParsed.err ? 'INVALID INPUT' : dBytes.length * 8 + ' BITS · ' + dBytes.length + ' OCTETS',
-      dSummary, dSummaryStyle: 'font-size:9.5px;letter-spacing:.12em;font-weight:600;padding:3px 9px;white-space:nowrap;' + D_LEVEL[dSummaryLevel].css,
+      dSummary, dSummaryStyle: 'font-size:9.5px;letter-spacing:.05em;font-weight:600;padding:3px 9px;white-space:nowrap;' + D_LEVEL[dSummaryLevel].css,
       dChecks, dHasFields: dRes.fields.length > 0, dRibbon, dFields, dDump, dOctets,
       dDumpMore: dBytes.length > D_DUMP_MAX, dDumpMoreLabel: '… ' + (dBytes.length - D_DUMP_MAX) + ' more octets not shown.',
       dWireNote: 'Transmission order — most significant bit of octet 0 first.' + (dBytes.length > D_WIRE_MAX ? ' First ' + D_WIRE_MAX + ' of ' + dBytes.length + ' octets.' : ''),
@@ -922,7 +922,7 @@ class Component extends DCLogic {
       sdCovTabs: this.SDLS_COV_ORDER.map(id => {
         const on = (st.sdCov || 'tm') === id;
         return { id, name: this.SDLS_COV[id].tab,
-          style: 'padding:7px 15px;cursor:pointer;font-family:var(--font-heading);font-weight:600;font-size:11.5px;letter-spacing:.14em;border:1px solid ' + (on ? 'var(--color-accent)' : 'var(--color-divider)') + ';background:' + (on ? 'var(--color-accent)' : 'transparent') + ';color:' + (on ? 'var(--color-bg)' : 'var(--color-neutral-700)'),
+          style: 'padding:7px 15px;cursor:pointer;font-family:var(--font-heading);font-weight:600;font-size:11.5px;letter-spacing:.06em;border:1px solid ' + (on ? 'var(--color-accent)' : 'var(--color-divider)') + ';background:' + (on ? 'var(--color-accent)' : 'transparent') + ';color:' + (on ? 'var(--color-bg)' : 'var(--color-neutral-700)'),
           onClick: () => this.setState({ sdCov: id, tip: null }) };
       }),
       sdCovGrid: '152px ' + cov.cells.map(c => 'minmax(0,' + c.w + 'fr)').join(' '),
@@ -931,7 +931,7 @@ class Component extends DCLogic {
       sdCovHasRanges: !!covLay, sdCovRanges: covLay ? profileCoverage(pr, st.sdCov || 'tm').text : '',
       sdCovCells: cov.cells.map((c, i) => ({
         n: c.n, sub: c.sub || '', hasSub: !!c.sub, len: covLay && c.k ? profileFieldLabel(covLay.fields.find(x => x.key === c.k)) : c.len,
-        style: 'min-width:0;border:1px solid var(--color-text);' + (i ? 'margin-left:-1px;' : '') + 'min-height:108px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;padding:8px 4px;background:' + (c.enc && covEnc ? 'var(--color-accent-100)' : 'var(--color-bg)')
+        style: 'min-width:0;border:1px solid var(--color-line);' + (i ? 'margin-left:-1px;' : '') + 'min-height:108px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;padding:8px 4px;background:' + (c.enc && covEnc ? 'var(--color-accent-100)' : 'var(--color-bg)')
       })),
       sdCovPay: cov.cells.map((c, i) => {
         const first = cov.cells.findIndex(x => x.pay), lastPay = cov.cells.map(x => x.pay).lastIndexOf(true);

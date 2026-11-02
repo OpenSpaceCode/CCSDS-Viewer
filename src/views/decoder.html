@@ -2,10 +2,10 @@
       <sc-if value="{{ showDecoder }}" hint-placeholder-val="{{ false }}">
         <div data-screen-label="Frame decoder">
           <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
-            <span style="font-size:11px;letter-spacing:.2em;font-weight:600;color:var(--color-accent-700)">INTERACTIVE · DECODER</span>
-            <span style="font-size:11px;letter-spacing:.14em;color:var(--color-neutral-600)">{{ dTotalLabel }}</span>
+            <span style="font-size:11px;letter-spacing:.08em;font-weight:600;color:var(--color-accent-700)">INTERACTIVE · DECODER</span>
+            <span style="font-size:11px;letter-spacing:.06em;color:var(--color-neutral-600)">{{ dTotalLabel }}</span>
           </div>
-          <h1 style="margin:8px 0 0;font-size:42px;line-height:1.02;letter-spacing:.01em">FRAME DECODER</h1>
+          <h1 style="margin:8px 0 0;font-size:36px;line-height:1.12;letter-spacing:-.01em;font-weight:700">FRAME DECODER</h1>
           <p style="margin:14px 0 0;max-width:74ch;font-size:14.5px;line-height:1.6;color:var(--color-neutral-700);text-wrap:pretty">Choose a protocol, set the mission parameters the Standard leaves to management, and paste raw hex. Every field is extracted, explained and checked against the Blue Book.</p>
 
           <div style="display:flex;gap:8px;margin-top:20px;flex-wrap:wrap">
@@ -20,11 +20,11 @@
             <!-- mission settings + raw input -->
             <div style="flex:0 1 340px;min-width:300px;display:flex;flex-direction:column">
               <div style="display:flex;align-items:baseline;gap:10px">
-                <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.18em;flex:1">MISSION SETTINGS</span>
-                <span style="font-size:9.5px;letter-spacing:.14em;font-weight:600;padding:3px 7px;border:1px solid var(--color-divider);color:var(--color-neutral-600);white-space:nowrap">MANAGED PARAMETERS</span>
+                <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.07em;flex:1">MISSION SETTINGS</span>
+                <span style="font-size:9.5px;letter-spacing:.06em;font-weight:600;padding:3px 7px;border-radius:8px;border:1px solid var(--color-divider);color:var(--color-neutral-600);white-space:nowrap">MANAGED PARAMETERS</span>
               </div>
               <sc-if value="{{ dResetShow }}" hint-placeholder-val="{{ true }}">
-                <div role="button" tabindex="0" sc-camel-on-click="{{ dResetSettings }}" style="margin-top:10px;align-self:flex-start;padding:8px 15px;border:1px solid var(--color-divider);cursor:pointer;font-size:11.5px;letter-spacing:.13em;font-family:var(--font-heading);font-weight:600" style-hover="border-color:var(--color-accent);color:var(--color-accent-700)">RESET SETTINGS</div>
+                <div role="button" tabindex="0" sc-camel-on-click="{{ dResetSettings }}" style="margin-top:10px;align-self:flex-start;padding:8px 15px;border-radius:8px;border:1px solid var(--color-divider);cursor:pointer;font-size:11.5px;letter-spacing:.05em;font-family:var(--font-heading);font-weight:600" style-hover="border-color:var(--color-accent);color:var(--color-accent-700)">RESET SETTINGS</div>
               </sc-if>
               <p style="margin:9px 0 0;font-size:11.5px;line-height:1.6;color:var(--color-neutral-600);text-wrap:pretty">{{ dSetNote }}</p>
               <sc-for list="{{ dSettingsList }}" as="s" hint-placeholder-count="3">
@@ -35,17 +35,17 @@
                   </div>
                   <div style="display:flex;gap:7px;align-items:center">
                     <sc-if value="{{ s.isEnum }}" hint-placeholder-val="{{ false }}">
-                      <sc-raw-select data-dset="{{ s.id }}" value="{{ s.value }}" sc-camel-on-change="{{ s.onInput }}" style="flex:1;min-width:0;font-family:var(--font-body);font-size:12.5px;padding:6px 8px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
+                      <sc-raw-select data-dset="{{ s.id }}" value="{{ s.value }}" sc-camel-on-change="{{ s.onInput }}" style="flex:1;min-width:0;font-family:var(--font-body);font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
                         <sc-for list="{{ s.opts }}" as="o" hint-placeholder-count="2">
                           <option value="{{ o.v }}">{{ o.l }}</option>
                         </sc-for>
                       </sc-raw-select>
                     </sc-if>
                     <sc-if value="{{ s.isFixed }}" hint-placeholder-val="{{ false }}">
-                      <span data-dfixed="{{ s.id }}" style="flex:1;min-width:0;font-size:12.5px;padding:6px 8px;border:1px dashed var(--color-neutral-500);color:var(--color-neutral-700);background:var(--color-surface)">{{ s.fixedLabel }}</span>
+                      <span data-dfixed="{{ s.id }}" style="flex:1;min-width:0;font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px dashed var(--color-neutral-500);color:var(--color-neutral-700);background:var(--color-surface)">{{ s.fixedLabel }}</span>
                     </sc-if>
                     <sc-if value="{{ s.isNum }}" hint-placeholder-val="{{ true }}">
-                      <input type="number" min="{{ s.min }}" max="{{ s.max }}" data-dset="{{ s.id }}" value="{{ s.value }}" sc-camel-on-change="{{ s.onInput }}" sc-camel-on-input="{{ s.onInput }}" style="width:104px;flex:none;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;padding:6px 8px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
+                      <input type="number" min="{{ s.min }}" max="{{ s.max }}" data-dset="{{ s.id }}" value="{{ s.value }}" sc-camel-on-change="{{ s.onInput }}" sc-camel-on-input="{{ s.onInput }}" style="width:104px;flex:none;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)">
                       <span style="font-size:10.5px;letter-spacing:.06em;color:var(--color-neutral-600)">{{ s.unit }}</span>
                     </sc-if>
                   </div>
@@ -56,33 +56,33 @@
                 </div>
               </sc-for>
 
-              <div style="margin-top:22px;border-top:1px solid var(--color-text);padding-top:13px;display:flex;align-items:baseline;gap:10px">
-                <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.18em;flex:1">RAW HEX</span>
-                <span style="font-size:10px;letter-spacing:.1em;color:var(--color-neutral-600);font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap">{{ dParseLabel }}</span>
+              <div style="margin-top:22px;border-top:1px solid var(--color-line);padding-top:13px;display:flex;align-items:baseline;gap:10px">
+                <span style="font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.07em;flex:1">RAW HEX</span>
+                <span style="font-size:10px;letter-spacing:.04em;color:var(--color-neutral-600);font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap">{{ dParseLabel }}</span>
               </div>
               <textarea spellcheck="false" autocomplete="off" value="{{ dHexText }}" sc-camel-on-change="{{ dOnHex }}" sc-camel-on-input="{{ dOnHex }}" placeholder="08 64 C0 01 00 0B …" style="margin-top:10px;width:100%;min-height:132px;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.6;letter-spacing:.06em;padding:8px 10px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-text)"></textarea>
               <div style="font-size:11px;line-height:1.5;color:var(--color-neutral-600);padding-top:6px">Spaces, line breaks, commas, colons and 0x prefixes are ignored.</div>
               <sc-if value="{{ dParseBad }}" hint-placeholder-val="{{ false }}">
                 <div style="font-size:11px;color:var(--color-accent-900);padding-top:6px">{{ dParseErr }}</div>
               </sc-if>
-              <div style="font-size:10px;letter-spacing:.18em;color:var(--color-neutral-600);padding:16px 0 7px">EXAMPLES</div>
+              <div style="font-size:10px;letter-spacing:.07em;color:var(--color-neutral-600);padding:16px 0 7px">EXAMPLES</div>
               <sc-if value="{{ dHasExampleNote }}" hint-placeholder-val="{{ false }}">
                 <div style="font-size:11px;line-height:1.5;color:var(--color-neutral-600);padding-bottom:7px">{{ dExampleNote }}</div>
               </sc-if>
               <div style="display:flex;flex-wrap:wrap;gap:6px">
                 <sc-for list="{{ dExamples }}" as="x" hint-placeholder-count="4">
-                  <div role="button" tabindex="0" sc-camel-on-click="{{ x.onClick }}" title="{{ x.hex }}" style="padding:5px 10px;border:1px solid var(--color-divider);cursor:pointer;font-size:11.5px;letter-spacing:.04em" style-hover="border-color:var(--color-accent);color:var(--color-accent-700)">{{ x.l }}</div>
+                  <div role="button" tabindex="0" sc-camel-on-click="{{ x.onClick }}" title="{{ x.hex }}" style="padding:5px 10px;border-radius:8px;border:1px solid var(--color-divider);cursor:pointer;font-size:11.5px;letter-spacing:.04em" style-hover="border-color:var(--color-accent);color:var(--color-accent-700)">{{ x.l }}</div>
                 </sc-for>
               </div>
-              <div role="button" tabindex="0" sc-camel-on-click="{{ dClear }}" style="margin-top:16px;align-self:flex-start;padding:8px 15px;border:1px solid var(--color-divider);cursor:pointer;font-size:11.5px;letter-spacing:.13em;font-family:var(--font-heading);font-weight:600" style-hover="border-color:var(--color-accent);color:var(--color-accent-700)">CLEAR INPUT</div>
+              <div role="button" tabindex="0" sc-camel-on-click="{{ dClear }}" style="margin-top:16px;align-self:flex-start;padding:8px 15px;border-radius:8px;border:1px solid var(--color-divider);cursor:pointer;font-size:11.5px;letter-spacing:.05em;font-family:var(--font-heading);font-weight:600" style-hover="border-color:var(--color-accent);color:var(--color-accent-700)">CLEAR INPUT</div>
             </div>
 
             <!-- decoded output -->
             <div style="flex:1 1 540px;min-width:0;display:flex;flex-direction:column;gap:26px">
 
-              <div style="border:1px solid var(--color-divider);padding:16px 18px;min-width:0">
+              <div style="border:1px solid var(--color-divider);border-radius:12px;padding:16px 18px;min-width:0">
                 <div style="display:flex;align-items:center;gap:10px;padding-bottom:4px">
-                  <span style="font-family:var(--font-heading);font-weight:600;font-size:12.5px;letter-spacing:.2em;flex:1">CONSISTENCY CHECKS</span>
+                  <span style="font-family:var(--font-heading);font-weight:600;font-size:12.5px;letter-spacing:.08em;flex:1">CONSISTENCY CHECKS</span>
                   <span style="{{ dSummaryStyle }}">{{ dSummary }}</span>
                 </div>
                 <sc-for list="{{ dChecks }}" as="c" hint-placeholder-count="3">
@@ -99,7 +99,7 @@
                   <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
                   <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
                     <span style="flex:1;height:1px;background:var(--color-text)"></span>
-                    <span style="font-family:var(--font-heading);font-weight:600;font-size:12.5px;letter-spacing:.2em;white-space:nowrap">{{ dSpecName }} · FIELD MAP</span>
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:12.5px;letter-spacing:.08em;white-space:nowrap">{{ dSpecName }} · FIELD MAP</span>
                     <span style="flex:1;height:1px;background:var(--color-text)"></span>
                   </div>
                   <div style="display:flex;align-items:stretch;min-width:0;flex-wrap:wrap">
@@ -114,14 +114,14 @@
                 </div>
 
                 <div style="min-width:0">
-                  <div style="font-family:var(--font-heading);font-weight:600;font-size:12.5px;letter-spacing:.2em;padding-bottom:4px">DECODED FIELDS</div>
+                  <div style="font-family:var(--font-heading);font-weight:600;font-size:12.5px;letter-spacing:.08em;padding-bottom:4px">DECODED FIELDS</div>
                   <div style="font-size:12px;color:var(--color-neutral-600);padding-bottom:12px">Click a field to open its reference page.</div>
-                  <div style="display:grid;grid-template-columns:14px minmax(0,2fr) minmax(0,.9fr) minmax(0,1.5fr) minmax(0,.9fr) minmax(0,2fr);column-gap:10px;align-items:baseline;padding:0 6px 7px;font-size:10px;letter-spacing:.12em;color:var(--color-neutral-600);border-bottom:1px solid var(--color-text)">
+                  <div style="display:grid;grid-template-columns:14px minmax(0,2fr) minmax(0,.9fr) minmax(0,1.5fr) minmax(0,.9fr) minmax(0,2fr);column-gap:10px;align-items:baseline;padding:0 6px 7px;font-size:10px;letter-spacing:.05em;color:var(--color-neutral-600);border-bottom:1px solid var(--color-line)">
                     <span></span><span>FIELD</span><span>POSITION</span><span>RAW</span><span>VALUE</span><span>MEANING</span>
                   </div>
                   <sc-for list="{{ dFields }}" as="f" hint-placeholder-count="7">
                     <div role="button" tabindex="0" data-dfield="{{ f.fid }}" sc-camel-on-click="{{ f.onClick }}" style="{{ f.rowStyle }}" style-hover="background:color-mix(in srgb, var(--color-accent) 8%, transparent)">
-                      <span style="width:12px;height:12px;align-self:center;border:1px solid var(--color-text);background:{{ f.swatch }}"></span>
+                      <span style="width:12px;height:12px;align-self:center;border:1px solid var(--color-line);background:{{ f.swatch }}"></span>
                       <span style="font-size:12.5px;font-weight:500;line-height:1.35">{{ f.n }}</span>
                       <span style="font-size:10.5px;letter-spacing:.04em;color:var(--color-neutral-600);font-family:ui-monospace,Menlo,Consolas,monospace">{{ f.pos }}</span>
                       <span style="font-size:11.5px;letter-spacing:.04em;color:var(--color-neutral-700);font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all">{{ f.raw }}</span>
@@ -131,8 +131,8 @@
                   </sc-for>
                 </div>
 
-                <div style="border:1px solid var(--color-divider);padding:16px 18px;min-width:0">
-                  <div style="font-size:10px;letter-spacing:.18em;color:var(--color-neutral-600);padding-bottom:10px">HEX DUMP · COLOURED BY FIELD</div>
+                <div style="border:1px solid var(--color-divider);border-radius:12px;padding:16px 18px;min-width:0">
+                  <div style="font-size:10px;letter-spacing:.07em;color:var(--color-neutral-600);padding-bottom:10px">HEX DUMP · COLOURED BY FIELD</div>
                   <div style="display:flex;flex-direction:column;gap:3px;overflow-x:auto">
                     <sc-for list="{{ dDump }}" as="row" hint-placeholder-count="2">
                       <div style="display:flex;gap:3px;align-items:center">
@@ -149,12 +149,12 @@
                 </div>
 
                 <div style="min-width:0">
-                  <div style="font-family:var(--font-heading);font-weight:600;font-size:12.5px;letter-spacing:.2em;padding-bottom:4px">ON THE WIRE</div>
+                  <div style="font-family:var(--font-heading);font-weight:600;font-size:12.5px;letter-spacing:.08em;padding-bottom:4px">ON THE WIRE</div>
                   <div style="font-size:12px;color:var(--color-neutral-600);padding-bottom:15px">{{ dWireNote }}</div>
                   <div style="display:flex;flex-wrap:wrap;gap:14px 16px">
                     <sc-for list="{{ dOctets }}" as="o" hint-placeholder-count="6">
                       <div style="display:flex;flex-direction:column;gap:5px">
-                        <div style="font-size:9.5px;letter-spacing:.1em;color:var(--color-neutral-600);font-family:ui-monospace,Menlo,Consolas,monospace">{{ o.label }}</div>
+                        <div style="font-size:9.5px;letter-spacing:.04em;color:var(--color-neutral-600);font-family:ui-monospace,Menlo,Consolas,monospace">{{ o.label }}</div>
                         <div style="display:flex">
                           <sc-for list="{{ o.cells }}" as="c" hint-placeholder-count="8">
                             <div style="{{ c.style }}">{{ c.b }}</div>
