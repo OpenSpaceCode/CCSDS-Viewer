@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { loadComponent, loadSrc } from './load.mjs';
-import { build, buildTemplate, loadAssets, OUTPUT } from '../build.mjs';
+import { build, buildTemplate, loadAssets, resolveAssets, OUTPUT } from '../build.mjs';
 
 const Component = loadComponent();
 const render = (state) => {
@@ -146,6 +146,13 @@ test('without a script the page still says what it is, with every book it covers
   assert.ok(html.slice(html.indexOf('<noscript>'), html.indexOf('</noscript>')).includes('#__bundler_thumbnail{display:none}'), 'nothing covers it then');
   assert.ok(html.indexOf('<noscript>') < html.indexOf('</head>'), 'the head stays valid: only style in its noscript');
   assert.ok(!html.slice(html.indexOf('<noscript>'), html.indexOf('</noscript>')).includes('<div'), 'a div there would end the head early');
+});
+
+test('every asset the README gives as an example exists, so it can be copied', () => {
+  const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
+  const examples = [...readme.matchAll(/asset:([\w./-]+)/g)].map(m => m[1]);
+  assert.ok(examples.length > 0);
+  for (const file of examples) assert.doesNotThrow(() => resolveAssets('asset:' + file, loadAssets()), file);
 });
 
 test('no fonts are bundled: the system font costs no download', () => {
